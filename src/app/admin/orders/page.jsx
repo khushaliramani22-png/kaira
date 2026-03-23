@@ -52,7 +52,7 @@ export default function AdminOrders() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:ml-64">
       <div className="bg-white rounded-xl shadow border">
-        
+
         {/* HEADER */}
         <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-xl font-bold">Manage Orders</h1>
@@ -80,11 +80,13 @@ export default function AdminOrders() {
             <tbody>
               {orders.map((order, index) => (
                 <tr key={order.id} className="border-b hover:bg-gray-50">
-                  
+
                   {/* SERIAL NUMBER (#1, #2, #3...) */}
                   <td className="p-4">
+                    {/* SERIAL NUMBER (#ID) */}
+
                     <div className="font-bold text-gray-900">
-                      #{index + 1}
+                      #{order.order_number}
                     </div>
                     <div style={{ marginTop: "4px" }}>
                       <span
@@ -94,8 +96,8 @@ export default function AdminOrders() {
                             order.status === "Confirmed"
                               ? "#22c55e"
                               : order.status === "Canceled"
-                              ? "#ef4444"
-                              : "#f59e0b",
+                                ? "#ef4444"
+                                : "#f59e0b",
                           color: "#fff",
                           padding: "3px 8px",
                           borderRadius: "4px",
