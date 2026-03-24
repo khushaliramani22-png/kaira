@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, User, Phone, Calendar } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, User, Phone, Calendar, Mail, ShoppingBag, IndianRupee } from "lucide-react";
 
 export default function UsersListPage() {
   const router = useRouter();
@@ -23,6 +23,7 @@ export default function UsersListPage() {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
+      // ૧. પ્રોફાઈલ્સ ફેચ કરો
       let query = supabase
         .from("profiles")
         .select("*", { count: "exact" })
@@ -33,10 +34,25 @@ export default function UsersListPage() {
         query = query.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
       }
 
-      const { data, error, count } = await query;
+      const { data: userData, error: userError, count } = await query;
+      if (userError) throw userError;
 
-      if (error) throw error;
-      setUsers(data || []);
+      // ૨. ઓર્ડર્સ ફેચ કરો (Total Spend અને Count ગણવા માટે)
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .select("user_id, total_amount");
+
+      if (orderError) console.error("Order fetch error:", orderError);
+
+      // ૩. ડેટા પ્રોસેસ કરીને યુઝર્સમાં ઓર્ડરની વિગતો ઉમેરો
+      const processedUsers = userData.map(user => {
+        const userOrders = orderData ? orderData.filter(o => o.user_id === user.id) : [];
+        const totalOrders = userOrders.length;
+        const totalSpend = userOrders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+        return { ...user, totalOrders, totalSpend };
+      });
+
+      setUsers(processedUsers);
       setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching users:", error.message);
@@ -52,16 +68,25 @@ export default function UsersListPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Header & Search Bar */}
+    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-[#fbfbfb]">
+      {/* Header & Stats Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Users Management</h1>
-          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">{totalCount} Total Customers</p>
+          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+            <User className="text-blue-600" size={28} />
+            Users Management
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
+              {totalCount} Total Customers
+            </p>
+          </div>
         </div>
 
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        {/* Search Bar */}
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
             placeholder="Search name or email..."
@@ -70,67 +95,86 @@ export default function UsersListPage() {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all shadow-sm"
+            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all shadow-sm font-medium"
           />
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 text-[10px] uppercase tracking-widest text-gray-400 font-black border-b">
-                <th className="p-5">User</th>
-                <th className="p-5 hidden sm:table-cell">Email</th>
-                <th className="p-5 hidden lg:table-cell">Phone</th>
-                <th className="p-5 hidden md:table-cell">Joined Date</th>
-                <th className="p-5 text-center">Action</th>
+              <tr className="bg-gray-50/80 text-[10px] uppercase tracking-[0.15em] text-gray-500 font-black border-b border-gray-100">
+                <th className="p-6"># Rank & Customer</th>
+                <th className="p-6 hidden sm:table-cell">Activity</th>
+                <th className="p-6 hidden md:table-cell text-center text-blue-600">Total Value</th>
+                <th className="p-6 text-center">Management</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="p-20 text-center animate-pulse text-gray-400 font-bold uppercase tracking-widest text-xs">
-                    Updating list...
+                  <td colSpan="4" className="p-32 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Database...</span>
+                    </div>
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-20 text-center text-gray-300 font-bold uppercase tracking-widest text-xs">
+                  <td colSpan="4" className="p-32 text-center text-gray-300 font-bold uppercase tracking-widest text-xs">
                     No users found
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
-                  <tr key={user.id} className="hover:bg-blue-50/20 transition-all group">
-                    <td className="p-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-sm font-black border-2 border-white shadow-sm uppercase">
-                          {user.full_name ? user.full_name[0] : "U"}
+                users.map((user, index) => (
+                  <tr key={user.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
+                    <td className="p-6">
+                      <div className="flex items-center gap-4">
+                        {/* Serial Number */}
+                        <span className="text-[10px] font-black text-blue-500 bg-blue-50 w-8 h-8 rounded-lg flex items-center justify-center border border-blue-100">
+                           #{(currentPage - 1) * pageSize + (index + 1)}
+                        </span>
+                        
+                        <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-lg uppercase transform group-hover:scale-105 transition-transform">
+                          {user.full_name ? user.full_name[0] : <User size={20}/>}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-800">{user.full_name || "N/A"}</span>
-                          {/* Mobile Only Info */}
-                          <span className="text-[10px] text-gray-400 sm:hidden">{user.email}</span>
+                          <span className="font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors">
+                            {user.full_name || user.email.split('@')[0]}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-medium">Joined {new Date(user.created_at).toLocaleDateString("en-IN")}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="p-5 text-sm font-medium text-gray-600 hidden sm:table-cell">
-                      {user.email}
+                    <td className="p-6 hidden sm:table-cell">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                          <Mail size={14} className="text-gray-400" />
+                          {user.email}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full w-fit uppercase border border-green-100">
+                          <ShoppingBag size={10} /> {user.totalOrders} Orders
+                        </div>
+                      </div>
                     </td>
-                    <td className="p-5 text-sm font-medium text-gray-500 hidden lg:table-cell">
-                      {user.phone || "Not Provided"}
+                    <td className="p-6 hidden md:table-cell text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="text-md font-black text-gray-900 flex items-center">
+                          <IndianRupee size={14} />
+                          {user.totalSpend.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Total Spent</span>
+                      </div>
                     </td>
-                    <td className="p-5 text-xs font-bold text-gray-400 hidden md:table-cell">
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString("en-IN") : "N/A"}
-                    </td>
-                    <td className="p-5 text-center">
+                    <td className="p-6 text-center">
                       <button
                         onClick={() => router.push(`/admin/users/${user.id}`)}
-                        className="text-[10px] font-black py-2 px-4 border-2 border-gray-100 rounded-xl hover:bg-gray-900 hover:text-white transition-all uppercase"
+                        className="text-[10px] font-black py-2.5 px-6 border-2 border-gray-100 rounded-2xl bg-white hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all uppercase shadow-sm active:scale-95"
                       >
-                        View Profile
+                        Details
                       </button>
                     </td>
                   </tr>
@@ -141,24 +185,24 @@ export default function UsersListPage() {
         </div>
 
         {/* Pagination Section */}
-        <div className="p-5 border-t bg-gray-50/30 flex justify-between items-center">
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+        <div className="p-6 border-t bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
             Page {currentPage} of {totalPages || 1}
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               disabled={currentPage === 1 || loading}
-              onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-30 transition-all shadow-sm"
+              onClick={() => { setCurrentPage((p) => p - 1); window.scrollTo(0, 0); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border bg-white text-gray-600 font-bold text-xs hover:bg-gray-100 disabled:opacity-30 transition-all shadow-sm"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} /> Prev
             </button>
             <button
               disabled={currentPage === totalPages || totalPages === 0 || loading}
-              onClick={() => setCurrentPage((p) => p + 1)}
-              className="p-2 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-30 transition-all shadow-sm"
+              onClick={() => { setCurrentPage((p) => p + 1); window.scrollTo(0, 0); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border bg-white text-gray-600 font-bold text-xs hover:bg-gray-100 disabled:opacity-30 transition-all shadow-sm"
             >
-              <ChevronRight size={18} />
+              Next <ChevronRight size={16} />
             </button>
           </div>
         </div>
