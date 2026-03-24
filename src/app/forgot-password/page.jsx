@@ -109,8 +109,8 @@ export default function ForgotPassword() {
               <input 
                 type="text" 
                 className="form-control form-control-lg text-center fw-bold" 
-                placeholder="0 0 0 0 0 0" 
-                maxLength="6"
+                placeholder="0 0 0 0 0 0 0 0" 
+                maxLength="8"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 required 
