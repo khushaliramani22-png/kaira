@@ -1,6 +1,5 @@
-
 'use client'
-import { useState } from 'react' 
+import { useState, useEffect } from 'react' // useEffect ઉમેર્યું
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -9,6 +8,19 @@ export default function AdminLayout({ children }) {
   const supabase = createClient()
 
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [adminEmail, setAdminEmail] = useState('Loading...') // ઈમેલ માટે સ્ટેટ
+
+  // લોગિન થયેલ એડમિનનો ડેટા મેળવવા માટે
+  useEffect(() => {
+    const getAdminData = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setAdminEmail(user.email) // યુઝરનો સાચો ઈમેલ સેટ થશે
+      }
+    };
+    getAdminData();
+  }, [supabase]);
+
   // logout function
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -17,7 +29,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="d-flex">
-      {/* Sidebar */}
+      {/* Sidebar - (પહેલા જેવો જ રહેશે) */}
       <div
         className="bg-black text-white p-3"
         style={{ width: "240px", minHeight: "100vh", position: "sticky", top: 0 }}
@@ -31,7 +43,7 @@ export default function AdminLayout({ children }) {
             </a>
           </li>
           <li className="mb-2">
-            <div 
+            <div
               onClick={() => setIsProductOpen(!isProductOpen)}
               className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect"
               style={{ cursor: 'pointer' }}
@@ -40,8 +52,8 @@ export default function AdminLayout({ children }) {
                 <span className="me-2">📦</span> Products
               </div>
               {/* એરો આયકોન જે ફરશે */}
-              <span style={{ 
-                transform: isProductOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+              <span style={{
+                transform: isProductOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: '0.3s',
                 fontSize: '12px'
               }}>▼</span>
@@ -69,8 +81,8 @@ export default function AdminLayout({ children }) {
             )}
           </li>
 
-          
-          
+
+
           <li className="mb-3">
             <a href="/admin/orders" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
               📜 Orders
@@ -81,11 +93,17 @@ export default function AdminLayout({ children }) {
               👥 Users
             </a>
           </li>
+          <li className="mb-3">
+            <a href="/admin/messages" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+              💬 Messages
+            </a>
+          </li>
+
         </ul>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-grow-1 bg-light">
+     <div className="flex-grow-1 bg-light">
         
         {/* Admin Header */}
         <header className="navbar navbar-white bg-white border-bottom px-4 py-2 shadow-sm">
@@ -95,7 +113,8 @@ export default function AdminLayout({ children }) {
             </span>
             
             <div className="d-flex align-items-center">
-              <span className="me-3 text-muted small">khushali@admin</span>
+              {/* અહીં હવે ડાયનેમિક ઈમેલ દેખાશે */}
+              <span className="me-3 text-muted small">{adminEmail}</span>
               <button 
                 onClick={handleLogout}
                 className="btn btn-outline-danger btn-sm"

@@ -152,7 +152,7 @@ export default function Header() {
             {/* SHOP DROPDOWN END */}
 
                   <li className="nav-item">
-  {/* જો તમારો બ્લોગ પેજ app/blog/page.js પર હોય તો */}
+
   <Link href="/blog" className="nav-link">
     Blog
   </Link>
