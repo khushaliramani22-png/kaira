@@ -23,28 +23,30 @@ export default function UsersListPage() {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      // ૧. પ્રોફાઈલ્સ ફેચ કરો
+      // ૧. 'users' ટેબલમાંથી ડેટા ફેચ કરો (profiles ને બદલે)
       let query = supabase
-        .from("profiles")
+        .from("users") // ટેબલ બદલ્યું
         .select("*", { count: "exact" })
+        .eq("role", "user") // માત્ર કસ્ટમર્સ બતાવવા માટે
         .order("created_at", { ascending: false })
         .range(from, to);
 
       if (searchQuery) {
-        query = query.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
+        // full_name ને બદલે name વાપર્યું
+        query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
       }
 
       const { data: userData, error: userError, count } = await query;
       if (userError) throw userError;
 
-      // ૨. ઓર્ડર્સ ફેચ કરો (Total Spend અને Count ગણવા માટે)
+      // ૨. ઓર્ડર્સ ફેચ કરો
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select("user_id, total_amount");
 
       if (orderError) console.error("Order fetch error:", orderError);
 
-      // ૩. ડેટા પ્રોસેસ કરીને યુઝર્સમાં ઓર્ડરની વિગતો ઉમેરો
+      // ૩. ડેટા પ્રોસેસ કરો
       const processedUsers = userData.map(user => {
         const userOrders = orderData ? orderData.filter(o => o.user_id === user.id) : [];
         const totalOrders = userOrders.length;
@@ -69,7 +71,7 @@ export default function UsersListPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-[#fbfbfb]">
-      {/* Header & Stats Section */}
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
@@ -133,17 +135,17 @@ export default function UsersListPage() {
                   <tr key={user.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
                     <td className="p-6">
                       <div className="flex items-center gap-4">
-                        {/* Serial Number */}
                         <span className="text-[10px] font-black text-blue-500 bg-blue-50 w-8 h-8 rounded-lg flex items-center justify-center border border-blue-100">
-                           #{(currentPage - 1) * pageSize + (index + 1)}
+                            #{(currentPage - 1) * pageSize + (index + 1)}
                         </span>
                         
                         <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-lg uppercase transform group-hover:scale-105 transition-transform">
-                          {user.full_name ? user.full_name[0] : <User size={20}/>}
+                          {/* name કોલમ વાપર્યું */}
+                          {user.name ? user.name[0] : <User size={20}/>}
                         </div>
                         <div className="flex flex-col">
                           <span className="font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors">
-                            {user.full_name || user.email.split('@')[0]}
+                            {user.name || user.email.split('@')[0]}
                           </span>
                           <span className="text-[10px] text-gray-400 font-medium">Joined {new Date(user.created_at).toLocaleDateString("en-IN")}</span>
                         </div>

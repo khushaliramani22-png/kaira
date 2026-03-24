@@ -17,9 +17,9 @@ export default function UserHistory() {
     const fetchUserAndOrders = async () => {
       setLoading(true);
       try {
-        // 1. યુઝરની પ્રોફાઇલ ફેચ કરો
+        // ૧. યુઝરનો ડેટા 'users' ટેબલમાંથી ફેચ કરો (profiles ને બદલે)
         const { data: user, error: userError } = await supabase
-          .from("profiles")
+          .from("users") // ટેબલ બદલ્યું
           .select("*")
           .eq("id", id)
           .single();
@@ -27,10 +27,10 @@ export default function UserHistory() {
         if (userError) throw userError;
         setUserData(user);
 
-        // 2. આ યુઝરના ઓર્ડર્સ ફેચ કરો (સાચા Order Number સાથે)
+        // ૨. આ યુઝરના ઓર્ડર્સ ફેચ કરો
         const { data: userOrders, error: orderError } = await supabase
           .from("orders")
-          .select("*") // અહીં ખાતરી કરો કે order_number ટેબલમાં છે
+          .select("*")
           .eq("user_id", id)
           .order("created_at", { ascending: false });
 
@@ -65,7 +65,8 @@ export default function UserHistory() {
               <div className="bg-light rounded-circle d-inline-flex p-3 mb-2">
                 <User size={40} className="text-primary" />
               </div>
-              <h4 className="mb-0">{userData.full_name || "Guest User"}</h4>
+              {/* full_name ને બદલે name વાપર્યું */}
+              <h4 className="mb-0">{userData.name || "Guest User"}</h4>
               <span className="badge bg-soft-primary text-primary mt-1">Customer</span>
             </div>
             
@@ -135,7 +136,6 @@ export default function UserHistory() {
                   ) : (
                     orders.map((order) => (
                       <tr key={order.id}>
-                        {/* અહીં ફેરફાર કર્યો છે: સાચો Order Number બતાવવા માટે */}
                         <td className="fw-bold text-primary">
                           {order.order_number ? `#${order.order_number}` : `#${order.id.slice(0, 8)}`}
                         </td>
