@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-// ૧. PDF લાઇબ્રેરી ઇમ્પોર્ટ કરો
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import Swal from "sweetalert2";
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
@@ -36,11 +36,10 @@ export default function CheckoutPage() {
   const shippingCharge = subtotal > 1000 ? 0 : 50;
   const totalAmount = subtotal + shippingCharge;
 
-  // ૨. Invoice PDF જનરેટ કરવાનું ફંક્શન
+  // ૧. Invoice PDF જનરેટ કરવાનું ફંક્શન
   const generateInvoicePDF = (orderData, items) => {
     const doc = new jsPDF();
 
-    // બ્રાન્ડ હેડર (Luxury Look)
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
     doc.text("KAIRA", 14, 20);
@@ -48,27 +47,20 @@ export default function CheckoutPage() {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text("Premium Clothing Brand", 14, 25);
-    doc.text("Surat, Gujarat, India", 14, 30);
-    
-    // ઇનવોઇસ વિગતો (જમણી બાજુ)
-    doc.setFontSize(10);
-    doc.text(`INVOICE NO: #KRA-${orderData.id.slice(0, 8).toUpperCase()}`, 140, 20);
+    doc.text(`INVOICE: #KRA-${orderData.id.slice(0, 8).toUpperCase()}`, 140, 20);
     doc.text(`DATE: ${new Date().toLocaleDateString("en-IN")}`, 140, 25);
-    doc.text(`PAYMENT: ${orderData.payment_method}`, 140, 30);
 
-    // કસ્ટમર ડિટેલ્સ
     doc.setDrawColor(200);
-    doc.line(14, 35, 196, 35); // લાઈન
+    doc.line(14, 35, 196, 35);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.text("BILL TO:", 14, 45);
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(`Name: ${orderData.customer_name}`, 14, 52);
-    doc.text(`Phone: +91 ${orderData.phone}`, 14, 57);
-    doc.text(`Address: ${orderData.address}, ${orderData.city} - ${orderData.pincode}`, 14, 62);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${orderData.customer_name}`, 14, 52);
+    doc.text(`+91 ${orderData.phone}`, 14, 57);
+    doc.text(`${orderData.address}, ${orderData.city} - ${orderData.pincode}`, 14, 62);
 
-    // આઈટમ્સ ટેબલ
     const tableData = items.map((item, index) => [
       index + 1,
       item.product_name,
@@ -78,38 +70,21 @@ export default function CheckoutPage() {
       `INR ${(item.price * item.quantity).toLocaleString()}`
     ]);
 
+    // autoTable(doc, ...) નો ઉપયોગ (Fix for 'not a function' error)
     autoTable(doc, {
-  startY: 75,
-  head: [['#', 'PRODUCT', 'VARIANT', 'QTY', 'PRICE', 'TOTAL']],
-  body: tableData,
-  theme: 'grid',
-  headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
-  styles: { fontSize: 9 },
-});
+      startY: 75,
+      head: [['#', 'PRODUCT', 'VARIANT', 'QTY', 'PRICE', 'TOTAL']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 0, 0] },
+      styles: { fontSize: 9 },
+    });
 
-    // ટોટલ સેક્શન (ટેબલ પૂરો થયા પછી)
     const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(10);
-    doc.text(`Subtotal:`, 140, finalY);
-    doc.text(`INR ${orderData.subtotal.toLocaleString()}`, 175, finalY);
-    
-    doc.text(`Shipping:`, 140, finalY + 7);
-    doc.text(`INR ${orderData.shipping_charge.toLocaleString()}`, 175, finalY + 7);
-    
-    doc.setDrawColor(0);
-    doc.line(140, finalY + 10, 196, finalY + 10);
-    
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text(`GRAND TOTAL:`, 140, finalY + 17);
-    doc.text(`INR ${orderData.total_amount.toLocaleString()}`, 175, finalY + 17);
+    doc.text(`GRAND TOTAL: INR ${orderData.total_amount.toLocaleString()}`, 130, finalY);
 
-    // ફૂટર
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text("Thank you for choosing Kaira. For returns, visit kaira.com/returns", 14, finalY + 35);
-
-    // PDF સેવ કરો
     doc.save(`Kaira_Invoice_${orderData.id.slice(0, 8)}.pdf`);
   };
 
@@ -123,30 +98,21 @@ export default function CheckoutPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
-        alert("Please login to place an order.");
+        alert("Please login first.");
         setLoading(false);
         return;
       }
 
-      // ૧. સ્ટોક ચેક કરો
+      // ૨. સ્ટોક અપડેટ
       for (const item of cartItems) {
         const productId = item.product_id || item.id;
-        const { data: productData, error: productError } = await supabase
-          .from("products")
-          .select("stock")
-          .eq("id", productId)
-          .single();
-
-        if (productError || !productData || productData.stock < item.quantity) {
-          throw new Error(`Product ${item.name} is out of stock!`);
-        }
-
+        const { data: productData } = await supabase.from("products").select("stock").eq("id", productId).single();
+        if (productData.stock < item.quantity) throw new Error(`Stock low for ${item.name}`);
         await supabase.from("products").update({ stock: productData.stock - item.quantity }).eq("id", productId);
       }
 
-      // ૨. ઓર્ડર ટેબલમાં એન્ટ્રી
+      // ૩. ઓર્ડર સેવ
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -163,146 +129,112 @@ export default function CheckoutPage() {
           payment_method: paymentMethod,
           status: "Pending"
         })
-        .select()
-        .single();
+        .select().single();
 
       if (orderError) throw orderError;
 
-      // ૩. ઓર્ડર આઈટમ્સ મેપિંગ
-      const itemsToInsert = cartItems.map((item) => {
-        let finalSize = item.selected_size || item.selectedSize || item.size || "N/A";
-        let finalColor = item.selected_color || item.selectedColor || item.color || "N/A";
-
-        return {
-          order_id: orderData.id,
-          product_id: item.product_id || item.id,
-          product_name: item.name || item.product_name,
-          image: item.image || item.image1 || "",
-          size: finalSize,
-          color: finalColor,
-          quantity: item.quantity,
-          price: item.price
-        };
-      });
+      const itemsToInsert = cartItems.map((item) => ({
+        order_id: orderData.id,
+        product_id: item.product_id || item.id,
+        product_name: item.name || item.product_name,
+        size: item.selected_size || "N/A",
+        color: item.selected_color || "N/A",
+        quantity: item.quantity,
+        price: item.price
+      }));
 
       const { error: itemError } = await supabase.from("order_items").insert(itemsToInsert);
       if (itemError) throw itemError;
 
-      // ૪. ઇનવોઇસ જનરેટ કરો
+      // ૪. ઇનવોઇસ ડાઉનલોડ
       generateInvoicePDF(orderData, itemsToInsert);
 
-      alert("Order placed successfully! Your invoice is downloading...");
-      clearCart();
-      router.push("/order-success");
+      // ૫. Meesho Style Success Popup
+      Swal.fire({
+        html: `
+          <div class="p-2">
+            <div class="mb-4">
+              <svg class="mx-auto" width="70" height="70" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="12" fill="#00B33E"/>
+                <path d="M7 12L10 15L17 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">Order Placed Successfully!</h2>
+            <p class="text-sm text-gray-500 mt-2">Your invoice is downloading...</p>
+          </div>
+        `,
+        confirmButtonText: 'Go to My Orders',
+        confirmButtonColor: '#000',
+        allowOutsideClick: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          clearCart();
+          router.push("/user-order"); // તમારા પેજ પર રીડાયરેક્ટ
+        }
+      });
 
     } catch (error) {
-      console.error("Order error:", error.message);
-      alert(error.message || "Order failed.");
+      alert(error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] py-10 px-4 md:px-10">
+    <div className="min-h-screen bg-[#f9f9f9] py-10 px-4 md:px-10">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-900 border-b pb-4 uppercase tracking-tighter">Checkout</h1>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Form Section */}
+        <h1 className="text-2xl font-bold mb-8 uppercase tracking-widest border-b pb-4">Checkout</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          {/* Form */}
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 italic">
-                <span className="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs not-italic">1</span>
-                Shipping Details
-              </h2>
+              <h3 className="font-bold mb-4">Shipping Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Full Name *</label>
-                  <input name="name" placeholder="Enter your name" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:ring-1 focus:ring-black font-medium" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Phone Number *</label>
-                  <input name="phone" placeholder="10-digit number" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:ring-1 focus:ring-black font-medium" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Email Address</label>
-                  <input name="email" placeholder="email@example.com" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:ring-1 focus:ring-black font-medium" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Full Address *</label>
-                  <textarea name="address" rows="3" placeholder="House No, Street, Landmark" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:ring-1 focus:ring-black font-medium" />
-                </div>
-                <div>
-                    <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">City</label>
-                    <input name="city" placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:ring-1 focus:ring-black font-medium" />
-                </div>
-                <div>
-                    <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Pincode</label>
-                    <input name="pincode" placeholder="6-digit Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:ring-1 focus:ring-black font-medium" />
-                </div>
+                <input name="name" placeholder="Full Name" onChange={handleChange} className="w-full border p-3 rounded-xl focus:ring-1 focus:ring-black outline-none" />
+                <input name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full border p-3 rounded-xl focus:ring-1 focus:ring-black outline-none" />
+                <textarea name="address" placeholder="Full Address" onChange={handleChange} className="w-full border p-3 rounded-xl md:col-span-2 outline-none" />
+                <input name="city" placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none" />
+                <input name="pincode" placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none" />
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 italic">
-                <span className="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs not-italic">2</span>
-                Payment Method
-              </h2>
+              <h3 className="font-bold mb-4">Payment Method</h3>
               <div className="flex gap-4">
-                <label className={`flex-1 flex items-center gap-3 cursor-pointer border-2 p-4 rounded-xl transition ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100"}`}>
-                  <input type="radio" checked={paymentMethod === "COD"} onChange={() => setPaymentMethod("COD")} className="accent-black" />
-                  <span className="font-bold text-sm">Cash on Delivery</span>
-                </label>
-                <label className={`flex-1 flex items-center gap-3 cursor-pointer border-2 p-4 rounded-xl transition ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100"}`}>
-                  <input type="radio" checked={paymentMethod === "Online"} onChange={() => setPaymentMethod("Online")} className="accent-black" />
-                  <span className="font-bold text-sm">Online Payment</span>
-                </label>
+                <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100"}`}>Cash on Delivery</button>
+                <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100"}`}>Online Payment</button>
               </div>
             </div>
           </div>
 
-          {/* Summary Section */}
+          {/* Summary */}
           <div className="lg:col-span-5">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-6">
-              <h2 className="text-lg font-semibold mb-6 italic">Order Summary</h2>
-              <div className="divide-y max-h-80 overflow-y-auto pr-2">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-10">
+              <h3 className="font-bold mb-6 italic">Order Summary</h3>
+              <div className="divide-y space-y-2 max-h-60 overflow-y-auto">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4 py-4">
-                    <img src={item.image || item.image1} alt="" className="w-16 h-20 object-cover rounded-lg border" />
+                  <div key={item.id} className="flex gap-4 py-3">
+                    <img src={item.image || item.image1} className="w-14 h-16 object-cover rounded shadow-sm" alt="" />
                     <div className="flex-1">
-                      <p className="font-bold text-sm uppercase">{item.name}</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Qty: {item.quantity}</p>
-                      <p className="font-bold text-sm mt-1 text-black">₹{(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="text-sm font-bold uppercase">{item.name}</p>
+                      <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
+                      <p className="text-sm font-bold mt-1">₹{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
               </div>
-
               <div className="mt-6 pt-4 border-t space-y-2">
-                <div className="flex justify-between text-gray-500 font-medium text-sm">
-                  <span>Subtotal</span>
-                  <span>₹{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-gray-500 font-medium text-sm">
-                  <span>Shipping</span>
-                  <span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span>
-                </div>
-                <div className="flex justify-between font-black text-xl text-black pt-4 border-t-2 border-gray-900 mt-4">
-                  <span>Total</span>
-                  <span>₹{totalAmount.toLocaleString()}</span>
-                </div>
+                <div className="flex justify-between text-sm text-gray-500"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
+                <div className="flex justify-between text-sm text-gray-500"><span>Shipping</span><span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span></div>
+                <div className="flex justify-between text-xl font-black pt-4 border-t border-black mt-4"><span>Total</span><span>₹{totalAmount.toLocaleString()}</span></div>
               </div>
-
-              <button
-                onClick={handleOrder}
-                disabled={loading || cartItems.length === 0}
-                className="w-full bg-black text-white py-4 rounded-xl mt-8 font-black uppercase tracking-[0.1em] hover:bg-gray-800 transition-all disabled:bg-gray-400"
-              >
-                {loading ? "Processing..." : `Confirm Order`}
+              <button onClick={handleOrder} disabled={loading} className="w-full bg-black text-white py-4 rounded-xl mt-8 font-bold hover:opacity-90 transition-all uppercase tracking-widest">
+                {loading ? "Placing Order..." : "Confirm Order"}
               </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>
