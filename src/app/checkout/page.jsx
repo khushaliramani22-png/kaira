@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 // ૧. PDF લાઇબ્રેરી ઇમ્પોર્ટ કરો
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
@@ -78,14 +78,14 @@ export default function CheckoutPage() {
       `INR ${(item.price * item.quantity).toLocaleString()}`
     ]);
 
-    doc.autoTable({
-      startY: 75,
-      head: [['#', 'PRODUCT', 'VARIANT', 'QTY', 'PRICE', 'TOTAL']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
-      styles: { fontSize: 9 },
-    });
+    autoTable(doc, {
+  startY: 75,
+  head: [['#', 'PRODUCT', 'VARIANT', 'QTY', 'PRICE', 'TOTAL']],
+  body: tableData,
+  theme: 'grid',
+  headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+  styles: { fontSize: 9 },
+});
 
     // ટોટલ સેક્શન (ટેબલ પૂરો થયા પછી)
     const finalY = doc.lastAutoTable.finalY + 10;
