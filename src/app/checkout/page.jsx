@@ -114,6 +114,7 @@ export default function CheckoutPage() {
         order_id: orderData.id,
         product_id: item.product_id || item.id,
         product_name: item.name || item.product_name,
+        image: item.image || item.image1, 
         size: item.selected_size || "N/A",
         color: item.selected_color || "N/A",
         quantity: item.quantity,
