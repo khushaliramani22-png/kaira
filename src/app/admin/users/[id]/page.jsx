@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { User, Mail, Phone, MapPin, Package, Calendar, ArrowLeft } from "lucide-react";
 
 export default function UserHistory() {
-  const { id } = useParams(); // URL માંથી યુઝરની ID લેશે
+  const { id } = useParams();
   const router = useRouter();
   
   const [userData, setUserData] = useState(null);
@@ -27,10 +27,10 @@ export default function UserHistory() {
         if (userError) throw userError;
         setUserData(user);
 
-        // 2. આ યુઝરના ઓર્ડર્સ ફેચ કરો
+        // 2. આ યુઝરના ઓર્ડર્સ ફેચ કરો (સાચા Order Number સાથે)
         const { data: userOrders, error: orderError } = await supabase
           .from("orders")
-          .select("*")
+          .select("*") // અહીં ખાતરી કરો કે order_number ટેબલમાં છે
           .eq("user_id", id)
           .order("created_at", { ascending: false });
 
@@ -47,8 +47,8 @@ export default function UserHistory() {
     if (id) fetchUserAndOrders();
   }, [id]);
 
-  if (loading) return <div className="p-5 text-center">Loading User History...</div>;
-  if (!userData) return <div className="p-5 text-center">User not found!</div>;
+  if (loading) return <div className="p-5 text-center font-bold">Loading User History...</div>;
+  if (!userData) return <div className="p-5 text-center text-danger">User not found!</div>;
 
   return (
     <div className="container-fluid py-4">
@@ -76,7 +76,7 @@ export default function UserHistory() {
                 <Mail size={18} className="text-muted" />
                 <div>
                   <small className="text-muted d-block">Email Address</small>
-                  <span>{userData.email}</span>
+                  <span className="fw-bold">{userData.email}</span>
                 </div>
               </div>
               <div className="d-flex align-items-center gap-3 mb-3">
@@ -97,7 +97,7 @@ export default function UserHistory() {
                 <Calendar size={18} className="text-muted" />
                 <div>
                   <small className="text-muted d-block">Member Since</small>
-                  <span>{new Date(userData.created_at).toLocaleDateString()}</span>
+                  <span>{new Date(userData.created_at).toLocaleDateString("en-IN")}</span>
                 </div>
               </div>
             </div>
@@ -116,7 +116,7 @@ export default function UserHistory() {
             
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
-                <thead className="bg-light">
+                <thead className="bg-light text-uppercase small fw-bold">
                   <tr>
                     <th>Order ID</th>
                     <th>Date</th>
@@ -135,19 +135,23 @@ export default function UserHistory() {
                   ) : (
                     orders.map((order) => (
                       <tr key={order.id}>
-                        <td className="fw-bold">#{order.id.slice(0, 8)}...</td>
-                        <td>{new Date(order.created_at).toLocaleDateString()}</td>
-                        <td>₹{order.total_amount}</td>
+                        {/* અહીં ફેરફાર કર્યો છે: સાચો Order Number બતાવવા માટે */}
+                        <td className="fw-bold text-primary">
+                          {order.order_number ? `#${order.order_number}` : `#${order.id.slice(0, 8)}`}
+                        </td>
+                        <td>{new Date(order.created_at).toLocaleDateString("en-IN")}</td>
+                        <td className="fw-bold">₹{order.total_amount}</td>
                         <td>
                           <span className={`badge ${
-                            order.status === 'delivered' ? 'bg-success' : 
-                            order.status === 'pending' ? 'bg-warning text-dark' : 'bg-secondary'
+                            order.status.toLowerCase() === 'delivered' ? 'bg-success' : 
+                            order.status.toLowerCase() === 'pending' ? 'bg-warning text-dark' : 
+                            order.status.toLowerCase() === 'cancelled' ? 'bg-danger' : 'bg-secondary'
                           } text-uppercase`}>
                             {order.status}
                           </span>
                         </td>
                         <td>
-                          <button className="btn btn-sm btn-light border" onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                          <button className="btn btn-sm btn-light border fw-bold" onClick={() => router.push(`/admin/orders/${order.order_number || order.id}`)}>
                             View Details
                           </button>
                         </td>

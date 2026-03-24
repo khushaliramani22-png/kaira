@@ -50,7 +50,7 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:ml-64">
+    <div className="min-h-screen bg-gray-50">
       <div className="bg-white rounded-xl shadow border">
 
         {/* HEADER */}

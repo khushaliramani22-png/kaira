@@ -2,153 +2,166 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Search, ChevronLeft, ChevronRight, User, Phone, Calendar } from "lucide-react";
 
-export default function UserDetailPage() {
-  const params = useParams();
+export default function UsersListPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [orders, setOrders] = useState([]);
+  
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
-  const fetchUserDetails = useCallback(async () => {
-    if (!params.id) return;
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
 
-    // ૧. યુઝરની પ્રોફાઇલ ફેચ કરો
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", params.id)
-      .single();
+      let query = supabase
+        .from("profiles")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
-    setUser(profileData);
+      if (searchQuery) {
+        query = query.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
+      }
 
-    // ૨. યુઝરના તમામ ઓર્ડર્સ ફેચ કરો (order_number સાથે)
-    const { data: orderData } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", params.id)
-      .order("created_at", { ascending: false });
+      const { data, error, count } = await query;
 
-    setOrders(orderData || []);
-    setLoading(false);
-  }, [params.id]);
+      if (error) throw error;
+      setUsers(data || []);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching users:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
-    fetchUserDetails();
-  }, [fetchUserDetails]);
+    fetchUsers();
+  }, [fetchUsers]);
 
-  if (loading) return <div className="p-10 text-center animate-pulse text-gray-500 font-bold">Loading User Details...</div>;
-  if (!user) return <div className="p-10 text-center text-red-500">User not found.</div>;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="mb-6 flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition"
-      >
-        ← Back to Users
-      </button>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* Left Side: User Profile Card */}
-        <div className="lg:col-span-1">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
-            <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-4 border-4 border-white shadow-md">
-              {user.full_name ? user.full_name[0].toUpperCase() : "U"}
-            </div>
-            <h2 className="text-xl font-extrabold text-gray-800">{user.full_name || "N/A"}</h2>
-            <p className="text-sm text-gray-400 font-medium">Customer</p>
-
-            <div className="mt-8 space-y-4 text-left border-t pt-6">
-              <div>
-                <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">Email Address</p>
-                <p className="text-sm font-bold text-gray-700 break-all">{user.email}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">Phone Number</p>
-                <p className="text-sm font-bold text-gray-700">{user.phone || "Not Provided"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">Member Since</p>
-                <p className="text-sm font-bold text-gray-700">{new Date(user.created_at).toLocaleDateString("en-IN")}</p>
-              </div>
-            </div>
-          </div>
+      {/* Header & Search Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Users Management</h1>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">{totalCount} Total Customers</p>
         </div>
 
-        {/* Right Side: Order History Table */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b flex justify-between items-center bg-gray-50/30">
-              <h3 className="font-black text-gray-800 flex items-center gap-2">
-                📦 Order History
-              </h3>
-              <span className="bg-gray-900 text-white text-[10px] px-3 py-1 rounded-full font-black">
-                {orders.length} ORDERS
-              </span>
-            </div>
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search name or email..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all shadow-sm"
+          />
+        </div>
+      </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-gray-50/50 text-[10px] uppercase tracking-widest text-gray-400 font-black">
-                    <th className="p-5">Order ID</th>
-                    <th className="p-5">Date</th>
-                    <th className="p-5">Amount</th>
-                    <th className="p-5">Status</th>
-                    <th className="p-5 text-center">Action</th>
+      {/* Table Section */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 text-[10px] uppercase tracking-widest text-gray-400 font-black border-b">
+                <th className="p-5">User</th>
+                <th className="p-5 hidden sm:table-cell">Email</th>
+                <th className="p-5 hidden lg:table-cell">Phone</th>
+                <th className="p-5 hidden md:table-cell">Joined Date</th>
+                <th className="p-5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="p-20 text-center animate-pulse text-gray-400 font-bold uppercase tracking-widest text-xs">
+                    Updating list...
+                  </td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="p-20 text-center text-gray-300 font-bold uppercase tracking-widest text-xs">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id} className="hover:bg-blue-50/20 transition-all group">
+                    <td className="p-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-sm font-black border-2 border-white shadow-sm uppercase">
+                          {user.full_name ? user.full_name[0] : "U"}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-800">{user.full_name || "N/A"}</span>
+                          {/* Mobile Only Info */}
+                          <span className="text-[10px] text-gray-400 sm:hidden">{user.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-5 text-sm font-medium text-gray-600 hidden sm:table-cell">
+                      {user.email}
+                    </td>
+                    <td className="p-5 text-sm font-medium text-gray-500 hidden lg:table-cell">
+                      {user.phone || "Not Provided"}
+                    </td>
+                    <td className="p-5 text-xs font-bold text-gray-400 hidden md:table-cell">
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString("en-IN") : "N/A"}
+                    </td>
+                    <td className="p-5 text-center">
+                      <button
+                        onClick={() => router.push(`/admin/users/${user.id}`)}
+                        className="text-[10px] font-black py-2 px-4 border-2 border-gray-100 rounded-xl hover:bg-gray-900 hover:text-white transition-all uppercase"
+                      >
+                        View Profile
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-blue-50/20 transition-all group">
-                      <td className="p-5">
-                        <span className="font-mono text-xs font-black text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                          {order.order_number
-                            ? `#${order.order_number}`
-                            : `#${String(order.id).slice(-6).toUpperCase()}`
-                          }
-                        </span>
-                      </td>
-                      <td className="p-5 text-xs font-bold text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString("en-IN")}
-                      </td>
-                      <td className="p-5 text-sm font-black text-gray-900">
-                        ₹{order.total_amount}
-                      </td>
-                      <td className="p-5 text-sm">
-                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                            order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-800 text-white'
-                          }`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="p-5 text-center">
-                        <button
-                          onClick={() => router.push(`/admin/orders/${order.order_number || order.id}`)}
-                          className="text-[10px] font-black py-2 px-4 border-2 border-gray-100 rounded-xl hover:bg-gray-900 hover:text-white transition-all"
-                        >
-                          VIEW DETAILS
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {orders.length === 0 && (
-                <div className="p-20 text-center text-gray-300 font-bold uppercase tracking-widest text-xs">
-                  No orders yet
-                </div>
+                ))
               )}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
 
+        {/* Pagination Section */}
+        <div className="p-5 border-t bg-gray-50/30 flex justify-between items-center">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          <div className="flex gap-2">
+            <button
+              disabled={currentPage === 1 || loading}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="p-2 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-30 transition-all shadow-sm"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              disabled={currentPage === totalPages || totalPages === 0 || loading}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="p-2 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-30 transition-all shadow-sm"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

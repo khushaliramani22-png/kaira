@@ -20,7 +20,7 @@ const colorMap = {
   "red": "#FF0000",
   "green": "#008000",
   "beige": "#F5F5DC",
-  "olive": "#556B2F", 
+  "olive": "#556B2F",
   "olive green": "#556B2F",
 };
 
@@ -67,7 +67,7 @@ export default function ProductDetail() {
             .from("products")
             .select("id, color, image1")
             .eq("group_id", prod.group_id);
-          
+
           if (variants && variants.length > 0) {
             setRelatedVariants(variants);
           } else {
@@ -90,7 +90,7 @@ export default function ProductDetail() {
             .eq("user_id", currentUserId)
             .eq("product_id", id)
             .single();
-          
+
           setIsWishlisted(!!wishlistData);
         }
       } catch (err) {
@@ -156,7 +156,7 @@ export default function ProductDetail() {
         <div className="col-12 col-md-6">
           <p className="text-muted text-uppercase small mb-1">{product.brand || "KAIRA"}</p>
           <h2 className="fw-bold mb-2 h3">{product.name}</h2>
-          
+
           {/* કિંમત અને ડિસ્કાઉન્ટ સેક્શન */}
           <div className="d-flex align-items-center mb-4">
             {product.old_price && (
@@ -181,10 +181,10 @@ export default function ProductDetail() {
                 const isActive = id === v.id;
                 const hexColor = colorMap[variantColor?.toLowerCase()] || "#ccc";
                 return (
-                  <button 
-                    key={v.id} 
-                    onClick={() => router.push(`/shop/${v.id}`)} 
-                    className={`rounded-circle border-2 ${isActive ? 'border-dark shadow-lg scale-110' : 'border-light-subtle'}`} 
+                  <button
+                    key={v.id}
+                    onClick={() => router.push(`/shop/${v.id}`)}
+                    className={`rounded-circle border-2 ${isActive ? 'border-dark shadow-lg scale-110' : 'border-light-subtle'}`}
                     style={{ width: "42px", height: "42px", backgroundColor: hexColor, cursor: 'pointer', padding: '2px', transition: 'all 0.2s ease' }}
                   >
                     {isActive && <div className="w-100 h-100 rounded-circle border border-white" style={{ background: 'rgba(255,255,255,0.1)' }}></div>}
@@ -204,17 +204,53 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* એક્શન બટન્સ */}
-          <div className="d-flex gap-3 mb-4">
-            <button onClick={updateCartInDB} disabled={loading} className="btn btn-dark btn-lg flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-3 rounded-3 shadow-sm">
-              <AiOutlineShoppingCart size={22} />
-              {loading ? "Adding..." : "Buy Now"}
-            </button>
-            <button onClick={toggleWishlist} className={`btn btn-lg border rounded-3 px-3 ${isWishlisted ? "text-danger border-danger shadow-sm" : "text-muted"}`}>
-              {isWishlisted ? <AiFillHeart size={24} /> : <AiOutlineHeart size={24} />}
-            </button>
+          {/* સ્ટોક સ્ટેટસ */}
+          <div className="mb-3">
+            {product.stock > 0 ? (
+              <div className="d-flex align-items-center gap-2">
+                <span className={`badge ${product.stock <= 5 ? "bg-warning text-dark" : "bg-light text-success border"}`}>
+                  {product.stock <= 5 ? `Only ${product.stock} left!` : "In Stock"}
+                </span>
+                {product.stock > 5 && <span className="text-muted small">({product.stock} units available)</span>}
+              </div>
+            ) : (
+              <span className="badge bg-danger">Out of Stock</span>
+            )}
           </div>
 
+          {/* એક્શન બટન્સ */}
+          {/* એક્શન બટન્સ અને સ્ટોક સ્ટેટસ */}
+          <div className="mb-4">
+            {/* સ્ટોક મેસેજ */}
+            <div className="mb-2">
+              {product.stock > 0 ? (
+                <span className={`small fw-bold ${product.stock <= 5 ? "text-warning" : "text-success"}`}>
+                  {product.stock <= 5 ? `⚠️ Only ${product.stock} units left!` : "✓ In Stock"}
+                </span>
+              ) : (
+                <span className="small fw-bold text-danger">✕ Out of Stock</span>
+              )}
+            </div>
+
+            <div className="d-flex gap-3">
+              <button
+                onClick={updateCartInDB}
+                disabled={loading || product.stock <= 0}
+                className={`btn btn-lg flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-3 rounded-3 shadow-sm ${product.stock > 0 ? "btn-dark" : "btn-secondary opacity-50"
+                  }`}
+              >
+                <AiOutlineShoppingCart size={22} />
+                {loading ? "Adding..." : product.stock > 0 ? "Buy Now" : "Currently Unavailable"}
+              </button>
+
+              <button
+                onClick={toggleWishlist}
+                className={`btn btn-lg border rounded-3 px-3 ${isWishlisted ? "text-danger border-danger shadow-sm" : "text-muted"}`}
+              >
+                {isWishlisted ? <AiFillHeart size={24} /> : <AiOutlineHeart size={24} />}
+              </button>
+            </div>
+          </div>
           {/* Accordion Details */}
           <div className="accordion accordion-flush border-top mt-4" id="productAccordion">
             <div className="accordion-item">
@@ -225,7 +261,7 @@ export default function ProductDetail() {
                 <div className="accordion-body px-0 py-2 text-muted small" style={{ whiteSpace: "pre-wrap" }}>{product.description || "No description available."}</div>
               </div>
             </div>
-        {product.size_fit && (
+            {product.size_fit && (
               <div className="accordion-item">
                 <h2 className="accordion-header">
                   <button className="accordion-button collapsed fw-bold text-uppercase px-0 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSize">Size and Fit</button>
