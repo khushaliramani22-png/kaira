@@ -29,7 +29,7 @@ export default function CheckoutPage() {
   const shippingCharge = subtotal > 1000 ? 0 : 50;
   const totalAmount = subtotal + shippingCharge;
 
-  // ૧. Invoice PDF Function (Safe Implementation)
+  // ૧. Invoice PDF Function
   const generateInvoicePDF = (orderData, items) => {
     try {
       const doc = new jsPDF();
@@ -71,10 +71,11 @@ export default function CheckoutPage() {
 
       doc.save(`Kaira_Invoice_${orderData.id.slice(0, 8)}.pdf`);
     } catch (pdfError) {
-      console.error("PDF Error (But order is safe):", pdfError);
+      console.error("PDF Error:", pdfError);
     }
   };
 
+  // ૨. ઓર્ડર પ્લેસ કરવાનું મુખ્ય ફંક્શન
   const handleOrder = async () => {
     if (!formData.name || !formData.phone || !formData.address) {
       alert("Please fill all required fields.");
@@ -87,7 +88,7 @@ export default function CheckoutPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Please login to place an order.");
 
-      // ૨. ઓર્ડર સેવ (Orders Table)
+      // ઓર્ડર સેવ (Orders Table)
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -108,7 +109,7 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError;
 
-      // ૩. આઈટમ્સ સેવ (Order Items Table)
+      // આઈટમ્સ સેવ (Order Items Table)
       const itemsToInsert = cartItems.map((item) => ({
         order_id: orderData.id,
         product_id: item.product_id || item.id,
@@ -122,25 +123,38 @@ export default function CheckoutPage() {
       const { error: itemError } = await supabase.from("order_items").insert(itemsToInsert);
       if (itemError) throw itemError;
 
-      console.log("Order saved! Now opening popup...");
-
-      // ૪. ઇનવોઇસ જનરેટ કરો
+      // ઇનવોઇસ ડાઉનલોડ
       generateInvoicePDF(orderData, itemsToInsert);
 
-      // ૫. મેશો સ્ટાઈલ સક્સેસ પોપ-અપ
+      // ૩. Meesho Style Success Popup
       Swal.fire({
-        title: 'Order Placed!',
-        text: 'Your order is successful. Your invoice is downloading...',
-        icon: 'success',
+        html: `
+          <div style="background-color: #03a66d; margin: -20px; padding: 50px 20px; color: white; text-align: center;">
+            <div style="margin-bottom: 20px;">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h2 style="font-weight: 800; font-size: 30px; margin-bottom: 10px;">Order Confirmed!</h2>
+            <p style="font-size: 16px; opacity: 0.9;">Your order was placed successfully.</p>
+            <div style="margin-top: 20px; background: rgba(255,255,255,0.2); display: inline-block; padding: 8px 20px; border-radius: 50px; font-weight: bold;">
+              Invoice Downloaded ✅
+            </div>
+          </div>
+        `,
+        background: '#03a66d',
+        showConfirmButton: true,
         confirmButtonText: 'GO TO MY ORDERS',
-        confirmButtonColor: '#000',
+        confirmButtonColor: '#000000',
         allowOutsideClick: false,
+        timer: 4000, // ૪ સેકન્ડ પછી ઓટોમેટિક રીડાયરેક્ટ
+        timerProgressBar: true,
+        width: '100%',
+        padding: '0',
       }).then((result) => {
-        if (result.isConfirmed) {
-          clearCart();
-          // ડાયરેક્ટ રીડાયરેક્ટ
-          window.location.href = "/user-order";
-        }
+        clearCart();
+        window.location.href = "/user-order";
       });
 
     } catch (error) {
@@ -157,7 +171,6 @@ export default function CheckoutPage() {
         <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4 text-center md:text-left">Checkout</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Form */}
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Shipping Details</h3>
@@ -179,7 +192,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Summary Card */}
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-black sticky top-10">
               <h3 className="font-black mb-6 uppercase italic text-lg">Order Summary</h3>
