@@ -8,6 +8,8 @@ import {
   AiOutlineShoppingCart,
   AiOutlineHeart,
   AiFillHeart,
+  AiFillStar,
+  AiOutlineStar,
 } from "react-icons/ai";
 
 // કલર મેપિંગ
@@ -39,11 +41,16 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  // ૧. મુખ્ય useEffect: ડેટા ફેચિંગ
+  // reviews states
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "", name: "" });
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // ૧. ડેટા ફેચિંગ
   useEffect(() => {
     const loadProductData = async () => {
       try {
-        // પ્રોડક્ટ ડેટા ફેચ કરો (price, old_price, discount બધું જ select(*) માં આવી જશે)
         const { data: prod, error } = await supabase
           .from("products")
           .select("*")
@@ -61,36 +68,34 @@ export default function ProductDetail() {
           setSelectedSize(prod.size[0]);
         }
 
-        // વેરિઅન્ટ્સ ફેચ કરવાનું લોજિક
         if (prod.group_id) {
           const { data: variants } = await supabase
             .from("products")
             .select("id, color, image1")
             .eq("group_id", prod.group_id);
-
-          if (variants && variants.length > 0) {
-            setRelatedVariants(variants);
-          } else {
-            setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
-          }
+          setRelatedVariants(variants || []);
         } else {
-          // જો group_id ન હોય તો સિંગલ બટન બતાવવા માટે
           setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
         }
 
-        // યુઝર સેશન અને વિઝલિસ્ટ સ્ટેટસ
+        const { data: approvedReviews } = await supabase
+          .from("product_reviews")
+          .select("*")
+          .eq("product_id", id)
+          .eq("status", "approved")
+          .order("created_at", { ascending: false });
+
+        if (approvedReviews) setReviews(approvedReviews);
+
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const currentUserId = session.user.id;
-          setUserId(currentUserId);
-
+          setUserId(session.user.id);
           const { data: wishlistData } = await supabase
             .from("wishlist")
             .select("*")
-            .eq("user_id", currentUserId)
+            .eq("user_id", session.user.id)
             .eq("product_id", id)
             .single();
-
           setIsWishlisted(!!wishlistData);
         }
       } catch (err) {
@@ -98,12 +103,67 @@ export default function ProductDetail() {
       }
     };
 
-    if (id) {
-      loadProductData();
-    }
+    if (id) loadProductData();
   }, [id]);
 
-  // ૨. Wishlist Toggle
+  // રિવ્યુ સબમિટ વિથ લોગિન ચેક
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+
+    // લોગિન ચેક
+    if (!userId) {
+      alert("Please login to submit a review!");
+      router.push("/login");
+      return;
+    }
+
+    if (!newReview.name || !newReview.comment) return alert("Please fill all fields");
+    setReviewLoading(true);
+
+    let imageUrl = null;
+
+    try {
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `review-images/${Date.now()}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(fileName, selectedFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicData } = supabase.storage
+          .from("products")
+          .getPublicUrl(fileName);
+
+        imageUrl = publicData.publicUrl;
+      }
+
+      const { error: insertError } = await supabase.from("product_reviews").insert([
+        {
+          product_id: id,
+          customer_name: newReview.name,
+          rating: newReview.rating,
+          comment: newReview.comment,
+          review_image: imageUrl,
+          status: "pending",
+          user_id: userId // યુઝર આઈડી પણ સેવ કરીએ
+        }
+      ]);
+
+      if (insertError) throw insertError;
+
+      alert("Review submitted! Admin approval pending.");
+      setNewReview({ rating: 5, comment: "", name: "" });
+      setSelectedFile(null);
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   const toggleWishlist = async () => {
     if (!userId) { alert("Please login first!"); return; }
     try {
@@ -117,7 +177,6 @@ export default function ProductDetail() {
     } catch (err) { console.error("Wishlist error:", err.message); }
   };
 
-  // ૩. Cart Update
   const updateCartInDB = async () => {
     if (!userId) { alert("Please login first!"); return; }
     setLoading(true);
@@ -156,6 +215,20 @@ export default function ProductDetail() {
         <div className="col-12 col-md-6">
           <p className="text-muted text-uppercase small mb-1">{product.brand || "KAIRA"}</p>
           <h2 className="fw-bold mb-2 h3">{product.name}</h2>
+
+          {/* એવરેજ રેટિંગ ડિસ્પ્લે */}
+          <div className="d-flex align-items-center gap-2 mb-3">
+            <div className="bg-success text-white px-2 py-1 rounded small d-flex align-items-center gap-1 fw-bold">
+              {reviews.length > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1) : "5.0"} <AiFillStar size={14} />
+            </div>
+            <span className="text-muted small">({reviews.length} Verified Reviews)</span>
+          </div>
+
+          <div className="d-flex align-items-center mb-4">
+            {product.old_price && <span className="text-muted text-decoration-line-through me-2">₹{product.old_price}</span>}
+            <h3 className="text-dark fw-bold mb-0">₹{product.price}</h3>
+            {product.discount && <span className="badge bg-success ms-3">{product.discount}% OFF</span>}
+          </div>
 
           {/* કિંમત અને ડિસ્કાઉન્ટ સેક્શન */}
           <div className="d-flex align-items-center mb-4">
@@ -218,7 +291,7 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* એક્શન બટન્સ */}
+
           {/* એક્શન બટન્સ અને સ્ટોક સ્ટેટસ */}
           <div className="mb-4">
             {/* સ્ટોક મેસેજ */}
@@ -282,6 +355,68 @@ export default function ProductDetail() {
                 </div>
               </div>
             )}
+          </div>
+          {/* --- રિવ્યુ સેક્શન --- */}
+          <div className="mt-5 border-top pt-4">
+            <h5 className="fw-black uppercase italic mb-4">Customer Experience ({reviews.length})</h5>
+
+            <div className="mb-5">
+              {reviews.length > 0 ? reviews.map(rev => (
+                <div key={rev.id} className="mb-4 border-bottom pb-3">
+                  <div className="d-flex align-items-center gap-2 mb-1">
+                    <div className="text-warning d-flex">
+                      {[...Array(5)].map((_, i) => i < rev.rating ? <AiFillStar key={i} /> : <AiOutlineStar key={i} />)}
+                    </div>
+                    <span className="fw-bold small">{rev.customer_name}</span>
+                  </div>
+                  <p className="text-muted small mb-1 italic">"{rev.comment}"</p>
+                  
+                  {rev.review_image && (
+                    <div className="mt-2">
+                      <img src={rev.review_image} alt="Customer" className="rounded-3 shadow-sm" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  
+                  <small className="text-muted d-block mt-1" style={{ fontSize: '10px' }}>
+                    Verified Buyer • {new Date(rev.created_at).toLocaleDateString()}
+                  </small>
+                </div>
+              )) : <p className="text-muted small italic">No reviews yet.</p>}
+            </div>
+
+            {/* રિવ્યુ ફોર્મ - લોગિન હોય તો જ દેખાશે */}
+            <div className="bg-light p-4 rounded-4 shadow-sm">
+              {!userId ? (
+                <div className="text-center py-2">
+                  <p className="mb-3 small fw-bold text-muted uppercase tracking-wider">Login to share your experience</p>
+                  <button onClick={() => router.push('/login')} className="btn btn-dark btn-sm rounded-pill px-4 fw-bold italic">
+                    Login Now
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h6 className="fw-bold mb-3 italic">Rate this outfit</h6>
+                  <form onSubmit={handleReviewSubmit}>
+                    <div className="mb-3 d-flex gap-2">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <AiFillStar key={s} size={24} onClick={() => setNewReview({ ...newReview, rating: s })} style={{ cursor: 'pointer', color: s <= newReview.rating ? '#FFC107' : '#D1D5DB' }} />
+                      ))}
+                    </div>
+                    <input type="text" placeholder="Your Name" className="form-control mb-2 rounded-3 border-0 shadow-sm" required value={newReview.name} onChange={e => setNewReview({ ...newReview, name: e.target.value })} />
+                    <textarea placeholder="Tell us about the fabric and fit..." className="form-control mb-2 rounded-3 border-0 shadow-sm" rows="3" required value={newReview.comment} onChange={e => setNewReview({ ...newReview, comment: e.target.value })}></textarea>
+                    
+                    <div className="mb-3">
+                      <label className="small fw-bold text-muted mb-1">Add Photo (Optional)</label>
+                      <input type="file" accept="image/*" className="form-control form-control-sm rounded-3 border-0 shadow-sm" onChange={(e) => setSelectedFile(e.target.files[0])} />
+                    </div>
+
+                    <button disabled={reviewLoading} className="btn btn-dark w-100 rounded-pill fw-bold uppercase italic">
+                      {reviewLoading ? "Submitting..." : "Post Review"}
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

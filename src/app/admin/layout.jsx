@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react' // useEffect ઉમેર્યું
+import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -8,20 +8,18 @@ export default function AdminLayout({ children }) {
   const supabase = createClient()
 
   const [isProductOpen, setIsProductOpen] = useState(false)
-  const [adminEmail, setAdminEmail] = useState('Loading...') // ઈમેલ માટે સ્ટેટ
+  const [adminEmail, setAdminEmail] = useState('Loading...')
 
-  // લોગિન થયેલ એડમિનનો ડેટા મેળવવા માટે
   useEffect(() => {
     const getAdminData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        setAdminEmail(user.email) // યુઝરનો સાચો ઈમેલ સેટ થશે
+        setAdminEmail(user.email)
       }
     };
     getAdminData();
   }, [supabase]);
 
-  // logout function
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/admin/login')
@@ -29,9 +27,9 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="d-flex">
-      {/* Sidebar - (પહેલા જેવો જ રહેશે) */}
+      {/* Sidebar - Added 'no-print' class for clean printing */}
       <div
-        className="bg-black text-white p-3"
+        className="bg-black text-white p-3 no-print"
         style={{ width: "240px", minHeight: "100vh", position: "sticky", top: 0 }}
       >
         <h4 className="mb-4 text-center border-bottom pb-3">Kiara Admin</h4>
@@ -42,6 +40,8 @@ export default function AdminLayout({ children }) {
               📊 Dashboard
             </a>
           </li>
+          
+          {/* Products Dropdown */}
           <li className="mb-2">
             <div
               onClick={() => setIsProductOpen(!isProductOpen)}
@@ -51,7 +51,6 @@ export default function AdminLayout({ children }) {
               <div className="d-flex align-items-center">
                 <span className="me-2">📦</span> Products
               </div>
-              {/* એરો આયકોન જે ફરશે */}
               <span style={{
                 transform: isProductOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: '0.3s',
@@ -59,7 +58,6 @@ export default function AdminLayout({ children }) {
               }}>▼</span>
             </div>
 
-            {/* Sub-menu (Dropdown) */}
             {isProductOpen && (
               <ul className="list-unstyled ms-4 mt-1">
                 <li className="mb-1">
@@ -72,25 +70,31 @@ export default function AdminLayout({ children }) {
                     • Add New Product
                   </a>
                 </li>
-                <li className="mb-1">
-                  <a href="/admin/products/edit/[id]" className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white">
-                    • Edit Product
-                  </a>
-                </li>
               </ul>
             )}
           </li>
-
-
 
           <li className="mb-3">
             <a href="/admin/orders" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
               📜 Orders
             </a>
           </li>
+
+          {/* --- ન્યૂઝલેટર ઓપ્શન અહીં એડ કર્યું છે --- */}
+          <li className="mb-3">
+            <a href="/admin/subscribers" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+              📧 Subscribers
+            </a>
+          </li>
+
           <li className="mb-3">
             <a href="/admin/users" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
               👥 Users
+            </a>
+          </li>
+          <li className="mb-3">
+            <a href="/admin/reviews" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+              ⭐ Reviews
             </a>
           </li>
           <li className="mb-3">
@@ -98,22 +102,20 @@ export default function AdminLayout({ children }) {
               💬 Messages
             </a>
           </li>
-
         </ul>
       </div>
 
       {/* Main Content Area */}
-     <div className="flex-grow-1 bg-light">
+      <div className="flex-grow-1 bg-light">
         
-        {/* Admin Header */}
-        <header className="navbar navbar-white bg-white border-bottom px-4 py-2 shadow-sm">
+        {/* Admin Header - Added 'no-print' class */}
+        <header className="navbar navbar-white bg-white border-bottom px-4 py-2 shadow-sm no-print">
           <div className="container-fluid d-flex justify-content-between align-items-center">
             <span className="navbar-text fw-bold text-dark">
               Welcome back, Admin
             </span>
             
             <div className="d-flex align-items-center">
-              {/* અહીં હવે ડાયનેમિક ઈમેલ દેખાશે */}
               <span className="me-3 text-muted small">{adminEmail}</span>
               <button 
                 onClick={handleLogout}
