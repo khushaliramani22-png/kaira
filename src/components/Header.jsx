@@ -151,7 +151,10 @@ export default function Header() {
                                   href={`/shop?category=${cat.toLowerCase().replace(/ /g, '-')}`}
                                   className="d-block px-4 py-2 text-decoration-none text-dark hover-bg-white/40"
                                   style={{ fontSize: '13px', letterSpacing: '0.05em', fontWeight: '400' }}
-                                  onClick={() => setIsShopOpen(false)}
+                                  onClick={() => {
+                                    setIsShopOpen(false);   
+                                    closeMobileMenu();      
+                                  }}
                                 >
                                   {cat}
                                 </Link>
