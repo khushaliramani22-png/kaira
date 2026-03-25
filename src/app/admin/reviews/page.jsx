@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { AiFillStar, AiOutlineCheck, AiOutlineDelete, AiOutlineEye } from "react-icons/ai";
+import { 
+  AiFillStar, 
+  AiOutlineCheck, 
+  AiOutlineDelete, 
+  AiOutlineLink 
+} from "react-icons/ai";
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -15,17 +20,17 @@ export default function AdminReviews() {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      // રિવ્યુની સાથે પ્રોડક્ટનું નામ પણ ફેચ કરીએ
+      // products!product_id નો ઉપયોગ કરીને કન્ફ્યુઝન દૂર કર્યું છે
       const { data, error } = await supabase
         .from("product_reviews")
         .select(`
           *,
-          products ( name )
+          products!product_id ( name )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      if (data) setReviews(data);
+      setReviews(data || []);
     } catch (err) {
       console.error("Fetch error:", err.message);
     } finally {
@@ -44,7 +49,7 @@ export default function AdminReviews() {
       alert("Review Approved!");
       fetchReviews();
     } else {
-      alert("Error approving review: " + error.message);
+      alert("Error: " + error.message);
     }
   };
 
@@ -65,19 +70,19 @@ export default function AdminReviews() {
   if (loading) return <div className="p-5 text-center fw-bold">Loading reviews...</div>;
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="container-fluid py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
         <div>
-          <h2 className="fw-black uppercase italic tracking-tighter mb-0">Review Moderation</h2>
-          <p className="text-muted small">Manage customer feedback for Kaira products</p>
+          <h2 className="fw-black text-uppercase italic tracking-tighter mb-0">Review Moderation</h2>
+          <p className="text-muted small mb-0">Manage customer feedback for Kaira</p>
         </div>
         <span className="badge bg-dark px-3 py-2 shadow-sm">{reviews.length} Total Reviews</span>
       </div>
 
-      <div className="table-responsive shadow-sm rounded-4 overflow-hidden border">
-        <table className="table table-hover align-middle bg-white mb-0">
+      <div className="table-responsive shadow-sm rounded-4 border bg-white">
+        <table className="table table-hover align-middle mb-0">
           <thead className="table-light">
-            <tr className="small uppercase tracking-wider">
+            <tr className="small text-uppercase fw-bold">
               <th className="ps-4">Product & Image</th>
               <th>Customer</th>
               <th>Rating</th>
@@ -91,22 +96,27 @@ export default function AdminReviews() {
               <tr key={rev.id}>
                 <td className="ps-4">
                   <div className="d-flex align-items-center gap-3">
-                    {/* જો રિવ્યુમાં ઈમેજ હોય તો અહીં દેખાશે */}
                     {rev.review_image ? (
-                      <a href={rev.review_image} target="_blank" rel="noreferrer">
+                      <div className="position-relative">
                         <img 
                           src={rev.review_image} 
                           alt="Review" 
                           className="rounded-2 border shadow-sm" 
                           style={{ width: "45px", height: "45px", objectFit: "cover" }} 
                         />
-                      </a>
-                    ) : (
-                      <div className="bg-light rounded-2 border d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px" }}>
-                        <span className="text-muted" style={{ fontSize: '10px' }}>No Pic</span>
+                        <a 
+                          href={rev.review_image} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-all rounded-2 text-white"
+                        >
+                          <AiOutlineLink size={14} />
+                        </a>
                       </div>
+                    ) : (
+                      <div className="bg-light rounded-2 border text-muted d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px", fontSize: "10px" }}>No Pic</div>
                     )}
-                    <span className="fw-bold text-dark small">{rev.products?.name || "Deleted Product"}</span>
+                    <span className="fw-bold text-dark small">{rev.products?.name || "Product Not Found"}</span>
                   </div>
                 </td>
                 <td><span className="small text-muted fw-medium">{rev.customer_name}</span></td>
@@ -118,7 +128,7 @@ export default function AdminReviews() {
                   </div>
                 </td>
                 <td style={{ maxWidth: "250px" }}>
-                  <p className="small mb-0 text-dark italic" style={{ fontSize: '13px' }}>"{rev.comment}"</p>
+                  <p className="small mb-0 text-dark italic">"{rev.comment}"</p>
                 </td>
                 <td>
                   <span className={`badge rounded-pill px-3 py-2 border ${
@@ -141,8 +151,7 @@ export default function AdminReviews() {
                     )}
                     <button 
                       onClick={() => deleteReview(rev.id)} 
-                      className="btn btn-sm btn-outline-danger border-0 hover-bg-danger"
-                      title="Delete Review"
+                      className="btn btn-sm btn-outline-danger border-0"
                     >
                       <AiOutlineDelete size={18} />
                     </button>
@@ -154,9 +163,7 @@ export default function AdminReviews() {
         </table>
         
         {reviews.length === 0 && (
-          <div className="p-5 text-center text-muted italic bg-white">
-            <p className="mb-0">No reviews found in database.</p>
-          </div>
+          <div className="p-5 text-center text-muted italic">No reviews found.</div>
         )}
       </div>
     </div>
