@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, useRef } from "react"; 
-import Link from "next/link"; 
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
-import { supabase } from "@/lib/supabase"; 
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
@@ -10,8 +10,8 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  
-  const dropdownRef = useRef(null); 
+
+  const dropdownRef = useRef(null);
   const shopRef = useRef(null);
   const router = useRouter();
 
@@ -21,20 +21,30 @@ export default function Header() {
     "BLAZERS", "TROUSERS", "JEANS", "LIVIN PANTS", "SKIRTS & SKORTS"
   ];
 
+  // મોબાઈલ મેનુ બંધ કરવા માટેનું ફંક્શન
+  const closeMobileMenu = () => {
+    if (typeof window !== "undefined") {
+      const menuElement = document.getElementById('offcanvasNavbar');
+      if (menuElement) {
+        import('bootstrap').then((bootstrap) => {
+          const bsOffcanvas = bootstrap.Offcanvas.getInstance(menuElement) || new bootstrap.Offcanvas(menuElement);
+          bsOffcanvas.hide();
+        });
+      }
+    }
+  };
+
   useEffect(() => {
-    // 1. Get initial user
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
 
-    // 2. Auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
     });
 
-    // 3. Click outside logic for both dropdowns
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
@@ -55,6 +65,7 @@ export default function Header() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsDropdownOpen(false);
+    closeMobileMenu(); // લોગઆઉટ વખતે મેનુ બંધ થશે
     router.push("/login");
   };
 
@@ -104,59 +115,60 @@ export default function Header() {
                 <div className="offcanvas-body">
                   <ul className="navbar-nav gap-4">
                     <li className="nav-item">
-                      <Link href="/" className="nav-link active">
+                      <Link href="/" className="nav-link active" onClick={closeMobileMenu}>
                         Home
                       </Link>
+
                     </li>
 
-                  {/* SHOP DROPDOWN START */}
-            <li className="nav-item position-relative" ref={shopRef}>
-              <button 
-                onClick={() => setIsShopOpen(!isShopOpen)}
-                className="nav-link border-0 bg-transparent text-uppercase small tracking-widest"
-                style={{ fontWeight: '500' }}
-              >
-                Shop {isShopOpen ? '▴' : '▾'}
-              </button>
+                    {/* SHOP DROPDOWN START */}
+                    <li className="nav-item position-relative" ref={shopRef}>
+                      <button
+                        onClick={() => setIsShopOpen(!isShopOpen)}
+                        className="nav-link border-0 bg-transparent text-uppercase small tracking-widest"
+                        style={{ fontWeight: '500' }}
+                      >
+                        Shop {isShopOpen ? '▴' : '▾'}
+                      </button>
 
-              {isShopOpen && (
-                <div 
-                  className="position-absolute shadow-xl py-4 z-50 animate-in fade-in slide-in-from-top-1" 
-                  style={{ 
-                    backgroundColor: 'white', 
-                    width: '260px', 
-                    top: '100%', 
-                    left: '0',
-                    border: '1px solid #e5d9cc',
-                    zIndex: 9999, 
-                   display: 'block'
-                  }}
-                >
-                  <ul className="list-unstyled m-0">
-                    {shopCategories.map((cat, index) => (
-                      <li key={index}>
-                        <Link 
-                          href={`/shop?category=${cat.toLowerCase().replace(/ /g, '-')}`}
-                          className="d-block px-4 py-2 text-decoration-none text-dark hover-bg-white/40"
-                          style={{ fontSize: '13px', letterSpacing: '0.05em', fontWeight: '400' }}
-                          onClick={() => setIsShopOpen(false)}
+                      {isShopOpen && (
+                        <div
+                          className="position-absolute shadow-xl py-4 z-50 animate-in fade-in slide-in-from-top-1"
+                          style={{
+                            backgroundColor: 'white',
+                            width: '260px',
+                            top: '100%',
+                            left: '0',
+                            border: '1px solid #e5d9cc',
+                            zIndex: 9999,
+                            display: 'block'
+                          }}
                         >
-                          {cat}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </li>
-            {/* SHOP DROPDOWN END */}
+                          <ul className="list-unstyled m-0">
+                            {shopCategories.map((cat, index) => (
+                              <li key={index}>
+                                <Link
+                                  href={`/shop?category=${cat.toLowerCase().replace(/ /g, '-')}`}
+                                  className="d-block px-4 py-2 text-decoration-none text-dark hover-bg-white/40"
+                                  style={{ fontSize: '13px', letterSpacing: '0.05em', fontWeight: '400' }}
+                                  onClick={() => setIsShopOpen(false)}
+                                >
+                                  {cat}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </li>
+                    {/* SHOP DROPDOWN END */}
 
-                  <li className="nav-item">
+                    <li className="nav-item">
 
-  <Link href="/blog" className="nav-link">
-    Blog
-  </Link>
-</li>
+                      <Link href="/blog" className="nav-link" onClick={closeMobileMenu}>
+                        Blog
+                      </Link>
+                    </li>
 
                     <li className="nav-item dropdown">
                       <a
@@ -169,18 +181,18 @@ export default function Header() {
                         Page
                       </a>
                       <ul className="dropdown-menu">
-                        <li><Link href="/about" className="dropdown-item">About</Link></li>
-                        <li><Link href="/cart" className="dropdown-item">Cart</Link></li>
-                        <li><Link href="/checkout" className="dropdown-item">Checkout</Link></li>
-                        <li><Link href="/user-order" className="dropdown-item">My Order</Link></li>
-                        <li><Link href="/contact" className="dropdown-item">Contact</Link></li>
-                        <li><Link href="/order-tracking" className="dropdown-item">Order Tracking</Link></li>
+                        <li><Link href="/about" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>About</Link></li>
+                        <li><Link href="/cart" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Cart</Link></li>
+                        <li><Link href="/checkout" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Checkout</Link></li>
+                        <li><Link href="/user-order" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}> My Orders</Link></li>
+                        <li><Link href="/contact" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Contact</Link></li>
+                        <li><Link href="/order-tracking" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Order Tracking</Link></li>
                       </ul>
                     </li>
 
 
                     <li className="nav-item">
-                      <Link href="/contact" className="nav-link">
+                      <Link href="/contact" className="nav-link" onClick={closeMobileMenu}>
                         Contact
                       </Link>
                     </li>
@@ -194,104 +206,104 @@ export default function Header() {
             {/* RIGHT MENU======login====== */}
             <div className="col-3 col-lg-auto">
               <ul className="list-unstyled d-flex m-0">
-               {/* USER LOGIN & DROPDOWN SECTION */}
-<li className="d-flex align-items-center me-3 position-relative" ref={dropdownRef}>
+                {/* USER LOGIN & DROPDOWN SECTION */}
+                <li className="d-flex align-items-center me-3 position-relative" ref={dropdownRef}>
 
-  <div 
-    className="d-flex align-items-center" 
-    style={{ cursor: 'pointer' }}
-    onClick={() => user ? setIsDropdownOpen(!isDropdownOpen) : router.push("/login")}
-  >
-    {user ? (
-      <>
-        <span className="text-lowercase fw-bold text-primary me-2 d-none d-sm-inline" style={{ fontSize: '13px' }}>
-          hello, {user.user_metadata?.full_name?.split(' ')[0] || "user"}
-        </span>
-        
-        {/* Profile Icon with Active State Color */}
-        <div className={`d-flex flex-column align-items-center ${isDropdownOpen ? 'text-[#800080]' : 'text-black'}`}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="currentColor"
-            viewBox="0 0 16 16"
-          >
-            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
-          </svg>
-          {/* ઈમેજમાં બતાવ્યા પ્રમાણે નીચે પર્પલ ટેક્સ્ટ */}
-          <span className="fw-bold" style={{ fontSize: '10px', marginTop: '-2px', borderBottom: isDropdownOpen ? '2px solid #800080' : 'none' }}>
-            Profile
-          </span>
-        </div>
-      </>
-    ) : (
-      <Link href="/login" className="text-black">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
-        </svg>
-      </Link>
-    )}
-  </div>
+                  <div
+                    className="d-flex align-items-center"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => user ? setIsDropdownOpen(!isDropdownOpen) : router.push("/login")}
+                  >
+                    {user ? (
+                      <>
+                        <span className="text-lowercase fw-bold text-primary me-2 d-none d-sm-inline" style={{ fontSize: '13px' }}>
+                          hello, {user.user_metadata?.full_name?.split(' ')[0] || "user"}
+                        </span>
+
+                        {/* Profile Icon with Active State Color */}
+                        <div className={`d-flex flex-column align-items-center ${isDropdownOpen ? 'text-[#800080]' : 'text-black'}`}>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            fill="currentColor"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
+                          </svg>
+                          {/* ઈમેજમાં બતાવ્યા પ્રમાણે નીચે પર્પલ ટેક્સ્ટ */}
+                          <span className="fw-bold" style={{ fontSize: '10px', marginTop: '-2px', borderBottom: isDropdownOpen ? '2px solid #800080' : 'none' }}>
+                            Profile
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <Link href="/login" className="text-black">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                          <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
+                        </svg>
+                      </Link>
+                    )}
+                  </div>
 
 
-  {user && isDropdownOpen && (
-    <div 
-      className="position-absolute bg-white shadow-lg border rounded-3 overflow-hidden z-3"
-      style={{ 
-        right: 0, 
-        top: '120%', 
-        width: '280px', 
-        textTransform: 'none', 
-    
-        zIndex: 1050 
-      }}
-    >
-      {/* Header: User Info */}
-      <div className="p-3 d-flex align-items-center gap-3 border-bottom">
-        <div className="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '48px', height: '48px' }}>
-          <svg className="text-blue-300" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
-          </svg>
-        </div>
-        <div className="overflow-hidden">
-          <h6 className="mb-0 fw-bold text-dark">Hello {user.user_metadata?.full_name || "User"}</h6>
-          <p className="mb-0 text-muted small">{user.phone || user.email || "+91 0000000000"}</p>
-        </div>
-      </div>
+                  {user && isDropdownOpen && (
+                    <div
+                      className="position-absolute bg-white shadow-lg border rounded-3 overflow-hidden z-3"
+                      style={{
+                        right: 0,
+                        top: '120%',
+                        width: '280px',
+                        textTransform: 'none',
 
-      {/* Body: Links */}
-      <div className="py-2">
-        <Link 
-          href="/user-order" 
-          className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark hover-bg-light transition-all"
-          onClick={() => setIsDropdownOpen(false)}
-          style={{ gap: '12px' }}
-        >
-          <span>🛍️</span>
-          <span className="fw-medium">My Orders</span>
-        </Link>
+                        zIndex: 1050
+                      }}
+                    >
+                      {/* Header: User Info */}
+                      <div className="p-3 d-flex align-items-center gap-3 border-bottom">
+                        <div className="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '48px', height: '48px' }}>
+                          <svg className="text-blue-300" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
+                          </svg>
+                        </div>
+                        <div className="overflow-hidden">
+                          <h6 className="mb-0 fw-bold text-dark">Hello {user.user_metadata?.full_name || "User"}</h6>
+                          <p className="mb-0 text-muted small">{user.phone || user.email || "+91 0000000000"}</p>
+                        </div>
+                      </div>
 
-        <button 
-          className="w-100 text-start px-3 py-2 border-0 bg-transparent text-dark hover-bg-light transition-all"
-          style={{ paddingLeft: '43px' }} 
-        >
-          <span className="fw-medium">Delete Account</span>
-        </button>
+                      {/* Body: Links */}
+                      <div className="py-2">
+                        <Link
+                          href="/user-order"
+                          className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark hover-bg-light transition-all"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{ gap: '12px' }}
+                        >
+                          <span>🛍️</span>
+                          <span className="fw-medium" onClick={closeMobileMenu}>My Orders</span>
+                        </Link>
 
-        <hr className="my-1 mx-2 text-muted opacity-25" />
+                        <button
+                          className="w-100 text-start px-3 py-2 border-0 bg-transparent text-dark hover-bg-light transition-all"
+                          style={{ paddingLeft: '43px' }}
+                        >
+                          <span className="fw-medium" onClick={closeMobileMenu}>Delete Account</span>
+                        </button>
 
-        <button 
-          onClick={handleLogout}
-          className="w-100 text-start px-3 py-2 border-0 bg-transparent text-dark hover-bg-light transition-all d-flex align-items-center gap-2"
-        >
-          <span style={{ transform: 'rotate(180deg)', display: 'inline-block' }}>🚪</span>
-          <span className="fw-bold">Logout</span>
-        </button>
-      </div>
-    </div>
-  )}
-</li>
+                        <hr className="my-1 mx-2 text-muted opacity-25" />
+
+                        <button
+                          onClick={handleLogout}
+                          className="w-100 text-start px-3 py-2 border-0 bg-transparent text-dark hover-bg-light transition-all d-flex align-items-center gap-2"
+                        >
+                          <span style={{ transform: 'rotate(180deg)', display: 'inline-block' }}>🚪</span>
+                          <span className="fw-bold" onClick={closeMobileMenu}>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </li>
 
                 {/* cart */}
                 <li className="position-relative">
