@@ -77,7 +77,7 @@ export default function CheckoutPage() {
 
   // ૨. ઓર્ડર પ્લેસ કરવાનું મુખ્ય ફંક્શન
   const handleOrder = async () => {
-    if (!formData.name || !formData.phone || !formData.address) {
+    if (!formData.name || !formData.phone || !formData.address || !formData.email) {
       alert("Please fill all required fields.");
       return;
     }
@@ -176,10 +176,11 @@ export default function CheckoutPage() {
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Shipping Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input name="name" placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input name="phone" placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <textarea name="address" placeholder="Address *" onChange={handleChange} className="w-full border p-3 rounded-xl md:col-span-2 outline-none focus:border-black" />
-                <input name="city" placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input name="name" placeholder="Enter your Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input name="phone" placeholder="Enter your Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input nmae="email" placeholder="Enter your E-mail" onChange={handleChange} className="w-full border p-3 rounded-x1 outline-none focus:border-black" />
+                <textarea name="address" placeholder="house No,soc.name..." onChange={handleChange} className="w-full border p-3 rounded-xl md:col-span-2 outline-none focus:border-black" />
+                <input name="city" placeholder="Enter your City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
                 <input name="pincode" placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
               </div>
             </div>
