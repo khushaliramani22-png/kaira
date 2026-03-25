@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
 
@@ -29,36 +31,47 @@ export default function CheckoutPage() {
   const shippingCharge = subtotal > 1000 ? 0 : 50;
   const totalAmount = subtotal + shippingCharge;
 
-  // ૧. Invoice PDF Function
+  // ૧. Professional Invoice PDF Function
   const generateInvoicePDF = (orderData, items) => {
     try {
       const doc = new jsPDF();
-      doc.setFontSize(22);
+      doc.setFontSize(24);
       doc.setFont("helvetica", "bold");
       doc.text("KAIRA", 14, 20);
       
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text(`INVOICE: #KRA-${orderData.id.slice(0, 8).toUpperCase()}`, 140, 20);
-      doc.text(`DATE: ${new Date().toLocaleDateString("en-IN")}`, 140, 25);
+      doc.text("Premium Clothing Brand", 14, 25);
+      doc.text("Surat, Gujarat, India", 14, 30);
 
       doc.setFontSize(10);
-      doc.text("BILL TO:", 14, 40);
-      doc.text(`${orderData.customer_name}`, 14, 46);
-      doc.text(`+91 ${orderData.phone}`, 14, 51);
-      doc.text(`${orderData.address}, ${orderData.city}`, 14, 56);
+      doc.text(`INVOICE: #KRA-${orderData.id.slice(0, 8).toUpperCase()}`, 140, 20);
+      doc.text(`DATE: ${new Date().toLocaleDateString("en-IN")}`, 140, 25);
+      doc.text(`PAYMENT: ${orderData.payment_method}`, 140, 30);
+
+      doc.setDrawColor(200);
+      doc.line(14, 35, 196, 35);
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("BILL TO:", 14, 45);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Name: ${orderData.customer_name}`, 14, 52);
+      doc.text(`Phone: +91 ${orderData.phone}`, 14, 57);
+      doc.text(`Address: ${orderData.address}, ${orderData.city} - ${orderData.pincode}`, 14, 62);
 
       const tableData = items.map((item, index) => [
         index + 1,
         item.product_name,
         `${item.size} / ${item.color}`,
         item.quantity,
-        `INR ${item.price}`,
-        `INR ${item.price * item.quantity}`
+        `INR ${item.price.toLocaleString()}`,
+        `INR ${(item.price * item.quantity).toLocaleString()}`
       ]);
 
       autoTable(doc, {
-        startY: 65,
+        startY: 75,
         head: [['#', 'PRODUCT', 'VARIANT', 'QTY', 'PRICE', 'TOTAL']],
         body: tableData,
         theme: 'grid',
@@ -67,7 +80,7 @@ export default function CheckoutPage() {
 
       const finalY = doc.lastAutoTable.finalY + 10;
       doc.setFont("helvetica", "bold");
-      doc.text(`GRAND TOTAL: INR ${orderData.total_amount}`, 130, finalY);
+      doc.text(`GRAND TOTAL: INR ${orderData.total_amount.toLocaleString()}`, 130, finalY + 10);
 
       doc.save(`Kaira_Invoice_${orderData.id.slice(0, 8)}.pdf`);
     } catch (pdfError) {
@@ -75,10 +88,10 @@ export default function CheckoutPage() {
     }
   };
 
-  // ૨. ઓર્ડર પ્લેસ કરવાનું મુખ્ય ફંક્શન
+  // ૨. Main Order Handler with Stock Management
   const handleOrder = async () => {
     if (!formData.name || !formData.phone || !formData.address || !formData.email) {
-      alert("Please fill all required fields.");
+      alert("Please fill all required fields (Name, Phone, Email, Address)");
       return;
     }
 
@@ -88,7 +101,23 @@ export default function CheckoutPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Please login to place an order.");
 
-      // ઓર્ડર સેવ (Orders Table)
+      // A. સ્ટોક ચેક કરો અને અપડેટ કરો
+      for (const item of cartItems) {
+        const productId = item.product_id || item.id;
+        const { data: productData, error: productError } = await supabase
+          .from("products")
+          .select("stock")
+          .eq("id", productId)
+          .single();
+
+        if (productError || !productData || productData.stock < item.quantity) {
+          throw new Error(`Product ${item.name} is out of stock!`);
+        }
+
+        await supabase.from("products").update({ stock: productData.stock - item.quantity }).eq("id", productId);
+      }
+
+      // B. ઓર્ડર સેવ કરો
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -109,14 +138,14 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError;
 
-      // આઈટમ્સ સેવ (Order Items Table)
+      // C. આઈટમ્સ સેવ કરો (ઈમેજ સાથે)
       const itemsToInsert = cartItems.map((item) => ({
         order_id: orderData.id,
         product_id: item.product_id || item.id,
         product_name: item.name || item.product_name,
-        image: item.image || item.image1, 
-        size: item.selected_size || "N/A",
-        color: item.selected_color || "N/A",
+        image: item.image || item.image1 || "",
+        size: item.selected_size || item.selectedSize || "N/A",
+        color: item.selected_color || item.selectedColor || "N/A",
         quantity: item.quantity,
         price: item.price
       }));
@@ -124,10 +153,10 @@ export default function CheckoutPage() {
       const { error: itemError } = await supabase.from("order_items").insert(itemsToInsert);
       if (itemError) throw itemError;
 
-      // ઇનવોઇસ ડાઉનલોડ
+      // D. ઇનવોઇસ જનરેટ
       generateInvoicePDF(orderData, itemsToInsert);
 
-      // ૩. Meesho Style Success Popup
+      // E. Meesho Style Success Popup
       Swal.fire({
         html: `
           <div style="background-color: #03a66d; margin: -20px; padding: 50px 20px; color: white; text-align: center;">
@@ -149,17 +178,16 @@ export default function CheckoutPage() {
         confirmButtonText: 'GO TO MY ORDERS',
         confirmButtonColor: '#000000',
         allowOutsideClick: false,
-        timer: 4000, // ૪ સેકન્ડ પછી ઓટોમેટિક રીડાયરેક્ટ
+        timer: 4000,
         timerProgressBar: true,
         width: '100%',
         padding: '0',
-      }).then((result) => {
+      }).then(() => {
         clearCart();
         window.location.href = "/user-order";
       });
 
     } catch (error) {
-      console.error("Critical Error:", error.message);
       alert(error.message);
     } finally {
       setLoading(false);
@@ -169,54 +197,49 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#f8f8f8] py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4 text-center md:text-left">Checkout</h1>
-        
+        <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4">Checkout</h1>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Shipping Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input name="name" placeholder="Enter your Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input name="phone" placeholder="Enter your Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input nmae="email" placeholder="Enter your E-mail" onChange={handleChange} className="w-full border p-3 rounded-x1 outline-none focus:border-black" />
-                <textarea name="address" placeholder="house No,soc.name..." onChange={handleChange} className="w-full border p-3 rounded-xl md:col-span-2 outline-none focus:border-black" />
-                <input name="city" placeholder="Enter your City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input name="name" placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input name="phone" placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input name="email" placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <textarea name="address" placeholder="Address *" onChange={handleChange} className="md:col-span-2 w-full border p-3 rounded-xl outline-none focus:border-black" />
+                <input name="city" placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
                 <input name="pincode" placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
               </div>
             </div>
-
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>
               <div className="flex gap-4">
-                <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-4 border-2 rounded-xl font-bold transition ${paymentMethod === "COD" ? "border-black bg-gray-50 text-black" : "border-gray-100 text-gray-400"}`}>Cash on Delivery</button>
-                <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-4 border-2 rounded-xl font-bold transition ${paymentMethod === "Online" ? "border-black bg-gray-50 text-black" : "border-gray-100 text-gray-400"}`}>Online Payment</button>
+                <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Cash on Delivery</button>
+                <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Online Payment</button>
               </div>
             </div>
           </div>
-
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-black sticky top-10">
               <h3 className="font-black mb-6 uppercase italic text-lg">Order Summary</h3>
-              <div className="divide-y max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="divide-y max-h-60 overflow-y-auto pr-2">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4 py-4">
                     <img src={item.image || item.image1} className="w-16 h-20 object-cover rounded-lg border" alt="" />
                     <div className="flex-1">
-                      <p className="font-bold text-sm uppercase leading-tight">{item.name}</p>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">QTY: {item.quantity}</p>
+                      <p className="font-bold text-sm uppercase">{item.name}</p>
+                      <p className="text-[10px] font-bold text-gray-400">QTY: {item.quantity}</p>
                       <p className="font-black text-sm mt-1">₹{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
               </div>
-
               <div className="mt-6 pt-4 border-t-2 border-dashed space-y-2">
                 <div className="flex justify-between text-sm font-bold text-gray-500"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
                 <div className="flex justify-between text-sm font-bold text-gray-500"><span>Shipping</span><span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span></div>
                 <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4"><span>Total</span><span>₹{totalAmount.toLocaleString()}</span></div>
               </div>
-
-              <button onClick={handleOrder} disabled={loading || cartItems.length === 0} className="w-full bg-black text-white py-5 rounded-2xl mt-8 font-black uppercase tracking-widest hover:bg-gray-900 transition-all disabled:bg-gray-300 shadow-xl">
+              <button onClick={handleOrder} disabled={loading || cartItems.length === 0} className="w-full bg-black text-white py-5 rounded-2xl mt-8 font-black uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 shadow-xl">
                 {loading ? "Placing Order..." : "Confirm & Pay"}
               </button>
             </div>
