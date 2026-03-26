@@ -102,6 +102,12 @@ export default function AdminLayout({ children }) {
               💬 Messages
             </a>
           </li>
+          <li className="mb-3">
+             <a href="/admin/settings" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+             ⚙️ Settings
+             </a>
+          </li>
+
         </ul>
       </div>
 

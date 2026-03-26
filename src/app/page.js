@@ -15,37 +15,37 @@ import Collection from "@/components/Collection";
 import BestSellers from "@/components/BestSellers";
 import RelatedProducts from "@/components/ReletedProduct";
 import Newsletter from "@/components/Newsletter";
-import Header from "@/components/Header";
+
 
 export default function Page() {
 
-  useEffect(() => {
-    AOS.init({
-      duration: 1000,
-      once: true
-    });
-  }, []);
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: true
+    });
+  }, []);
 
-  return (
-    <><div data-aos="fade-up">
+  return (
+    <><div data-aos="fade-up">
 
-      <HeroSlider />
-       <Features />
-       <Categories />
-       <NewArrivals />
-       <Collection />
-       <BestSellers />
-       <RelatedProducts />
-       <Newsletter />
-       
-      <Blog />
-    
-   
-      
-      
-      </div>
+      <HeroSlider />
+       <Features />
+       <Categories />
+       <NewArrivals />
+       <Collection />
+       <BestSellers />
+       <RelatedProducts />
+       <Newsletter />
+       
+      <Blog />
+    
+   
+      
+      
+      </div>
 
 
-    </>
-  );
+    </>
+  );
 }
