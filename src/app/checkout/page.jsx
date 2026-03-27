@@ -241,102 +241,101 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-[#f8f8f8] py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4">Checkout</h1>
+        
+        {/* મુખ્ય ગ્રીડ: અહીંથી layout નક્કી થાય છે */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          {/* ડાબી બાજુનો ભાગ (Shipping & Payment) */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border">
-              <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Shipping Details</h3>
-              <div className="lg:col-span-7 space-y-6">
-                <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                  <div className="flex items-center p-4 bg-gray-50 border-b">
-                    <span className="text-blue-600 mr-2 text-xl">📍</span>
-                    <h3 className="font-bold text-gray-700 uppercase text-xs tracking-wider">Delivery Address</h3>
+            
+            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div className="flex items-center p-4 bg-gray-50 border-b">
+                <span className="text-blue-600 mr-2 text-xl">📍</span>
+                <h3 className="font-bold text-gray-700 uppercase text-xs tracking-wider">Delivery Address</h3>
+              </div>
+
+              <div className="p-6">
+                {hasPreviousOrder && !showAddressForm ? (
+                  /* જૂના યુઝર માટે એડ્રેસ કાર્ડ */
+                  <div className="flex justify-between items-start animate-in fade-in duration-500">
+                    <div className="space-y-1">
+                      <p className="font-bold text-lg text-gray-800">{formData.name}</p>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        {formData.address}, {formData.city} - {formData.pincode}
+                      </p>
+                      <p className="font-semibold pt-2 text-gray-800">{formData.phone}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddressForm(true)}
+                      className="text-pink-600 font-black text-sm hover:bg-pink-50 px-3 py-1 rounded transition-all"
+                    >
+                      CHANGE
+                    </button>
                   </div>
+                ) : (
+                  /* નવો યુઝર અથવા ફોર્મ */
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                    <input name="name" value={formData.name} placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                    <input name="phone" value={formData.phone} placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                    <input name="email" value={formData.email} placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                    <textarea name="address" value={formData.address} placeholder="Address *" onChange={handleChange} className="md:col-span-2 w-full border p-3 rounded-xl outline-none focus:border-black" />
+                    <input name="city" value={formData.city} placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+                    <input name="pincode" value={formData.pincode} placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
 
-                  <div className="p-6">
-                    {/* જૂના યુઝર માટે કાર્ડ */}
-                    {hasPreviousOrder && !showAddressForm ? (
-                      <div className="flex justify-between items-start animate-in fade-in duration-500">
-                        <div className="space-y-1">
-                          <p className="font-bold text-lg text-gray-800">{formData.name}</p>
-                          <p className="text-gray-600 text-sm leading-relaxed">
-                            {formData.address}, {formData.city} - {formData.pincode}
-                          </p>
-                          <p className="font-semibold pt-2 text-gray-800">{formData.phone}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddressForm(true)}
-                          className="text-pink-600 font-black text-sm hover:bg-pink-50 px-3 py-1 rounded transition-all"
-                        >
-                          CHANGE
-                        </button>
-                      </div>
-                    ) : (
-                      /* નવા યુઝર માટે અથવા CHANGE ક્લિક કર્યા પછી ફોર્મ */
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-                        <input name="name" value={formData.name} placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                        <input name="phone" value={formData.phone} placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                        <input name="email" value={formData.email} placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                        <textarea name="address" value={formData.address} placeholder="Address *" onChange={handleChange} className="md:col-span-2 w-full border p-3 rounded-xl outline-none focus:border-black" />
-                        <input name="city" value={formData.city} placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                        <input name="pincode" value={formData.pincode} placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-
-                        {hasPreviousOrder && (
-                          <button
-                            type="button"
-                            onClick={() => setShowAddressForm(false)}
-                            className="md:col-span-2 text-gray-400 text-xs underline text-left hover:text-black"
-                          >
-                            Use previously saved address
-                          </button>
-                        )}
-                      </div>
+                    {hasPreviousOrder && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressForm(false)}
+                        className="md:col-span-2 text-gray-400 text-xs underline text-left hover:text-black"
+                      >
+                        Use previously saved address
+                      </button>
                     )}
                   </div>
-                </div>
-
-                {/* Payment Method વાળો div આની નીચે જ રહેશે */}
-
-
-
-            
-              <div className="bg-white p-6 rounded-2xl shadow-sm border">
-                <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>
-                <div className="flex gap-4">
-                  <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Cash on Delivery</button>
-                  <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Online Payment</button>
-                </div>
+                )}
               </div>
             </div>
-            <div className="lg:col-span-5">
-              <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-black sticky top-10">
-                <h3 className="font-black mb-6 uppercase italic text-lg">Order Summary</h3>
-                <div className="divide-y max-h-60 overflow-y-auto pr-2">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex gap-4 py-4">
-                      <img src={item.image || item.image1} className="w-16 h-20 object-cover rounded-lg border" alt="" />
-                      <div className="flex-1">
-                        <p className="font-bold text-sm uppercase">{item.name}</p>
-                        <p className="text-[10px] font-bold text-gray-400">QTY: {item.quantity}</p>
-                        <p className="font-black text-sm mt-1">₹{(item.price * item.quantity).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 pt-4 border-t-2 border-dashed space-y-2">
-                  <div className="flex justify-between text-sm font-bold text-gray-500"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
-                  <div className="flex justify-between text-sm font-bold text-gray-500"><span>Shipping</span><span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span></div>
-                  <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4"><span>Total</span><span>₹{totalAmount.toLocaleString()}</span></div>
-                </div>
-                <button onClick={handleOrder} disabled={loading || cartItems.length === 0} className="w-full bg-black text-white py-5 rounded-2xl mt-8 font-black uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 shadow-xl">
-                  {loading ? "Placing Order..." : "Confirm & Pay"}
-                </button>
+
+            {/* Payment Method */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border">
+              <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>
+              <div className="flex gap-4">
+                <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Cash on Delivery</button>
+                <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Online Payment</button>
               </div>
             </div>
           </div>
-        </div>
+
+          {/* જમણી બાજુનો ભાગ (Order Summary) */}
+          <div className="lg:col-span-5">
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-black sticky top-10">
+              <h3 className="font-black mb-6 uppercase italic text-lg">Order Summary</h3>
+              <div className="divide-y max-h-60 overflow-y-auto pr-2">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex gap-4 py-4">
+                    <img src={item.image || item.image1} className="w-16 h-20 object-cover rounded-lg border" alt="" />
+                    <div className="flex-1">
+                      <p className="font-bold text-sm uppercase">{item.name}</p>
+                      <p className="text-[10px] font-bold text-gray-400">QTY: {item.quantity}</p>
+                      <p className="font-black text-sm mt-1">₹{(item.price * item.quantity).toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 pt-4 border-t-2 border-dashed space-y-2">
+                <div className="flex justify-between text-sm font-bold text-gray-500"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
+                <div className="flex justify-between text-sm font-bold text-gray-500"><span>Shipping</span><span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span></div>
+                <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4"><span>Total</span><span>₹{totalAmount.toLocaleString()}</span></div>
+              </div>
+              <button onClick={handleOrder} disabled={loading || cartItems.length === 0} className="w-full bg-black text-white py-5 rounded-2xl mt-8 font-black uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 shadow-xl">
+                {loading ? "Placing Order..." : "Confirm & Pay"}
+              </button>
+            </div>
+          </div>
+          
+        </div> {/* grid end */}
       </div>
     </div>
-  </div>
   );
 }
