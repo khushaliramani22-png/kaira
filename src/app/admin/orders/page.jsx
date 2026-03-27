@@ -2,11 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { RefreshCw, MapPin, AlertCircle, CheckCircle2, Truck, XCircle } from "lucide-react";
+import { RefreshCw, MapPin, AlertCircle, CheckCircle2, Truck, XCircle, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // --- SEARCH & PAGINATION LOGIC ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // સર્ચ ફિલ્ટર
+  const filteredOrders = orders.filter((order) => {
+    const searchLower = searchQuery.toLowerCase();
+    const orderId = (order.order_number || order.id).toLowerCase();
+    const customerName = (order.customer_name || "").toLowerCase();
+    return orderId.includes(searchLower) || customerName.includes(searchLower);
+  });
+
+  // પેજીનેશન કેલ્ક્યુલેશન
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
   // ઓર્ડર ફેચ કરવા માટેનું ફંક્શન
   const fetchOrders = async () => {
@@ -61,6 +80,16 @@ export default function AdminOrders() {
         {/* HEADER */}
         <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-xl font-black uppercase tracking-tighter italic">Manage Orders</h1>
+          <div className="relative w-full md:w-80">
+  <input
+    type="text"
+    placeholder="Search by ID or Name..."
+    value={searchQuery}
+    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-black text-xs font-bold uppercase"
+  />
+  <Search className="absolute left-3 top-2.5 text-gray-400" size={14} />
+</div>
           <button
             onClick={fetchOrders}
             className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-90"
@@ -83,7 +112,7 @@ export default function AdminOrders() {
             </thead>
 
             <tbody className="divide-y divide-gray-50">
-              {orders.map((order) => (
+          {currentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50/30 transition-colors">
                   
                   {/* ORDER ID & STATUS */}
@@ -189,7 +218,18 @@ export default function AdminOrders() {
             </tbody>
           </table>
         </div>
-        
+        {totalPages > 1 && (
+  <div className="p-6 border-t flex justify-between items-center bg-gray-50/50">
+    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
+      Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredOrders.length)} of {filteredOrders.length}
+    </div>
+    <div className="flex gap-2">
+      <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-2 border rounded-lg bg-white disabled:opacity-30"><ChevronLeft size={18} /></button>
+      <div className="flex items-center px-4 text-[11px] font-black border rounded-lg bg-white">Page {currentPage} of {totalPages}</div>
+      <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="p-2 border rounded-lg bg-white disabled:opacity-30"><ChevronRight size={18} /></button>
+    </div>
+  </div>
+)}
         {orders.length === 0 && (
           <div className="p-20 text-center text-gray-300 font-black uppercase tracking-widest text-sm">
             No Orders Found
