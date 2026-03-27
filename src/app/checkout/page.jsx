@@ -26,35 +26,44 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    const fetchPreviousAddress = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  const getAddress = async (userId) => {
+    console.log("Fetching address for:", userId);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("customer_name, phone, email, address, city, pincode")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select("customer_name, phone, email, address, city, pincode")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+    if (data && data.length > 0) {
+      const lastOrder = data[0];
+      setFormData({
+        name: lastOrder.customer_name || "",
+        phone: lastOrder.phone || "",
+        email: lastOrder.email || "",
+        address: lastOrder.address || "",
+        city: lastOrder.city || "",
+        pincode: lastOrder.pincode || ""
+      });
+      setHasPreviousOrder(true);
+      setShowAddressForm(false);
+    } else {
+      setShowAddressForm(true);
+    }
+  };
 
-      if (data) {
-        setFormData({
-          name: data.customer_name,
-          phone: data.phone,
-          email: data.email,
-          address: data.address,
-          city: data.city,
-          pincode: data.pincode
-        });
-        setHasPreviousOrder(true);
-        setShowAddressForm(false);
-      } else {
-        setShowAddressForm(true);
-      }
-    };
-    fetchPreviousAddress();
-  }, []);
+  // યુઝર સ્ટેટ ચેક કરો
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      getAddress(user.id);
+    } else {
+      setShowAddressForm(true);
+    }
+  };
+
+  checkUser();
+}, []);
 
 
   const handleChange = (e) => {
