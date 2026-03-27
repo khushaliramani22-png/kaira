@@ -47,12 +47,18 @@ export default function UsersListPage() {
       if (orderError) console.error("Order fetch error:", orderError);
 
       // ૩. ડેટા પ્રોસેસ કરો
+      // ૩. ડેટા પ્રોસેસ કરો
       const processedUsers = userData.map(user => {
-        const userOrders = orderData ? orderData.filter(o => o.user_id === user.id) : [];
+        const userOrders = orderData ? orderData.filter(o => String(o.user_id) === String(user.id)) : [];
         const totalOrders = userOrders.length;
-        const totalSpend = userOrders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
-        return { ...user, totalOrders, totalSpend };
-      });
+        const totalSpend = userOrders.reduce((sum, order) => {
+          const amount = parseFloat(order.total_amount) || 0; 
+          return sum + amount;
+        }, 0);
+
+        // આ લાઈન મહત્વની છે: દરેક યુઝર માટે ઓબ્જેક્ટ રિટર્ન કરવો પડે
+        return { ...user, totalOrders, totalSpend }; 
+      }); // <--- અહીં મેપ ફંક્શન પૂરો થાય છે
 
       setUsers(processedUsers);
       setTotalCount(count || 0);
@@ -62,7 +68,6 @@ export default function UsersListPage() {
       setLoading(false);
     }
   }, [currentPage, searchQuery]);
-
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
