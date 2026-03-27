@@ -21,23 +21,24 @@ const [userContact, setUserContact] = useState({ phone: "", address: "" });
       const { data: user } = await supabase.from("users").select("*").eq("id", id).single();
       setUserData(user);
 
-      // 2. ઓર્ડર્સ ડેટા (અહીં ખાસ ફિલ્ટર ચેક કરો)
+      // 2. ઓર્ડર્સ ડેટા 
       const { data: userOrders, error: orderError } = await supabase
         .from("orders")
         .select("*")
-        .eq("user_id", id) // ચેક કરો કે ઓર્ડર ટેબલમાં 'user_id' કોલમ જ છે ને?
+        .eq("user_id", id) 
         .order("created_at", { ascending: false });
 
       if (orderError) throw orderError;
       
-      console.log("User Orders Found:", userOrders); // આ લાઈન console માં ચેક કરો
+      console.log("User Orders Found:", userOrders); 
+      
 
       setOrders(userOrders || []);
 
       // 3. એડ્રેસ સેટ કરવાનું લોજિક
       if (userOrders && userOrders.length > 0) {
         const latest = userOrders[0];
-        console.log("Latest Order for Address:", latest); // આ પણ ચેક કરો
+        console.log("Latest Order for Address:", latest); 
         
         setUserContact({
           phone: latest.phone || "No Phone",
@@ -72,7 +73,7 @@ const [userContact, setUserContact] = useState({ phone: "", address: "" });
               <div className="bg-light rounded-circle d-inline-flex p-3 mb-2">
                 <User size={40} className="text-primary" />
               </div>
-              {/* full_name ને બદલે name વાપર્યું */}
+              
               <h4 className="mb-0">{userData.name || "Guest User"}</h4>
               <span className="badge bg-soft-primary text-primary mt-1">Customer</span>
             </div>
