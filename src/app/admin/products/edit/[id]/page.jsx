@@ -12,6 +12,8 @@ export default function EditProduct() {
     name: "", brand: "", gender: "", category: "",
     price: "", old_price: "", discount: "", stock: "",
     description: "",
+    size_fit: "",      // નવું ફિલ્ડ ઉમેર્યું
+    fabric_care: "",    // નવું ફિલ્ડ ઉમેર્યું
     image1: null, image2: null, image3: null,
   });
 
@@ -21,16 +23,16 @@ export default function EditProduct() {
   const [preview2, setPreview2] = useState(null);
   const [preview3, setPreview3] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true); // ડેટા લોડિંગ સ્ટેટ
 
   const sizesOptions = ["S", "M", "L", "XL", "XXL"];
-  const colorsOptions = ["Red", "Blue", "Black", "White", "Beige", "Green", "Pink"];
+  const colorsOptions = ["Red", "Blue", "Black", "White", "Beige", "Green", "Pink", "olive green"];
   const shopCategories = [
     "NEW ARRIVALS", "BESTSELLER", "FS WORK", "DRESSES", "CO-ORDS",
     "TOPS & SHIRTS", "TEES", "WAISTCOATS", "CAMIS & TANKS",
     "BLAZERS", "TROUSERS", "JEANS", "LIVIN PANTS", "SKIRTS & SKORTS"
   ];
 
-  // 1. પ્રોડક્ટનો જૂનો ડેટા લોડ કરવા માટે
   useEffect(() => {
     const fetchProduct = async () => {
       const { data, error } = await supabase
@@ -47,7 +49,7 @@ export default function EditProduct() {
 
       setProduct({
         ...data,
-        image1: null, // નવી ફાઈલ માટે નલ રાખીએ
+        image1: null,
         image2: null,
         image3: null,
       });
@@ -56,6 +58,7 @@ export default function EditProduct() {
       setPreview1(data.image1);
       setPreview2(data.image2);
       setPreview3(data.image3);
+      setFetching(false);
     };
 
     if (id) fetchProduct();
@@ -100,10 +103,9 @@ export default function EditProduct() {
     setLoading(true);
 
     try {
-      // જો નવી ઈમેજ પસંદ કરી હોય તો અપલોડ કરો, નહીંતર જૂની URL વાપરો
-      const img1 = product.image1 ? await uploadImage(product.image1, 1) : preview1;
-      const img2 = product.image2 ? await uploadImage(product.image2, 2) : preview2;
-      const img3 = product.image3 ? await uploadImage(product.image3, 3) : preview3;
+      const img1 = product.image1 instanceof File ? await uploadImage(product.image1, 1) : preview1;
+      const img2 = product.image2 instanceof File ? await uploadImage(product.image2, 2) : preview2;
+      const img3 = product.image3 instanceof File ? await uploadImage(product.image3, 3) : preview3;
 
       const dataToUpdate = {
         name: product.name,
@@ -117,6 +119,8 @@ export default function EditProduct() {
         size: selectedSizes,
         color: selectedColors,
         description: product.description,
+        size_fit: product.size_fit,       // નવું ફિલ્ડ
+        fabric_care: product.fabric_care,   // નવું ફિલ્ડ
         image1: img1,
         image2: img2,
         image3: img3,
@@ -133,6 +137,8 @@ export default function EditProduct() {
       setLoading(false);
     }
   };
+
+  if (fetching) return <div className="text-center py-5 fw-bold">Loading product details...</div>;
 
   return (
     <div className="container py-5">
@@ -203,25 +209,44 @@ export default function EditProduct() {
           </div>
         </div>
 
-        <textarea name="description" value={product.description} onChange={handleChange} className="form-control mb-4" rows="3" />
+        <div className="mb-3">
+          <label className="fw-bold small mb-1 text-uppercase">Description</label>
+          <textarea name="description" value={product.description} onChange={handleChange} className="form-control mb-3" rows="3" />
+        </div>
 
-        <h5 className="mb-3">Product Images</h5>
+        <div className="mb-3">
+          <label className="fw-bold small mb-1 text-uppercase">Size & Fit Details</label>
+          <textarea name="size_fit" placeholder="e.g. Model is wearing size S." value={product.size_fit} onChange={handleChange} className="form-control mb-3" rows="2" />
+        </div>
+
+        <div className="mb-3">
+          <label className="fw-bold small mb-1 text-uppercase">Fabric & Care Details</label>
+          <textarea name="fabric_care" placeholder="e.g. 100% Cotton." value={product.fabric_care} onChange={handleChange} className="form-control mb-4" rows="2" />
+        </div>
+
+        <h5 className="mb-3">Product Images (Update only if changing)</h5>
         <div className="row text-center">
           {[1, 2, 3].map((i) => (
             <div className="col-md-4 mb-3" key={i}>
               <input type="file" accept="image/*" onChange={(e) => handleImageInput(e, i)} className="form-control mb-2" />
-              <div style={{ height: "150px", border: "1px dashed #ccc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ height: "150px", border: "1px dashed #ccc", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                 {i === 1 && preview1 && <img src={preview1} alt="p1" style={{ maxHeight: "100%", maxWidth: "100%" }} />}
                 {i === 2 && preview2 && <img src={preview2} alt="p2" style={{ maxHeight: "100%", maxWidth: "100%" }} />}
                 {i === 3 && preview3 && <img src={preview3} alt="p3" style={{ maxHeight: "100%", maxWidth: "100%" }} />}
+                {((i === 1 && !preview1) || (i === 2 && !preview2) || (i === 3 && !preview3)) && <small className="text-muted">No Image</small>}
               </div>
             </div>
           ))}
         </div>
 
-        <button type="submit" className="btn btn-primary mt-4 w-100" disabled={loading}>
-          {loading ? "Updating..." : "Update Product"}
-        </button>
+        <div className="d-flex gap-3">
+          <button type="submit" className="btn btn-dark mt-4 w-100 py-2 fw-bold" disabled={loading}>
+            {loading ? "Updating..." : "Update Product"}
+          </button>
+          <button type="button" onClick={() => router.back()} className="btn btn-outline-danger mt-4 w-100 py-2 fw-bold">
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );
