@@ -4,21 +4,17 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation"; // URL Parameters વાંચવા માટે
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/app/context/CartContext";
-import { ShoppingBag, Heart, Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingBag, Heart, Eye } from "lucide-react";
 import Link from "next/link";
 
 function ShopContent() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-
+  
   // URL માંથી 'category' મેળવો
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
 
   useEffect(() => {
     async function fetchProducts() {
@@ -26,9 +22,9 @@ function ShopContent() {
         setLoading(true);
         let query = supabase.from("products").select("*");
 
-
+        // જો URL માં કેટેગરી હોય, તો તેને ફિલ્ટર કરો
         if (categoryParam) {
-
+          // URL ના 'jeans' ને DB ના 'JEANS' સાથે મેચ કરવા માટે ફોર્મેટિંગ
           const formattedCategory = categoryParam.toUpperCase().replace(/-/g, ' ');
           query = query.eq("category", formattedCategory);
         }
@@ -43,20 +39,7 @@ function ShopContent() {
       }
     }
     fetchProducts();
-  }, [categoryParam]);
-
-  useEffect(() => {
-    const filtered = products.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-    setCurrentPage(1);
-  }, [searchQuery, products]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  }, [categoryParam]); // જ્યારે પણ કેટેગરી બદલાય ત્યારે આ ફરીથી રન થશે
 
   if (loading)
     return (
@@ -71,21 +54,11 @@ function ShopContent() {
       <h2 className="text-2xl md:text-3xl font-semibold text-center mb-12 tracking-wide uppercase">
         {categoryParam ? categoryParam.replace(/-/g, ' ') : "Our Collection"}
       </h2>
-      <div className="relative w-full md:w-80 mx-auto mb-10">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-1 focus:ring-black text-sm"
-        />
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-      </div>
 
       {/* Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {products.length > 0 ? (
-          currentItems.map((product) => (
+          products.map((product) => (
             <div
               key={product.id}
               className="group bg-white rounded-xl overflow-hidden border hover:shadow-xl transition duration-300"
@@ -143,19 +116,6 @@ function ShopContent() {
           </div>
         )}
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-10 gap-2">
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border rounded disabled:opacity-30">
-            <ChevronLeft size={20} />
-          </button>
-          <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border rounded disabled:opacity-30">
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      )}
-
     </div>
   );
 }
