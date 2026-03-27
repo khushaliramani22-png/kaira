@@ -103,7 +103,7 @@ export default function CartPage() {
                           <img
                             src={item.image}
                             alt={item.name}
-                           style={{ width: "100px", height: "140px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }}
+                           style={{ width: "150px", height: "150px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }}
                           />
                         </div>
 
