@@ -10,6 +10,8 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isPageOpen, setIsPageOpen] = useState(false); // નવી સ્ટેટ Page માટે
+  const pageRef = useRef(null);
 
   const dropdownRef = useRef(null);
   const shopRef = useRef(null);
@@ -51,6 +53,9 @@ export default function Header() {
       }
       if (shopRef.current && !shopRef.current.contains(event.target)) {
         setIsShopOpen(false);
+      }
+      if (pageRef.current && !pageRef.current.contains(event.target)) {
+        setIsPageOpen(false);
       }
     };
 
@@ -166,32 +171,37 @@ export default function Header() {
                     </li>
                     {/* SHOP DROPDOWN END */}
 
-                    <li className="nav-item">
+                    {/* BLOG LINK */}
+                <li className="nav-item">
+                  <Link href="/blog" className="nav-link" onClick={closeMobileMenu}>
+                    Blog
+                  </Link>
+                </li>
 
-                      <Link href="/blog" className="nav-link" onClick={closeMobileMenu}>
-                        Blog
-                      </Link>
-                    </li>
+                {/* PAGE DROPDOWN - સુધારેલું લોજિક */}
+                <li className="nav-item position-relative" ref={pageRef}>
+                  <button
+                    onClick={() => setIsPageOpen(!isPageOpen)}
+                    className="nav-link border-0 bg-transparent text-uppercase small"
+                    style={{ fontWeight: '500' }}
+                  >
+                    Page {isPageOpen ? '▴' : '▾'}
+                  </button>
 
-                    <li className="nav-item dropdown">
-                      <a
-                        className="nav-link dropdown-toggle"
-                        href="#"
-                        role="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                      >
-                        Page
-                      </a>
-                      <ul className="dropdown-menu">
-                        <li><Link href="/about" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>About</Link></li>
-                        <li><Link href="/cart" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Cart</Link></li>
-                        <li><Link href="/checkout" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Checkout</Link></li>
-                        <li><Link href="/user-order" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}> My Orders</Link></li>
-                        <li><Link href="/contact" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Contact</Link></li>
-                        <li><Link href="/order-tracking" className="dropdown-item" onClick={() => { setIsDropdownOpen(false); closeMobileMenu(); }}>Order Tracking</Link></li>
+                  {isPageOpen && (
+                    <div className="position-absolute shadow-lg py-2 z-3 bg-white border" 
+                         style={{ width: '200px', top: '100%', left: '0' }}>
+                      <ul className="list-unstyled m-0">
+                        <li><Link href="/about" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>About</Link></li>
+                        <li><Link href="/cart" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Cart</Link></li>
+                        <li><Link href="/checkout" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Checkout</Link></li>
+                        <li><Link href="/user-order" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}> My Orders</Link></li>
+                        <li><Link href="/contact" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Contact</Link></li>
+                        <li><Link href="/order-tracking" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Order Tracking</Link></li>
                       </ul>
-                    </li>
+                    </div>
+                  )}
+                </li>
 
 
                     <li className="nav-item">

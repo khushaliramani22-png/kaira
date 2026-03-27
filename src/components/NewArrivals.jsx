@@ -1,85 +1,125 @@
-
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
-
-// Correct Swiper v10+ imports
 import { Navigation, Pagination } from "swiper/modules";
 
+// Supabase કનેક્શન (પાથ ચેક કરી લેવો)
+import { supabase } from "@/lib/supabase"; 
+
+// Swiper CSS
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-
-
 export default function NewArrivals() {
-  const products = [
-    { title: "Dark florish onepiece", img: "/images/colorbox/product-item-1.jpg", price: 95, href: "/" },
-    { title: "Baggy Shirt", img: "/images/colorbox/product-item-2.jpg", price: 55, href: "/" },
-    { title: "Cotton off-white shirt", img: "/images/colorbox/product-item-3.jpg", price: 65, href: "/" },
-    { title: "Crop sweater", img: "/images/colorbox/product-item-4.jpg", price: 50, href: "/" },
-    { title: "Crop sweater", img: "/images/colorbox/product-item-10.jpg", price: 70, href: "/" },
-  ];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products') // તમારા એડમિન પેજ વાળું ટેબલ
+          .select('*')
+          .eq('category', 'NEW ARRIVALS')
+          .order('created_at', { ascending: false }) // નવી આઈટમ પહેલા બતાવવા
+          .limit(8); // હોમ પેજ પર ટોપ 8 આઈટમ બતાવવા માટે
+
+        if (error) throw error;
+        if (data) setProducts(data);
+      } catch (error) {
+        console.error("Error fetching arrivals:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNewArrivals();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <section id="new-arrival" className="new-arrival product-carousel py-5 relative overflow-hidden">
-      <div className="container">
-        <div className="d-flex flex-wrap justify-between items-center mt-5 mb-3">
-          <h4 className="text-uppercase">Our New Arrivals</h4>
-
+    <section id="new-arrival" className="py-12 bg-white">
+      <div className="container mx-auto px-4">
+        {/* Title Section */}
+        <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-4">
+          <div>
+            <span className="text-blue-600 font-bold text-sm uppercase tracking-widest">Fresh Collection</span>
+            <h2 className="text-3xl font-bold text-gray-900 mt-1 uppercase">Our New Arrivals</h2>
+          </div>
           <Link 
-    href="/shop?category=JEANS" 
-    className="text-blue-600 hover:underline font-medium"
-  >
-    View All
-  </Link>
-          {/* <Link href="/" className="btn-link no-underline text-black hover:text-black">
-            View All Products
-          </Link> */}
+            href="/shop" 
+            className="text-gray-900 font-semibold border-b-2 border-black hover:text-blue-600 hover:border-blue-600 transition-all pb-1"
+          >
+            Shop All
+          </Link>
         </div>
 
-        <Swiper
-          modules={[Navigation, Pagination]}
-          spaceBetween={20}
-          slidesPerView={3}
-          navigation
-          pagination={{ clickable: true }}
-        >
-          {products.map((product, index) => (
-            <SwiperSlide key={index}>
-              <div className="product-item image-zoom-effect link-effect relative">
-                <div className="image-holder relative">
-                  {/* Product Image */}
-                  <Link href={product.href}>
-                    <Image
-                      src={product.img}
-                      alt={product.title}
-                      width={365}
-                      height={365}
-                      className="product-image img-fluid"
-                    />
-                  </Link>
+        {/* Swiper Slider */}
+        {products.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">નવું કલેક્શન ટૂંક સમયમાં આવશે...</div>
+        ) : (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            spaceBetween={25}
+            slidesPerView={1}
+            navigation
+            pagination={{ clickable: true, dynamicBullets: true }}
+            breakpoints={{
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+              1280: { slidesPerView: 4 },
+            }}
+            className="pb-12"
+          >
+            {products.map((product) => (
+              <SwiperSlide key={product.id}>
+                {/* <div className="product-item image-zoom-effect link-effect relative"> */}
+                <div className="group relative">
+                  {/* Product Image Wrapper */}
+                  <div className="relative aspect-[3/4] overflow-hidden  bg-gray-100 shadow-sm">
+             
+                    <Link href={`/shop/${product.id}`}>
+                      <Image
+                        src={product.image1 || "/images/placeholder.jpg"} // એડમિનની image1 કોલમ
+                        alt={product.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, 25vw"
+                      />
+                    </Link>
+                    {/* New Badge */}
+                    <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full shadow-sm">
+                      <span className="text-[10px] font-bold text-blue-600 uppercase">New</span>
+                    </div>
+                  </div>
 
-                  {/* Product Info */}
-                  <div className="product-content mt-2">
-                    <h5 className="text-uppercase fs-5 mt-3">
-                      <Link
-                        href={product.href}
-                        className="text-black"
-                        style={{ textDecoration: "none" }}
-                      >
-                        {product.title}
+                  {/* Product Details */}
+                  <div className="mt-4 text-center">
+                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-tight truncate px-2">
+                      <Link href={`/product/${product.id}`} className="hover:text-blue-600 transition-colors">
+                        {product.name}
                       </Link>
-                    </h5>
-                    <span>${product.price.toFixed(2)}</span>
+                    </h3>
+                    <div className="flex justify-center items-center gap-2 mt-1">
+                      <span className="text-lg font-black text-gray-900">₹{product.price}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
       </div>
     </section>
   );

@@ -230,20 +230,7 @@ export default function ProductDetail() {
             {product.discount && <span className="badge bg-success ms-3">{product.discount}% OFF</span>}
           </div>
 
-          {/* કિંમત અને ડિસ્કાઉન્ટ સેક્શન */}
-          <div className="d-flex align-items-center mb-4">
-            {product.old_price && (
-              <span className="text-muted text-decoration-line-through me-2" style={{ fontSize: '1.1rem' }}>
-                ₹{product.old_price}
-              </span>
-            )}
-            <h3 className="text-dark fw-bold mb-0">₹{product.price}</h3>
-            {product.discount && (
-              <span className="badge bg-success ms-3 small">
-                {product.discount}% OFF
-              </span>
-            )}
-          </div>
+        
 
           {/* કલર સિલેક્શન */}
           <div className="mb-4">
