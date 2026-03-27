@@ -42,6 +42,11 @@ export default function Products() {
     await supabase.from("products").delete().eq("id", id);
     fetchProducts();
   };
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
 
   return (
     <div className="container py-5">
