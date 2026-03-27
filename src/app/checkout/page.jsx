@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // અહીં useEffect ઉમેરવું જરૂરી છે
+import { useCart } from "@/app/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
