@@ -12,7 +12,7 @@ export default function UserHistory() {
   const [userData, setUserData] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
+const [userContact, setUserContact] = useState({ phone: "", address: "" });
   useEffect(() => {
     const fetchUserAndOrders = async () => {
       setLoading(true);
@@ -84,14 +84,14 @@ export default function UserHistory() {
                 <Phone size={18} className="text-muted" />
                 <div>
                   <small className="text-muted d-block">Phone Number</small>
-                  <span>{userData.phone || "Not Provided"}</span>
+                  <span>{userContact.phone || "Not Provided"}</span>
                 </div>
               </div>
               <div className="d-flex align-items-center gap-3 mb-3">
                 <MapPin size={18} className="text-muted" />
                 <div>
                   <small className="text-muted d-block">Address</small>
-                  <span className="small">{userData.address || "No address saved"}</span>
+                  <span className="small">{userContact.address || "No address saved"}</span>
                 </div>
               </div>
               <div className="d-flex align-items-center gap-3">
