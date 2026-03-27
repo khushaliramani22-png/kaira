@@ -299,7 +299,7 @@ export default function CheckoutPage() {
 
 
 
-              </div>
+            
               <div className="bg-white p-6 rounded-2xl shadow-sm border">
                 <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>
                 <div className="flex gap-4">
@@ -337,6 +337,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
-
+  </div>
   );
 }
