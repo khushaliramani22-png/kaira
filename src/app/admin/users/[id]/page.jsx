@@ -14,38 +14,45 @@ export default function UserHistory() {
   const [loading, setLoading] = useState(true);
 const [userContact, setUserContact] = useState({ phone: "", address: "" });
   useEffect(() => {
-    const fetchUserAndOrders = async () => {
-      setLoading(true);
-      try {
-        // ૧. યુઝરનો ડેટા 'users' ટેબલમાંથી ફેચ કરો (profiles ને બદલે)
-        const { data: user, error: userError } = await supabase
-          .from("users") // ટેબલ બદલ્યું
-          .select("*")
-          .eq("id", id)
-          .single();
+  const fetchUserAndOrders = async () => {
+    setLoading(true);
+    try {
+      // 1. યુઝર ડેટા
+      const { data: user } = await supabase.from("users").select("*").eq("id", id).single();
+      setUserData(user);
 
-        if (userError) throw userError;
-        setUserData(user);
+      // 2. ઓર્ડર્સ ડેટા (અહીં ખાસ ફિલ્ટર ચેક કરો)
+      const { data: userOrders, error: orderError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", id) // ચેક કરો કે ઓર્ડર ટેબલમાં 'user_id' કોલમ જ છે ને?
+        .order("created_at", { ascending: false });
 
-        // ૨. આ યુઝરના ઓર્ડર્સ ફેચ કરો
-        const { data: userOrders, error: orderError } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", id)
-          .order("created_at", { ascending: false });
+      if (orderError) throw orderError;
+      
+      console.log("User Orders Found:", userOrders); // આ લાઈન console માં ચેક કરો
 
-        if (orderError) throw orderError;
-        setOrders(userOrders || []);
+      setOrders(userOrders || []);
 
-      } catch (err) {
-        console.error("Error fetching data:", err.message);
-      } finally {
-        setLoading(false);
+      // 3. એડ્રેસ સેટ કરવાનું લોજિક
+      if (userOrders && userOrders.length > 0) {
+        const latest = userOrders[0];
+        console.log("Latest Order for Address:", latest); // આ પણ ચેક કરો
+        
+        setUserContact({
+          phone: latest.phone || "No Phone",
+          address: `${latest.address || ""}, ${latest.city || ""} - ${latest.pincode || ""}`
+        });
       }
-    };
+    } catch (err) {
+      console.error("Error:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (id) fetchUserAndOrders();
-  }, [id]);
+  if (id) fetchUserAndOrders();
+}, [id]);
 
   if (loading) return <div className="p-5 text-center font-bold">Loading User History...</div>;
   if (!userData) return <div className="p-5 text-center text-danger">User not found!</div>;
@@ -84,14 +91,14 @@ const [userContact, setUserContact] = useState({ phone: "", address: "" });
                 <Phone size={18} className="text-muted" />
                 <div>
                   <small className="text-muted d-block">Phone Number</small>
-                  <span>{userContact.phone || "Not Provided"}</span>
+                  <span>{userContact.phone}</span>
                 </div>
               </div>
               <div className="d-flex align-items-center gap-3 mb-3">
                 <MapPin size={18} className="text-muted" />
                 <div>
                   <small className="text-muted d-block">Address</small>
-                  <span className="small">{userContact.address || "No address saved"}</span>
+                  <span className="small">{userContact.address}</span>
                 </div>
               </div>
               <div className="d-flex align-items-center gap-3">
