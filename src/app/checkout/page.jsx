@@ -12,6 +12,8 @@ export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false); 
+const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
 
   const [formData, setFormData] = useState({
@@ -22,6 +24,38 @@ export default function CheckoutPage() {
     city: "",
     pincode: ""
   });
+
+useEffect(() => {
+  const fetchPreviousAddress = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("customer_name, phone, email, address, city, pincode")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (data) {
+      setFormData({
+        name: data.customer_name,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        city: data.city,
+        pincode: data.pincode
+      });
+      setHasPreviousOrder(true);
+      setShowAddressForm(false); 
+    } else {
+      setShowAddressForm(true); 
+    }
+  };
+  fetchPreviousAddress();
+}, []);
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -202,14 +236,62 @@ export default function CheckoutPage() {
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Shipping Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input name="name" placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input name="phone" placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input name="email" placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <textarea name="address" placeholder="Address *" onChange={handleChange} className="md:col-span-2 w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input name="city" placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-                <input name="pincode" placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
-              </div>
+              <div className="lg:col-span-7 space-y-6">
+  <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+    <div className="flex items-center p-4 bg-gray-50 border-b">
+      <span className="text-blue-600 mr-2 text-xl">📍</span>
+      <h3 className="font-bold text-gray-700 uppercase text-xs tracking-wider">Delivery Address</h3>
+    </div>
+
+    <div className="p-6">
+      {/* જૂના યુઝર માટે કાર્ડ */}
+      {hasPreviousOrder && !showAddressForm ? (
+        <div className="flex justify-between items-start animate-in fade-in duration-500">
+          <div className="space-y-1">
+            <p className="font-bold text-lg text-gray-800">{formData.name}</p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {formData.address}, {formData.city} - {formData.pincode}
+            </p>
+            <p className="font-semibold pt-2 text-gray-800">{formData.phone}</p>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setShowAddressForm(true)}
+            className="text-pink-600 font-black text-sm hover:bg-pink-50 px-3 py-1 rounded transition-all"
+          >
+            CHANGE
+          </button>
+        </div>
+      ) : (
+        /* નવા યુઝર માટે અથવા CHANGE ક્લિક કર્યા પછી ફોર્મ */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+          <input name="name" value={formData.name} placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+          <input name="phone" value={formData.phone} placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+          <input name="email" value={formData.email} placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+          <textarea name="address" value={formData.address} placeholder="Address *" onChange={handleChange} className="md:col-span-2 w-full border p-3 rounded-xl outline-none focus:border-black" />
+          <input name="city" value={formData.city} placeholder="City" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+          <input name="pincode" value={formData.pincode} placeholder="Pincode" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
+          
+          {hasPreviousOrder && (
+            <button 
+              type="button"
+              onClick={() => setShowAddressForm(false)}
+              className="md:col-span-2 text-gray-400 text-xs underline text-left hover:text-black"
+            >
+              Use previously saved address
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Payment Method વાળો div આની નીચે જ રહેશે */}
+  <div className="bg-white p-6 rounded-2xl shadow-sm border">
+    <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>
+    {/* ... બાકીનો Payment Method કોડ ... */}
+  </div>
+</div>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>

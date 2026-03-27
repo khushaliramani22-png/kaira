@@ -13,7 +13,7 @@ import Categories from "@/components/Categories";
 import NewArrivals from "@/components/NewArrivals";
 import Collection from "@/components/Collection";
 import BestSellers from "@/components/BestSellers";
-import RelatedProducts from "@/components/ReletedProduct";
+import RelatedProducts from "@/components/RelatedProduct";
 import Newsletter from "@/components/Newsletter";
 
 
