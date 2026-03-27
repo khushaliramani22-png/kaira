@@ -8,8 +8,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showOtpInput, setShowOtpInput] = useState(false); 
-  
+  const [showOtpInput, setShowOtpInput] = useState(false);
+
   const [message, setMessage] = useState("");
 
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
-        shouldCreateUser: true, 
+        shouldCreateUser: true,
       },
     });
 
@@ -40,7 +40,7 @@ export default function LoginPage() {
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+setMessage("");
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
@@ -48,11 +48,12 @@ export default function LoginPage() {
     });
 
     if (error) {
-      alert("Incorrect code! Try again.");
+      setMessage("Incorrect code! Try again.");
+      setLoading(false)
     } else {
-      router.push("/"); 
+      router.push("/");
 
-      
+
     }
     setLoading(false);
   };
@@ -81,13 +82,13 @@ export default function LoginPage() {
           <form onSubmit={handleSendOTP}>
             <div className="mb-3">
               <label className="form-label small fw-bold">Email Address</label>
-              <input 
-                type="email" 
-                className="form-control py-2" 
-                placeholder="name@example.com" 
+              <input
+                type="email"
+                className="form-control py-2"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required 
+                required
               />
             </div>
             <button type="submit" className="btn btn-dark w-100 mb-3 py-2 fw-bold" disabled={loading}>
@@ -97,23 +98,30 @@ export default function LoginPage() {
         ) : (
           /* OTP form */
           <form onSubmit={handleVerifyOTP}>
+            {/* OTP Input Field */}
             <div className="mb-3">
               <label className="form-label small fw-bold">Verification Code</label>
-              <input 
-                type="text" 
-                className="form-control py-2 text-center fw-bold" 
-                placeholder="000000" 
-                maxLength={6}
+              <input
+                type="text"
+                className="form-control py-2 text-center fw-bold"
+                style={{ letterSpacing: '0.3rem', fontSize: '1.2rem' }} // 8 આંકડા માટે સ્પેસ થોડી ઓછી કરી
+                placeholder="00000000"
+                maxLength={8} // અહીં 8 કરી દો
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required 
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ""); // ફક્ત નંબર્સ
+                  setOtp(value);
+
+                  if (message) setMessage("");
+                }}
+                required
               />
             </div>
             <button type="submit" className="btn btn-primary w-100 mb-2 py-2 fw-bold" disabled={loading}>
               {loading ? "Verifying..." : "Verify & Login"}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-link w-100 text-muted small text-decoration-none"
               onClick={() => setShowOtpInput(false)}
             >
