@@ -1,55 +1,34 @@
 "use client";
 
-// "use client";
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import {
-  RefreshCw,
-  MapPin,
-  AlertCircle,
-  CheckCircle2,
-  Truck,
-  XCircle,
-} from "lucide-react";
+import { RefreshCw, MapPin, AlertCircle, CheckCircle2, Truck, XCircle } from "lucide-react";
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ઓર્ડર ફેચ કરવા માટેનું ફંક્શન
   const fetchOrders = async () => {
-    try {
-      setLoading(true);
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      console.log("Orders Data:", data);
-      console.log("Orders Error:", error);
-
-      if (error) {
-        console.error("Supabase Fetch Error:", error.message);
-        alert("Failed to fetch orders: " + error.message);
-        setOrders([]);
-      } else {
-        setOrders(data || []);
-      }
-    } catch (err) {
-      console.error("Unexpected Error:", err);
-      alert("Something went wrong while fetching orders.");
-      setOrders([]);
-    } finally {
-      setLoading(false);
+    if (!error) {
+      setOrders(data || []);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
+  // સ્ટેટસ અપડેટ કરવાનું લોજિક
   const updateStatus = async (id, currentStatus, newStatus) => {
+    // જો ઓર્ડર પહેલેથી જ Cancelled હોય, તો તેને Confirm થતો અટકાવો
     if (currentStatus === "Cancelled" && newStatus === "Confirmed") {
       alert("This order is already cancelled and cannot be confirmed.");
       return;
@@ -61,14 +40,20 @@ export default function AdminOrders() {
       .eq("id", id);
 
     if (error) {
-      console.error("Update Error:", error.message);
-      alert("Status update failed: " + error.message);
+      alert("Status update failed");
     } else {
       fetchOrders();
     }
   };
 
   if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-400 font-bold uppercase tracking-widest text-xs">
+        <RefreshCw className="animate-spin mr-2" size={16} /> Loading Orders...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
