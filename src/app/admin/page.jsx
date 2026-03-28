@@ -13,87 +13,89 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-   async function fetchData() {
-  setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("તમારી અત્યારની લોગિન ID આ છે:", user?.id);
-      console.log("તમારો લોગિન ઈમેલ આ છે:", user?.email);
-  // ૧. બધા ઓર્ડર્સ ફેચ કરો
-  const { data: orders, error: orderError } = await supabase
-    .from("orders")
-    .select("*");
+    async function fetchData() {
+      setLoading(true);
+      
+      // ૧. સેશન ચેક કરો (આનાથી undefined એરર જતી રહેશે)
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      
+      console.log("તમારી અત્યારની લોગિન ID:", user?.id);
+      console.log("તમારો લોગિન ઈમેલ:", user?.email);
 
-  // ૨. પ્રોડક્ટ્સ ગણો
-  const { count: productCount } = await supabase
-    .from("products")
-    .select("*", { count: 'exact', head: true });
+      // ૨. બધા ઓર્ડર્સ ફેચ કરો (RLS Disable હશે તો ૭ આવશે)
+      const { data: orders, error: orderError } = await supabase
+        .from("orders")
+        .select("*");
 
-  // ૩. યુઝર્સ ગણો - પણ એડમિન ઈમેલ વગરના (Filter added)
-  const { count: userCount } = await supabase
-    .from("users")
-    .select("*", { count: 'exact', head: true })
-    .neq("email", "admin@gmail.com"); // એડમિનને લિસ્ટમાંથી કાઢી નાખશે
+      // ૩. પ્રોડક્ટ્સ ગણો
+      const { count: productCount } = await supabase
+        .from("products")
+        .select("*", { count: 'exact', head: true });
 
-  if (!orderError && orders) {
-    const totalRevenue = orders.reduce((sum, item) => sum + (item.total_amount || 0), 0);
+      // ૪. યુઝર્સ ગણો - એડમિન ઈમેલ (admin@gmail.com) સિવાયના
+      const { data: usersData, count: userCount, error: userError } = await supabase
+        .from("users")
+        .select("*", { count: 'exact' })
+        .neq("email", "admin@gmail.com");
 
-    setStats({
-      products: productCount || 0,
-      orders: orders.length, 
-      users: userCount || 0,  // હવે અહીં ૨ જ આવશે
-      revenue: totalRevenue
-    });
-  }
-  setLoading(false);
-}
+      if (!orderError && orders) {
+        // કુલ રેવન્યુ ગણો
+        const totalRevenue = orders.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
+
+        setStats({
+          products: productCount || 0,
+          orders: orders.length, // અહીં હવે ૭ દેખાશે
+          users: userCount || 0,  // અહીં ૨ દેખાશે
+          revenue: totalRevenue
+        });
+      }
+
+      if (orderError || userError) {
+        console.error("Fetch Error:", orderError?.message || userError?.message);
+      }
+      
+      setLoading(false);
+    }
 
     fetchData();
   }, []);
-  if (loading) return <div className="p-5 text-center font-serif tracking-widest uppercase">Loading Data...</div>;
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen font-serif tracking-widest uppercase text-xs text-gray-400">
+      Loading Dashboard Data...
+    </div>
+  );
 
   return (
-    <div className="container-fluid p-4">
-      <h1 className="mb-4 font-serif uppercase tracking-widest text-2xl">Admin Dashboard</h1>
+    <div className="container-fluid p-4 bg-white min-h-screen">
+      <h1 className="mb-8 font-black uppercase tracking-tighter italic text-2xl border-b pb-4">
+        Admin Dashboard
+      </h1>
 
-      <div className="row">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Products */}
-        <div className="col-md-3 mb-4">
-          <div className="card shadow border-0 bg-light">
-            <div className="card-body text-center">
-              <h5 className="text-[10px] uppercase font-bold text-gray-400">Total Products</h5>
-              <h2 className="text-primary font-serif">{stats.products}</h2>
-            </div>
-          </div>
+        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+          <h5 className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2">Total Products</h5>
+          <h2 className="text-3xl font-black text-blue-600">{stats.products}</h2>
         </div>
 
         {/* Total Orders */}
-        <div className="col-md-3 mb-4">
-          <div className="card shadow border-0 bg-light">
-            <div className="card-body text-center">
-              <h5 className="text-[10px] uppercase font-bold text-gray-400">Total Orders</h5>
-              <h2 className="text-success font-serif">{stats.orders}</h2>
-            </div>
-          </div>
+        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+          <h5 className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2">Total Orders</h5>
+          <h2 className="text-3xl font-black text-green-600">{stats.orders}</h2>
         </div>
 
-        {/* Users */}
-        <div className="col-md-3 mb-4">
-          <div className="card shadow border-0 bg-light">
-            <div className="card-body text-center">
-              <h5 className="text-[10px] uppercase font-bold text-gray-400">Total Users</h5>
-              <h2 className="text-warning font-serif">{stats.users}</h2>
-            </div>
-          </div>
+        {/* Total Users */}
+        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+          <h5 className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2">Total Users</h5>
+          <h2 className="text-3xl font-black text-orange-500">{stats.users}</h2>
         </div>
 
-        {/* Revenue */}
-        <div className="col-md-3 mb-4">
-          <div className="card shadow border-0 bg-dark text-white">
-            <div className="card-body text-center">
-              <h5 className="text-[10px] uppercase font-bold text-gray-500">Total Revenue</h5>
-              <h2 className="text-white font-serif">₹{stats.revenue.toLocaleString()}</h2>
-            </div>
-          </div>
+        {/* Total Revenue */}
+        <div className="bg-black p-6 rounded-2xl shadow-xl text-center">
+          <h5 className="text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Total Revenue</h5>
+          <h2 className="text-3xl font-black text-white">₹{stats.revenue.toLocaleString()}</h2>
         </div>
       </div>
     </div>

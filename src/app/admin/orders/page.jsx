@@ -18,7 +18,6 @@ export default function AdminOrders() {
  const fetchOrders = async () => {
   setLoading(true);
   
-  // 'supabase' ને બદલે 'supabaseAdmin' વાપરો
   const { data, error } = await supabaseAdmin 
     .from("orders")
     .select("*")
@@ -27,7 +26,7 @@ export default function AdminOrders() {
   if (error) {
     console.error("Error:", error.message);
   } else {
-    // હવે અહીં console માં 7 દેખાશે
+    
     console.log("Total Orders Found:", data.length); 
     setOrders(data || []);
   }
