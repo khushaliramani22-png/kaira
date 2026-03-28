@@ -1,12 +1,12 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/utils/supabase/client' // ખાતરી કરો કે આ પાથ સાચો છે
 import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false) // Toggle State
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   
@@ -22,18 +22,27 @@ export default function AdminLogin() {
     setErrorMsg('')
 
     try {
+      // ૧. ઈમેલ અને પાસવર્ડથી સાઈન-ઈન કરો
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      
       if (error) throw error
 
-      const isAdmin = data.user?.app_metadata?.is_admin === true
-      if (isAdmin) {
+      // ૨. એડમિન ચેક (અત્યારે તમારા ઈમેલથી ચેક કરીએ છીએ)
+      // જો તમે ભવિષ્યમાં રોલ વાપરવાના હોવ તો અહીં ફેરફાર કરી શકાય
+      const adminEmail = 'khushaliramani22@gmail.com'; 
+      const isAuthorized = data.user?.email === adminEmail;
+
+      if (isAuthorized) {
+        // જો એડમિન હોય તો ડેશબોર્ડ પર મોકલો
         router.push('/admin')
         router.refresh()
       } else {
+        // જો એડમિન ન હોય તો સેશન ક્લિયર કરો જેથી 'undefined' એરર ન આવે
         setErrorMsg("Access Denied: Admin only.")
         await supabase.auth.signOut()
       }
     } catch (error) {
+      console.error("Login Error:", error.message)
       setErrorMsg("Invalid credentials. Please try again.")
     } finally {
       setLoading(false)
@@ -80,7 +89,6 @@ export default function AdminLogin() {
               </button>
             </div>
             
-            {/* Password Input Wrapper */}
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
