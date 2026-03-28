@@ -15,25 +15,24 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    
-    // અહીં supabaseAdmin વાપરવાથી RLS બાયપાસ થશે અને ૭ ઓર્ડર દેખાશે
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
+ const fetchOrders = async () => {
+  setLoading(true);
+  
+  // 'supabase' ને બદલે 'supabaseAdmin' વાપરો
+  const { data, error } = await supabaseAdmin 
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching orders:", error.message);
-      alert("Error: " + error.message);
-    } else {
-      console.log("Total Orders Found:", data.length); 
-      setOrders(data || []);
-    }
-    setLoading(false);
-  };
-
+  if (error) {
+    console.error("Error:", error.message);
+  } else {
+    // હવે અહીં console માં 7 દેખાશે
+    console.log("Total Orders Found:", data.length); 
+    setOrders(data || []);
+  }
+  setLoading(false);
+};
   useEffect(() => {
     fetchOrders();
   }, []);
