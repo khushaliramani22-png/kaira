@@ -15,7 +15,9 @@ export default function AdminDashboard() {
   useEffect(() => {
    async function fetchData() {
   setLoading(true);
-
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("તમારી અત્યારની લોગિન ID આ છે:", user?.id);
+      console.log("તમારો લોગિન ઈમેલ આ છે:", user?.email);
   // ૧. બધા ઓર્ડર્સ ફેચ કરો
   const { data: orders, error: orderError } = await supabase
     .from("orders")
