@@ -18,25 +18,7 @@ export default function AdminOrders() {
 
   const [loading, setLoading] = useState(true);
 
-  // ઓર્ડર ફેચ કરવા માટેનું ફંક્શન
-
-  // const fetchOrders = async () => {
-  //   setLoading(true);
-
-  //   const { data, error } = await supabase
-
-  //     .from("orders")
-
-  //     .select("*")
-
-  //     .order("created_at", { ascending: false });
-
-  //   if (!error) {
-  //     setOrders(data || []);
-  //   }
-
-  //   setLoading(false);
-  // };
+  
 const fetchOrders = async () => {
   setLoading(true);
   

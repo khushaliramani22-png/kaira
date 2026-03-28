@@ -16,26 +16,28 @@ export default function AdminDashboard() {
     async function fetchData() {
       setLoading(true);
 
-  
+      // 1. બધા ઓર્ડર્સ ફેચ કરો
       const { data: orders, error: orderError } = await supabase
         .from("orders")
         .select("*");
 
-   
+      // 2. ટોટલ પ્રોડક્ટ્સ ગણો
       const { count: productCount } = await supabase
-        .from("products") 
+        .from("products")
+        .select("*", { count: 'exact', head: true });
+
+      // 3. ટોટલ યુઝર્સ ગણો (ઓર્ડર આપ્યો હોય કે ન આપ્યો હોય)
+      const { count: userCount, error: userError } = await supabase
+        .from("users") // તમારા યુઝર્સ ટેબલનું નામ
         .select("*", { count: 'exact', head: true });
 
       if (!orderError && orders) {
-
         const totalRevenue = orders.reduce((sum, item) => sum + (item.total_amount || 0), 0);
-  
-        const uniqueUsers = [...new Set(orders.map(o => o.email))].length;
 
         setStats({
           products: productCount || 0,
-          orders: orders.length,
-          users: uniqueUsers,
+          orders: orders.length, // અહીં હવે 7 દેખાશે જો SQL રન કરી હશે તો
+          users: userCount || 0,  // અહીં હવે 2 દેખાશે
           revenue: totalRevenue
         });
       }
@@ -44,7 +46,6 @@ export default function AdminDashboard() {
 
     fetchData();
   }, []);
-
   if (loading) return <div className="p-5 text-center font-serif tracking-widest uppercase">Loading Data...</div>;
 
   return (
