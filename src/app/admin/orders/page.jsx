@@ -20,23 +20,40 @@ export default function AdminOrders() {
 
   // ઓર્ડર ફેચ કરવા માટેનું ફંક્શન
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  // const fetchOrders = async () => {
+  //   setLoading(true);
 
-    const { data, error } = await supabase
+  //   const { data, error } = await supabase
 
-      .from("orders")
+  //     .from("orders")
 
-      .select("*")
+  //     .select("*")
 
-      .order("created_at", { ascending: false });
+  //     .order("created_at", { ascending: false });
 
-    if (!error) {
-      setOrders(data || []);
-    }
+  //   if (!error) {
+  //     setOrders(data || []);
+  //   }
 
-    setLoading(false);
-  };
+  //   setLoading(false);
+  // };
+const fetchOrders = async () => {
+  setLoading(true);
+  
+  // એડમિન માટે અહીં કોઈ .eq() ફિલ્ટર ન હોવું જોઈએ
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*") // બધા જ ઓર્ડર અને બધી જ કોલમ
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error:", error.message);
+  } else {
+    console.log("Total Orders Found:", data.length); // અહીં ચેક કરો 7 કે તેથી વધુ આંકડો આવે છે?
+    setOrders(data || []);
+  }
+  setLoading(false);
+};
 
   useEffect(() => {
     fetchOrders();
