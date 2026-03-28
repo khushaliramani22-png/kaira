@@ -9,6 +9,19 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
 
   // ઓર્ડર ફેચ કરવા માટેનું ફંક્શન
+  // const fetchOrders = async () => {
+  //   setLoading(true);
+  //   const { data, error } = await supabase
+  //     .from("orders")
+  //     .select("*")
+  //     .order("created_at", { ascending: false });
+
+  //   if (!error) {
+  //     setOrders(data || []);
+  //   }
+  //   setLoading(false);
+  // };
+
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -16,7 +29,10 @@ export default function AdminOrders() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error) {
+    if (error) {
+      console.error("Supabase Error:", error.message); // આ લાઈન ઉમેરો
+    } else {
+      console.log("Fetched Data:", data); // આનાથી ખબર પડશે ડેટા આવે છે કે નહીં
       setOrders(data || []);
     }
     setLoading(false);
