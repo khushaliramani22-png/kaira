@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -11,67 +12,87 @@ export default function AdminDashboard() {
     revenue: 0
   });
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       
-      // ૧. સેશન ચેક કરો (આનાથી undefined એરર જતી રહેશે)
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
+      // ૧. સેશન ચેક કરો - જો સેશન ન હોય તો સીધા લોગિન પર મોકલો
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      console.log("તમારી અત્યારની લોગિન ID:", user?.id);
-      console.log("તમારો લોગિન ઈમેલ:", user?.email);
-
-      // ૨. બધા ઓર્ડર્સ ફેચ કરો (RLS Disable હશે તો ૭ આવશે)
-      const { data: orders, error: orderError } = await supabase
-        .from("orders")
-        .select("*");
-
-      // ૩. પ્રોડક્ટ્સ ગણો
-      const { count: productCount } = await supabase
-        .from("products")
-        .select("*", { count: 'exact', head: true });
-
-      // ૪. યુઝર્સ ગણો - એડમિન ઈમેલ (admin@gmail.com) સિવાયના
-      const { data: usersData, count: userCount, error: userError } = await supabase
-        .from("users")
-        .select("*", { count: 'exact' })
-        .neq("email", "admin@gmail.com");
-
-      if (!orderError && orders) {
-        // કુલ રેવન્યુ ગણો
-        const totalRevenue = orders.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
-
-        setStats({
-          products: productCount || 0,
-          orders: orders.length, // અહીં હવે ૭ દેખાશે
-          users: userCount || 0,  // અહીં ૨ દેખાશે
-          revenue: totalRevenue
-        });
+      if (sessionError || !session) {
+        console.log("સેશન મળ્યું નથી, લોગિન પર રીડાયરેક્ટ કરી રહ્યા છીએ...");
+        router.push("/login");
+        return;
       }
 
-      if (orderError || userError) {
-        console.error("Fetch Error:", orderError?.message || userError?.message);
+      // ૨. સિક્યોરિટી ચેક - જો લોગિન યુઝર એડમિન ન હોય તો બહાર કાઢો
+      if (session.user.email !== "admin@gmail.com") {
+        alert("તમારી પાસે આ પેજ જોવાની પરવાનગી નથી!");
+        router.push("/"); // અથવા તમારા હોમ પેજ પર
+        return;
       }
-      
-      setLoading(false);
+
+      const user = session.user;
+      console.log("Admin Logged In:", user.email);
+
+      try {
+        // ૩. બધા ઓર્ડર્સ ફેચ કરો (RLS ચાલુ હશે તો પણ એડમિન પોલિસી મુજબ ૭ આવશે)
+        const { data: orders, error: orderError } = await supabase
+          .from("orders")
+          .select("*");
+
+        // ૪. પ્રોડક્ટ્સ ગણો
+        const { count: productCount } = await supabase
+          .from("products")
+          .select("*", { count: 'exact', head: true });
+
+        // ૫. યુઝર્સ ગણો - એડમિન ઈમેલ સિવાયના
+        const { count: userCount, error: userError } = await supabase
+          .from("users")
+          .select("*", { count: 'exact', head: true })
+          .neq("email", "admin@gmail.com");
+
+        if (orderError) throw orderError;
+        if (userError) throw userError;
+
+        if (orders) {
+          const totalRevenue = orders.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
+
+          setStats({
+            products: productCount || 0,
+            orders: orders.length, 
+            users: userCount || 0,
+            revenue: totalRevenue
+          });
+        }
+      } catch (err) {
+        console.error("Fetch Error:", err.message);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchData();
-  }, []);
+  }, [router]);
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen font-serif tracking-widest uppercase text-xs text-gray-400">
-      Loading Dashboard Data...
+    <div className="flex items-center justify-center min-h-screen font-serif tracking-widest uppercase text-xs text-gray-400 bg-white">
+      Loading Secure Admin Data...
     </div>
   );
 
   return (
     <div className="container-fluid p-4 bg-white min-h-screen">
-      <h1 className="mb-8 font-black uppercase tracking-tighter italic text-2xl border-b pb-4">
-        Admin Dashboard
-      </h1>
+      <div className="flex justify-between items-center mb-8 border-b pb-4">
+        <h1 className="font-black uppercase tracking-tighter italic text-2xl text-black">
+          Admin Dashboard
+        </h1>
+        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          Logged in as: admin@gmail.com
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Products */}
