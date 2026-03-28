@@ -1,12 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// ખાતરી કરો કે આ Variables તમારા .env.local અને Vercel Settings માં સાચા છે
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Supabase URL અથવા Anon Key ખૂટે છે!");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true, // આ સેશનને યાદ રાખશે
-    autoRefreshToken: true,
-    detectSessionInUrl: true, // URL માંથી ટોકન આપમેળે શોધી લેશે
-  },
-});
+    persistSession: true,      // સેશન બ્રાઉઝરમાં સેવ કરવા માટે
+    autoRefreshToken: true,    // ટોકન એક્સપાયર થાય તો ઓટોમેટિક નવું મેળવવા
+    detectSessionInUrl: true,  // ઈમેલ કન્ફર્મેશન લિંક માટે જરૂરી
+    storageKey: 'kaira-auth-token' // સ્ટોરેજમાં અલગ કી રાખવા માટે
+  }
+})
