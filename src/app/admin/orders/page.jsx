@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/adminsupabase"; // સાચું એડમિન ક્લાયન્ટ વાપરો
+import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import {
   RefreshCw,
   MapPin,
