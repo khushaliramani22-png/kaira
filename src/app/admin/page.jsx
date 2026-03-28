@@ -13,36 +13,37 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
+   async function fetchData() {
+  setLoading(true);
 
-      // 1. બધા ઓર્ડર્સ ફેચ કરો
-      const { data: orders, error: orderError } = await supabase
-        .from("orders")
-        .select("*");
+  // ૧. બધા ઓર્ડર્સ ફેચ કરો
+  const { data: orders, error: orderError } = await supabase
+    .from("orders")
+    .select("*");
 
-      // 2. ટોટલ પ્રોડક્ટ્સ ગણો
-      const { count: productCount } = await supabase
-        .from("products")
-        .select("*", { count: 'exact', head: true });
+  // ૨. પ્રોડક્ટ્સ ગણો
+  const { count: productCount } = await supabase
+    .from("products")
+    .select("*", { count: 'exact', head: true });
 
-      // 3. ટોટલ યુઝર્સ ગણો (ઓર્ડર આપ્યો હોય કે ન આપ્યો હોય)
-      const { count: userCount, error: userError } = await supabase
-        .from("users") // તમારા યુઝર્સ ટેબલનું નામ
-        .select("*", { count: 'exact', head: true });
+  // ૩. યુઝર્સ ગણો - પણ એડમિન ઈમેલ વગરના (Filter added)
+  const { count: userCount } = await supabase
+    .from("users")
+    .select("*", { count: 'exact', head: true })
+    .neq("email", "admin@gmail.com"); // એડમિનને લિસ્ટમાંથી કાઢી નાખશે
 
-      if (!orderError && orders) {
-        const totalRevenue = orders.reduce((sum, item) => sum + (item.total_amount || 0), 0);
+  if (!orderError && orders) {
+    const totalRevenue = orders.reduce((sum, item) => sum + (item.total_amount || 0), 0);
 
-        setStats({
-          products: productCount || 0,
-          orders: orders.length, // અહીં હવે 7 દેખાશે જો SQL રન કરી હશે તો
-          users: userCount || 0,  // અહીં હવે 2 દેખાશે
-          revenue: totalRevenue
-        });
-      }
-      setLoading(false);
-    }
+    setStats({
+      products: productCount || 0,
+      orders: orders.length, 
+      users: userCount || 0,  // હવે અહીં ૨ જ આવશે
+      revenue: totalRevenue
+    });
+  }
+  setLoading(false);
+}
 
     fetchData();
   }, []);
