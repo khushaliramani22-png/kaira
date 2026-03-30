@@ -23,16 +23,16 @@ export default function UsersListPage() {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      // ૧. 'users' ટેબલમાંથી ડેટા ફેચ કરો (profiles ને બદલે)
+   
       let query = supabase
         .from("users")
         .select("*", { count: "exact" })
         .eq("role", "user")
-        .order("created_at", { ascending: false }) // નવો યુઝર ઉપર લાવવા માટે false
+        .order("created_at", { ascending: false }) 
         .range(from, to);
 
       if (searchQuery) {
-        // full_name ને બદલે name વાપર્યું
+
         query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
       }
 
@@ -46,7 +46,6 @@ export default function UsersListPage() {
 
       if (orderError) console.error("Order fetch error:", orderError);
 
-      // ૩. ડેટા પ્રોસેસ કરો
       // ૩. ડેટા પ્રોસેસ કરો
       const processedUsers = userData.map(user => {
         const userOrders = orderData ? orderData.filter(o => String(o.user_id) === String(user.id)) : [];

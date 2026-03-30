@@ -159,11 +159,12 @@ export default function UserHistory() {
                         </td>
                         <td>
                           <button
-                            className="btn btn-sm btn-light"
-                            onClick={() => router.push(`/admin/users/${user.id}`)} // અહીં user.id (UUID) મોકલો
-                          >
-                            view Details
-                          </button>
+  className="btn btn-sm btn-light"
+ 
+  onClick={() => router.push(`/admin/orders/${order.id}`)} 
+>
+  View Details
+</button>
                         </td>
                       </tr>
                     ))
