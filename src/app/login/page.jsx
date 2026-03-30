@@ -24,6 +24,9 @@ export default function LoginPage() {
       email: email,
       options: {
         shouldCreateUser: true,
+        data: {
+          name: email.split('@')[0], 
+        },
       },
     });
 

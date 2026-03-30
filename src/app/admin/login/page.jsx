@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client' // ખાતરી કરો કે આ પાથ સાચો છે
+import { createClient } from '@/utils/supabase/client' // પાથ બરાબર ચેક કરી લેજો
 import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
@@ -22,24 +22,26 @@ export default function AdminLogin() {
     setErrorMsg('')
 
     try {
-      // ૧. ઈમેલ અને પાસવર્ડથી સાઈન-ઈન કરો
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      // ૧. સાઈન-ઈન પ્રોસેસ (Email & Password)
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password: password.trim() 
+      })
       
       if (error) throw error
 
-      // ૨. એડમિન ચેક (અત્યારે તમારા ઈમેલથી ચેક કરીએ છીએ)
-      // જો તમે ભવિષ્યમાં રોલ વાપરવાના હોવ તો અહીં ફેરફાર કરી શકાય
+      // ૨. એડમિન ચેક
+      // અહીં સીધું 'khushaliramani22@gmail.com' ચેક કરવાથી લોગિન થઈ જશે
       const adminEmail = 'khushaliramani22@gmail.com'; 
-      const isAuthorized = data.user?.email === adminEmail;
-
-      if (isAuthorized) {
-        // જો એડમિન હોય તો ડેશબોર્ડ પર મોકલો
-        router.push('/admin')
-        router.refresh()
+      
+      if (data.user?.email === adminEmail) {
+        // સફળ લોગિન - સીધા જ ઓર્ડર પેજ પર મોકલો
+        // router.push ને બદલે window.location વાપરવું વધુ સેફ છે જેથી સેશન રિફ્રેશ થઈ જાય
+        window.location.href = '/admin/orders';
       } else {
-        // જો એડમિન ન હોય તો સેશન ક્લિયર કરો જેથી 'undefined' એરર ન આવે
-        setErrorMsg("Access Denied: Admin only.")
+        // જો બીજો કોઈ યુઝર હોય તો લોગઆઉટ કરી દેવું
         await supabase.auth.signOut()
+        setErrorMsg("Access Denied: Admin only.")
       }
     } catch (error) {
       console.error("Login Error:", error.message)
@@ -49,6 +51,7 @@ export default function AdminLogin() {
     }
   }
 
+  // --- ડિઝાઈન એ જ રાખી છે જે તમારી પાસે હતી ---
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 font-sans text-black">
       <div className="w-full max-w-md bg-white border border-gray-200 p-10 shadow-2xl relative">
@@ -69,7 +72,7 @@ export default function AdminLogin() {
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
             <input 
               type="email" 
-              className="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:border-black transition-all" 
+              className="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:border-black transition-all text-black" 
               placeholder="admin@kaira.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -92,7 +95,7 @@ export default function AdminLogin() {
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
-                className="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:border-black transition-all pr-12" 
+                className="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:border-black transition-all pr-12 text-black" 
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -135,7 +138,7 @@ export default function AdminLogin() {
               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Identity Recovery</p>
               <h2 className="text-lg font-black uppercase italic tracking-tighter mt-1">Security Bypass</h2>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6 text-black">
               <div className="p-4 bg-gray-100 text-[10px] font-bold text-gray-600 text-center uppercase border-y border-gray-200">
                 Question: What was the name of your first school?
               </div>
@@ -143,10 +146,15 @@ export default function AdminLogin() {
                 type="text" 
                 value={recoveryAnswer}
                 onChange={(e) => setRecoveryAnswer(e.target.value)}
-                className="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:border-black" 
+                className="w-full p-4 bg-gray-50 border border-gray-100 outline-none focus:border-black text-black" 
                 placeholder="Type your answer"
               />
-              <button className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest hover:bg-gray-900 shadow-lg">Verify & Reset</button>
+              <button 
+                type="button"
+                className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest hover:bg-gray-900 shadow-lg"
+              >
+                Verify & Reset
+              </button>
             </div>
           </div>
         </div>

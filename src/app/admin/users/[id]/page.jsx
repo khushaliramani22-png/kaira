@@ -8,52 +8,52 @@ import { User, Mail, Phone, MapPin, Package, Calendar, ArrowLeft } from "lucide-
 export default function UserHistory() {
   const { id } = useParams();
   const router = useRouter();
-  
+
   const [userData, setUserData] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-const [userContact, setUserContact] = useState({ phone: "", address: "" });
+  const [userContact, setUserContact] = useState({ phone: "", address: "" });
   useEffect(() => {
-  const fetchUserAndOrders = async () => {
-    setLoading(true);
-    try {
-      // 1. યુઝર ડેટા
-      const { data: user } = await supabase.from("users").select("*").eq("id", id).single();
-      setUserData(user);
+    const fetchUserAndOrders = async () => {
+      setLoading(true);
+      try {
+        // 1. યુઝર ડેટા
+        const { data: user } = await supabase.from("users").select("*").eq("id", id).single();
+        setUserData(user);
 
-      // 2. ઓર્ડર્સ ડેટા 
-      const { data: userOrders, error: orderError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", id) 
-        .order("created_at", { ascending: false });
+        // 2. ઓર્ડર્સ ડેટા 
+        const { data: userOrders, error: orderError } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", id)
+          .order("created_at", { ascending: false });
 
-      if (orderError) throw orderError;
-      
-      console.log("User Orders Found:", userOrders); 
-      
+        if (orderError) throw orderError;
 
-      setOrders(userOrders || []);
+        console.log("User Orders Found:", userOrders);
 
-      // 3. એડ્રેસ સેટ કરવાનું લોજિક
-      if (userOrders && userOrders.length > 0) {
-        const latest = userOrders[0];
-        console.log("Latest Order for Address:", latest); 
-        
-        setUserContact({
-          phone: latest.phone || "No Phone",
-          address: `${latest.address || ""}, ${latest.city || ""} - ${latest.pincode || ""}`
-        });
+
+        setOrders(userOrders || []);
+
+        // 3. એડ્રેસ સેટ કરવાનું લોજિક
+        if (userOrders && userOrders.length > 0) {
+          const latest = userOrders[0];
+          console.log("Latest Order for Address:", latest);
+
+          setUserContact({
+            phone: latest.phone || "No Phone",
+            address: `${latest.address || ""}, ${latest.city || ""} - ${latest.pincode || ""}`
+          });
+        }
+      } catch (err) {
+        console.error("Error:", err.message);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error:", err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  if (id) fetchUserAndOrders();
-}, [id]);
+    if (id) fetchUserAndOrders();
+  }, [id]);
 
   if (loading) return <div className="p-5 text-center font-bold">Loading User History...</div>;
   if (!userData) return <div className="p-5 text-center text-danger">User not found!</div>;
@@ -73,13 +73,13 @@ const [userContact, setUserContact] = useState({ phone: "", address: "" });
               <div className="bg-light rounded-circle d-inline-flex p-3 mb-2">
                 <User size={40} className="text-primary" />
               </div>
-              
+
               <h4 className="mb-0">{userData.name || "Guest User"}</h4>
               <span className="badge bg-soft-primary text-primary mt-1">Customer</span>
             </div>
-            
+
             <hr />
-            
+
             <div className="user-details mt-3">
               <div className="d-flex align-items-center gap-3 mb-3">
                 <Mail size={18} className="text-muted" />
@@ -122,7 +122,7 @@ const [userContact, setUserContact] = useState({ phone: "", address: "" });
               </h5>
               <span className="badge bg-dark">{orders.length} Orders</span>
             </div>
-            
+
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
                 <thead className="bg-light text-uppercase small fw-bold">
@@ -150,17 +150,19 @@ const [userContact, setUserContact] = useState({ phone: "", address: "" });
                         <td>{new Date(order.created_at).toLocaleDateString("en-IN")}</td>
                         <td className="fw-bold">₹{order.total_amount}</td>
                         <td>
-                          <span className={`badge ${
-                            order.status.toLowerCase() === 'delivered' ? 'bg-success' : 
-                            order.status.toLowerCase() === 'pending' ? 'bg-warning text-dark' : 
-                            order.status.toLowerCase() === 'cancelled' ? 'bg-danger' : 'bg-secondary'
-                          } text-uppercase`}>
+                          <span className={`badge ${order.status.toLowerCase() === 'delivered' ? 'bg-success' :
+                              order.status.toLowerCase() === 'pending' ? 'bg-warning text-dark' :
+                                order.status.toLowerCase() === 'cancelled' ? 'bg-danger' : 'bg-secondary'
+                            } text-uppercase`}>
                             {order.status}
                           </span>
                         </td>
                         <td>
-                          <button className="btn btn-sm btn-light border fw-bold" onClick={() => router.push(`/admin/orders/${order.order_number || order.id}`)}>
-                            View Details
+                          <button
+                            className="btn btn-sm btn-light"
+                            onClick={() => router.push(`/admin/users/${user.id}`)} // અહીં user.id (UUID) મોકલો
+                          >
+                            view Details
                           </button>
                         </td>
                       </tr>

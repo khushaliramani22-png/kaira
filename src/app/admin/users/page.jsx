@@ -7,11 +7,11 @@ import { Search, ChevronLeft, ChevronRight, User, Phone, Calendar, Mail, Shoppin
 
 export default function UsersListPage() {
   const router = useRouter();
-  
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -25,10 +25,10 @@ export default function UsersListPage() {
 
       // ૧. 'users' ટેબલમાંથી ડેટા ફેચ કરો (profiles ને બદલે)
       let query = supabase
-        .from("users") // ટેબલ બદલ્યું
+        .from("users")
         .select("*", { count: "exact" })
-        .eq("role", "user") // માત્ર કસ્ટમર્સ બતાવવા માટે
-        .order("created_at", { ascending: false })
+        .eq("role", "user")
+        .order("created_at", { ascending: false }) // નવો યુઝર ઉપર લાવવા માટે false
         .range(from, to);
 
       if (searchQuery) {
@@ -52,14 +52,13 @@ export default function UsersListPage() {
         const userOrders = orderData ? orderData.filter(o => String(o.user_id) === String(user.id)) : [];
         const totalOrders = userOrders.length;
         const totalSpend = userOrders.reduce((sum, order) => {
-          const amount = parseFloat(order.total_amount) || 0; 
+          const amount = parseFloat(order.total_amount) || 0;
           return sum + amount;
         }, 0);
 
-        // આ લાઈન મહત્વની છે: દરેક યુઝર માટે ઓબ્જેક્ટ રિટર્ન કરવો પડે
-        return { ...user, totalOrders, totalSpend }; 
-      }); // <--- અહીં મેપ ફંક્શન પૂરો થાય છે
 
+        return { ...user, totalOrders, totalSpend };
+      });
       setUsers(processedUsers);
       setTotalCount(count || 0);
     } catch (error) {
@@ -124,8 +123,8 @@ export default function UsersListPage() {
                 <tr>
                   <td colSpan="4" className="p-32 text-center">
                     <div className="flex flex-col items-center gap-3">
-                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Database...</span>
+                      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Database...</span>
                     </div>
                   </td>
                 </tr>
@@ -141,12 +140,13 @@ export default function UsersListPage() {
                     <td className="p-6">
                       <div className="flex items-center gap-4">
                         <span className="text-[10px] font-black text-blue-500 bg-blue-50 w-8 h-8 rounded-lg flex items-center justify-center border border-blue-100">
-                            #{(currentPage - 1) * pageSize + (index + 1)}
+                          #{totalCount - ((currentPage - 1) * pageSize + index)}
+                          {/* #{(currentPage - 1) * pageSize + (index + 1)} */}
                         </span>
-                        
+
                         <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center text-lg font-black shadow-lg uppercase transform group-hover:scale-105 transition-transform">
                           {/* name કોલમ વાપર્યું */}
-                          {user.name ? user.name[0] : <User size={20}/>}
+                          {user.name ? user.name[0] : <User size={20} />}
                         </div>
                         <div className="flex flex-col">
                           <span className="font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors">
@@ -178,7 +178,14 @@ export default function UsersListPage() {
                     </td>
                     <td className="p-6 text-center">
                       <button
-                        onClick={() => router.push(`/admin/users/${user.id}`)}
+                        onClick={() => {
+                          // ખાતરી કરો કે 'user' વેરીએબલ લૂપ (map) માંથી સાચો મળે છે
+                          if (user?.id) {
+                            router.push(`/admin/users/${user.id}`);
+                          } else {
+                            console.error("User ID missing!");
+                          }
+                        }}
                         className="text-[10px] font-black py-2.5 px-6 border-2 border-gray-100 rounded-2xl bg-white hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all uppercase shadow-sm active:scale-95"
                       >
                         Details

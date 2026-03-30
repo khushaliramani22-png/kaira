@@ -83,7 +83,7 @@ export default function AdminDashboard() {
   return (
     <div className="container-fluid p-4 bg-white min-h-screen">
       <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <h1 className="font-black uppercase tracking-tighter italic text-2xl text-black">
+        <h1 className="font-black uppercase tracking-tighter  text-2xl text-black">
           Admin Dashboard
         </h1>
         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">

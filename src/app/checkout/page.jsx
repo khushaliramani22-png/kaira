@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      setFormData(prev => ({ ...prev, email: user.email }));
       getAddress(user.id);
     } else {
       setShowAddressForm(true);

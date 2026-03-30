@@ -1,311 +1,306 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useParams, useRouter } from "next/navigation";
-import { Printer, ArrowLeft } from "lucide-react";
+import {
+  Printer,
+  ArrowLeft,
+  User,
+  MapPin,
+  Package,
+  Smartphone,
+} from "lucide-react";
 
 export default function OrderDetail() {
   const params = useParams();
   const router = useRouter();
-  const [items, setItems] = useState([]);
   const [order, setOrder] = useState(null);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchOrder = useCallback(async () => {
-    if (!params.id) return;
+  const supabase = createClient();
 
-    setError(null);
-    const idParam = params.id;
-    const isNumber = /^\d+$/.test(idParam);
+  // const fetchOrderDetails = useCallback(async () => {
+  //   if (!params?.id) return;
 
+  //   try {
+  //     setLoading(true);
+
+  //     // ૧. ઓર્ડર ડેટા મેળવો (URL માં UUID હોય કે Order Number, બંને ચાલશે)
+  //     const { data: orderData, error: orderError } = await supabase
+  //       .from("orders")
+  //       .select("*")
+  //       .or(
+  //         `id.eq.${params.id},order_number.eq.${!isNaN(params.id) ? parseInt(params.id) : 0}`,
+  //       )
+  //       .maybeSingle();
+
+  //     if (orderError) throw orderError;
+
+  //     if (orderData) {
+  //       setOrder(orderData);
+
+  //       // ૨. ઓર્ડરના સાચા UUID થી items ફેચ કરો
+  //       // આ સ્ટેપ તમારી Array(0) વાળી ભૂલને સોલ્વ કરશે
+  //       const { data: itemsData, error: itemsError } = await supabase
+  //         .from("order_items")
+  //         .select("*")
+  //         .eq("order_id", orderData.id);
+
+  //       if (itemsError) throw itemsError;
+
+  //       setItems(itemsData || []);
+  //       console.log("Success! Items found:", itemsData);
+  //     }
+  //   } catch (err) {
+  //     console.error("Fetch Error:", err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [params?.id, supabase]);
+
+  const fetchOrderDetails = useCallback(async () => {
+  if (!params?.id) return;
+  try {
+    setLoading(true);
+    
+    // સાચો રસ્તો: પહેલા ચેક કરો કે ID નંબર છે કે UUID
     let query = supabase.from("orders").select("*");
-
-    if (isNumber) {
-      query = query.eq("order_number", parseInt(idParam));
+    if (!isNaN(params.id)) {
+      query = query.eq("order_number", parseInt(params.id));
     } else {
-      query = query.eq("id", idParam);
+      query = query.eq("id", params.id);
     }
 
-    const { data: orderData, error: orderError } = await query.single();
+    const { data: orderData, error: orderError } = await query.maybeSingle();
 
-    if (orderError) {
-      console.error("Supabase Error:", orderError.message);
-      setError("ઓર્ડરની વિગત મળી નથી. કૃપા કરીને ઓર્ડર નંબર ચેક કરો.");
-      return;
-    }
-
-    setOrder(orderData);
+    if (orderError) throw orderError;
 
     if (orderData) {
-      const { data: itemData } = await supabase
+      setOrder(orderData);
+      const { data: itemsData, error: itemsError } = await supabase
         .from("order_items")
         .select("*")
         .eq("order_id", orderData.id);
-      setItems(itemData || []);
+
+      if (itemsError) throw itemsError;
+      setItems(itemsData || []);
     }
-  }, [params.id]);
+  } catch (err) {
+    console.error("Fetch Error:", err.message);
+  } finally {
+    setLoading(false);
+  }
+}, [params?.id, supabase]);
 
   useEffect(() => {
-    fetchOrder();
-  }, [fetchOrder]);
+    fetchOrderDetails();
+  }, [fetchOrderDetails]);
 
-  const updateStatus = async (newStatus) => {
-    if (order?.status === "Cancelled" && newStatus !== "Cancelled") {
-      alert("This order is already cancelled and cannot be changed back.");
-      return;
-    }
-
-    setUpdating(true);
-    const idParam = params.id;
-    const isNumber = /^\d+$/.test(idParam);
-
-    let query = supabase.from("orders").update({ status: newStatus });
-
-    if (isNumber) {
-      query = query.eq("order_number", parseInt(idParam));
-    } else {
-      query = query.eq("id", idParam);
-    }
-
-    const { error: updateError } = await query;
-
-    if (!updateError) {
-      setOrder((prev) => ({ ...prev, status: newStatus }));
-      alert("Status updated successfully!");
-    } else {
-      alert("Update failed: " + updateError.message);
-    }
-    setUpdating(false);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  if (error) {
+  if (loading)
     return (
-      <div className="p-10 text-center">
-        <p className="text-red-500 font-bold">{error}</p>
-        <button onClick={() => router.back()} className="mt-4 px-4 py-2 bg-black text-white rounded-lg">Back</button>
+      <div className="p-20 text-center font-black uppercase text-gray-400 animate-pulse tracking-widest">
+        Loading Kaira Invoice...
       </div>
     );
-  }
-
   if (!order)
     return (
-      <div className="p-10 text-center animate-pulse text-gray-500 font-bold">
-        Loading Order Details...
+      <div className="p-20 text-center font-bold text-red-500 uppercase">
+        Order Not Found
       </div>
     );
 
-  const shippingCharge = order.shipping_charge || 0;
-  const totalAmount = order.total_amount || 0;
-
   return (
-    <div className="print-container p-3 sm:p-4 md:p-8 max-w-6xl mx-auto bg-white shadow-2xl rounded-2xl my-4 md:my-6 border border-gray-100 print:p-0 print:shadow-none print:border-none print:my-0 print:w-full">
-      
-      {/* --- PRINT CSS--- side bar hide */}
+    <div className="p-4 md:p-10 max-w-5xl mx-auto bg-white min-h-screen">
+      {/* Navigation & Print */}
+      <div className="flex justify-between items-center mb-8 no-print">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-black transition-all"
+        >
+          <ArrowLeft size={14} /> Back to Dashboard
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-80 transition-all shadow-lg"
+        >
+          <Printer size={16} /> Print Invoice
+        </button>
+      </div>
+
+      <div className="border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+        {/* Header */}
+        <div className="bg-gray-50/50 p-8 md:p-12 border-b border-gray-200 flex flex-col md:row justify-between items-start md:items-center gap-6">
+          <div>
+            <h1 className="text-4xl font-black italic tracking-tighter text-black uppercase">
+              Kaira Fashion
+            </h1>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.4em] mt-2 italic">
+              Premium Quality Wear
+            </p>
+          </div>
+          <div className="md:text-right">
+            <div className="bg-black text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-3 inline-block">
+              {order.status || "Pending"}
+            </div>
+            <p className="text-sm font-black text-gray-900 uppercase">
+              #KRA-{order.id.slice(0, 6).toUpperCase()}
+            </p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">
+              {new Date(order.created_at).toLocaleDateString("en-IN")}
+            </p>
+          </div>
+        </div>
+
+        {/* Customer Details Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 border-b border-gray-200">
+          <div className="p-8 border-b md:border-b-0 md:border-r border-gray-200">
+            <h3 className="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-6 flex items-center gap-2">
+              <User size={12} /> Billing Information
+            </h3>
+            <div className="space-y-1">
+              <p className="text-sm font-black text-gray-900 uppercase">
+                {order.customer_name}
+              </p>
+              <p className="text-xs font-bold text-gray-500">{order.email}</p>
+              <p className="text-xs font-black text-gray-900 mt-2 flex items-center gap-1">
+                <Smartphone size={10} /> {order.phone}
+              </p>
+            </div>
+          </div>
+          <div className="p-8">
+            <h3 className="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-6 flex items-center gap-2">
+              <MapPin size={12} /> Shipping Address
+            </h3>
+            <p className="text-xs text-gray-600 font-bold leading-relaxed uppercase">
+              {order.address}, {order.city}
+              <br />
+              {order.state} - {order.pincode}
+            </p>
+            <p className="text-[10px] font-black text-blue-500 uppercase mt-4 italic">
+              Payment: {order.payment_method || "COD"}
+            </p>
+          </div>
+        </div>
+
+        {/* Items Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 border-b border-gray-200">
+                <th className="p-6">Product Detail</th>
+                <th className="p-6 text-center">Qty</th>
+                <th className="p-6 text-right">Unit Price</th>
+                <th className="p-6 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {items.length > 0 ? (
+                items.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50/30 transition-colors"
+                  >
+                    <td className="p-6 flex items-center gap-5">
+                      <div className="w-16 h-20 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                        <img
+                          src={
+                            item.image?.startsWith("http")
+                              ? item.image
+                              : `https://pmuaelfyefdlhiqmspfg.supabase.co/storage/v1/object/public/products/${item.image}`
+                          }
+                          alt={item.product_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://via.placeholder.com/150?text=Kaira";
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-gray-900 uppercase leading-tight mb-1">
+                          {item.product_name}
+                        </p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase">
+                          Size: {item.size || "N/A"} | Color:{" "}
+                          {item.color || "N/A"}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center text-xs font-black text-gray-700">
+                      {item.quantity}
+                    </td>
+                    <td className="p-6 text-right text-xs font-bold text-gray-500">
+                      ₹{item.price?.toLocaleString()}
+                    </td>
+                    <td className="p-6 text-right text-xs font-black text-gray-900 italic">
+                      ₹{(item.price * item.quantity).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="p-20 text-center opacity-30">
+                    <Package size={32} className="mx-auto mb-2" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">
+                      No products found
+                    </p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Grand Total Section */}
+        <div className="p-8 md:p-12 bg-gray-50/50 flex justify-end border-t border-gray-200">
+          <div className="w-full md:w-72 space-y-4">
+            <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <span>Subtotal</span>
+              <span className="text-gray-900">
+                ₹{order.subtotal?.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between text-[10px] font-bold text-green-600 uppercase tracking-widest">
+              <span>Delivery</span>
+              <span>FREE</span>
+            </div>
+            <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase text-gray-900">
+                Payable Amount
+              </span>
+              <span className="text-3xl font-black text-black italic tracking-tighter">
+                ₹{order.total_amount?.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Footer Branding */}
+      <div className="mt-8 text-center no-print">
+        <p className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.5em]">
+          WebExpert Solutions Admin Panel
+        </p>
+      </div>
+
       <style jsx global>{`
         @media print {
-          /* sidebar and header hide */
-          .no-print, 
-          nav, 
-          aside, 
-          .admin-sidebar,
-          .admin-header,
-          header,
-          button {
+          .no-print {
             display: none !important;
           }
-
-          /* print time onliy show bill */
-          .print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 20px !important;
-            box-shadow: none !important;
-            border: none !important;
-          }
-
           body {
-            background: white !important;
-            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          .rounded-3xl {
+            border-radius: 0 !important;
+            border: 1px solid #eee !important;
+            box-shadow: none !important;
           }
         }
       `}</style>
-
-      {/* Navigation and Actions - Hidden on Print */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 no-print">
-        <button 
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black transition-all"
-        >
-          <ArrowLeft size={16} /> Back to Orders
-        </button>
-        
-        <button
-          onClick={handlePrint}
-          className="flex items-center justify-center gap-2 bg-black text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg"
-        >
-          <Printer size={16} /> Print Bill
-        </button>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center border-b pb-4 md:pb-6 mb-6 md:mb-8 gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tighter uppercase italic">
-            KAIRA FASHION
-          </h1>
-          <p className="text-sm font-bold text-blue-600 mt-1">
-            Order ID: #{order.order_number || order?.id?.slice(-8).toUpperCase()}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto no-print">
-          <div className="relative">
-            <select
-              value={order?.status}
-              onChange={(e) => updateStatus(e.target.value)}
-              disabled={updating || order?.status === "Cancelled"}
-              className="appearance-none w-32 sm:w-40 bg-white border border-gray-300 text-gray-700 py-1.5 px-3 pr-8 text-xs sm:text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer disabled:opacity-50 transition-all"
-            >
-              <option value="Pending">Pending</option>
-              <option value="Processing">Processing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-              <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-              </svg>
-            </div>
-          </div>
-
-          <span
-            className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-tighter border ${
-              order?.status === "Delivered"
-                ? "bg-green-50 text-green-700 border-green-200"
-                : order?.status === "Cancelled"
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-blue-50 text-blue-700 border-blue-200"
-            }`}
-          >
-            {order?.status}
-          </span>
-        </div>
-      </div>
-
-      {/* Cancellation Reason Display */}
-      {order?.status === "Cancelled" && order.cancel_reason && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl">
-          <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">
-            Cancellation Reason:
-          </p>
-          <p className="text-sm font-bold text-red-700 italic">
-            "{order.cancel_reason}"
-          </p>
-        </div>
-      )}
-
-      {/* Info Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 mb-8 md:mb-10">
-        <div className="bg-blue-50/50 p-4 sm:p-6 rounded-2xl border border-blue-100 print:bg-white print:border print:p-4">
-          <h2 className="font-bold text-blue-800 mb-3 sm:mb-4 uppercase text-xs tracking-widest">Shipping Address</h2>
-          <div className="space-y-1 text-gray-700 text-sm sm:text-base">
-            <p className="font-bold text-gray-900 uppercase">{order.customer_name}</p>
-            <p>📞 {order.phone}</p>
-            <p className="mt-2 leading-relaxed">{order.address}</p>
-            <p className="font-medium text-gray-900">{order.city} - {order.pincode}</p>
-          </div>
-        </div>
-
-        <div className="bg-purple-50/50 p-4 sm:p-6 rounded-2xl border border-purple-100 print:bg-white print:border print:p-4">
-          <h2 className="font-bold text-purple-800 mb-3 sm:mb-4 uppercase text-xs tracking-widest">Order Information</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-            <div>
-              <p className="text-gray-400 uppercase text-[10px] font-bold">Payment Method</p>
-              <p className="font-bold text-gray-800">{order.payment_method || "COD"}</p>
-            </div>
-            <div>
-              <p className="text-gray-400 uppercase text-[10px] font-bold">Order Date</p>
-              <p className="font-bold text-gray-800">
-                {new Date(order.created_at).toLocaleDateString("en-IN")}
-              </p>
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-gray-400 uppercase text-[10px] font-bold">Email Address</p>
-              <p className="font-bold text-gray-800 break-all">{order.email || "N/A"}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Items Section */}
-      <div className="space-y-4 mb-8 md:mb-10">
-        <div className="hidden md:grid grid-cols-4 text-[10px] font-black uppercase text-gray-400 px-4 mb-2 tracking-widest">
-          <div className="col-span-2">Product Details</div>
-          <div className="text-center">Qty x Price</div>
-          <div className="text-right">Total</div>
-        </div>
-
-        {items.map((item) => (
-          <div key={item.id} className="flex flex-col sm:grid sm:grid-cols-4 gap-4 border rounded-xl p-4 hover:bg-gray-50 transition print:grid-cols-4 print:border-b print:rounded-none">
-            <div className="flex gap-4 col-span-2 items-center">
-              <img
-                src={item.image || "/no-image.png"}
-                alt={item.product_name}
-                className="w-16 h-20 object-cover rounded-lg print:hidden"
-              />
-              <div className="flex-1 space-y-1">
-                <p className="font-black text-gray-900 text-sm sm:text-base uppercase tracking-tighter">{item.product_name}</p>
-                <div className="flex gap-2 text-[10px] font-bold text-gray-500 uppercase">
-                  {item.size && <span>Size: {item.size}</span>}
-                  {item.color && <span>Color: {item.color}</span>}
-                </div>
-                <p className="text-[9px] text-gray-400 uppercase font-black">SKU: {item.product_id?.slice(-6).toUpperCase()}</p>
-              </div>
-            </div>
-
-            <div className="flex sm:block items-center justify-between text-center border-t sm:border-0 pt-3 sm:pt-0">
-              <span className="sm:hidden text-[10px] font-bold text-gray-400 uppercase tracking-widest">Qty x Price</span>
-              <p className="text-sm font-bold">{item.quantity} x ₹{item.price}</p>
-            </div>
-
-            <div className="flex sm:block items-center justify-between text-right border-t sm:border-0 pt-3 sm:pt-0">
-              <span className="sm:hidden text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
-              <p className="text-sm font-black text-blue-600">₹{item.price * item.quantity}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Summary Section */}
-      <div className="flex justify-center md:justify-end">
-        <div className="w-full sm:w-80 space-y-3 bg-gray-50 p-4 sm:p-6 rounded-2xl border print:bg-white print:border-none print:w-64">
-          <div className="flex justify-between text-sm font-bold text-gray-500">
-            <span>Subtotal</span>
-            <span className="text-gray-900">₹{order.subtotal}</span>
-          </div>
-          <div className="flex justify-between text-sm font-bold text-gray-500">
-            <span>Shipping Charge</span>
-            <span className="text-green-600">{shippingCharge > 0 ? `₹${shippingCharge}` : "FREE"}</span>
-          </div>
-          <div className="border-t border-dashed border-gray-300 pt-3 flex justify-between font-black text-lg italic tracking-tighter uppercase">
-            <span>Grand Total</span>
-            <span className="text-blue-600">₹{totalAmount}</span>
-          </div>
-          <p className="text-[8px] font-black uppercase text-gray-300 text-center mt-4 hidden print:block tracking-widest">
-            Thank you for shopping with KAIRA
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
