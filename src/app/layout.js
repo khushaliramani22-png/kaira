@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { CartProvider } from "./context/CartContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import Footer from "../components/Footer";
 import "./styles/normalize.css";
 import "./styles/swiper-bundle.min.css";
@@ -14,10 +15,6 @@ import Header from "@/components/Header";
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith("/admin");
-
-
-
-  
 
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
@@ -48,13 +45,13 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className="homepage">
-        <CartProvider>
-
-          {!isAdminPage && <Header />}
-          {children}
-          {!isAdminPage && <Footer />}
-        </CartProvider>
-       
+        <SettingsProvider>
+          <CartProvider>
+            {!isAdminPage && <Header />}
+            {children}
+            {!isAdminPage && <Footer />}
+          </CartProvider>
+        </SettingsProvider>
       </body>
 
     </html>

@@ -22,9 +22,10 @@ function ShopContent() {
         setLoading(true);
         let query = supabase.from("products").select("*");
 
-        // જો URL માં કેટેગરી હોય, તો તેને ફિલ્ટર કરો
+        
+
         if (categoryParam) {
-          // URL ના 'jeans' ને DB ના 'JEANS' સાથે મેચ કરવા માટે ફોર્મેટિંગ
+        
           const formattedCategory = categoryParam.toUpperCase().replace(/-/g, ' ');
           query = query.eq("category", formattedCategory);
         }
@@ -120,7 +121,7 @@ function ShopContent() {
   );
 }
 
-// Next.js માં searchParams વાપરવા માટે Suspense ફરજિયાત છે
+
 export default function ShopPage() {
   return (
     <Suspense fallback={<div className="p-20 text-center">Loading...</div>}>

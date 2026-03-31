@@ -1,7 +1,13 @@
 // components/Footer.jsx
 "use client"; // Next.js 13+ app directory
 
+import { useSettings } from "@/app/context/SettingsContext";
+
 export default function Footer() {
+  const { settings } = useSettings();
+  const email = settings?.global?.support_email || "contact@yourcompany.com";
+  const phone = settings?.global?.support_phone || "+43 720 11 52 78";
+
   return (
     <footer id="footer" className="mt-5">
       <hr></hr>
@@ -101,21 +107,21 @@ export default function Footer() {
               <p>
                 Do you have any questions or suggestions?{" "}
                 <a
-                  href="mailto:contact@yourcompany.com"
+                  href={`mailto:${email}`}
                   className="item-anchor"
                   style={{ textDecoration: "none", borderBottom: "none" }}
                 >
-                  contact@yourcompany.com
+                  {email}
                 </a>
               </p>
               <p>
                 Do you need support? Give us a call.{" "}
                 <a
-                  href="tel:+43720115278"
+                  href={`tel:${phone}`}
                   className="item-anchor"
                   style={{ textDecoration: "none", borderBottom: "none" }}
                 >
-                  +43 720 11 52 78
+                  {phone}
                 </a>
               </p>
             </div>

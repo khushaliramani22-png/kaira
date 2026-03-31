@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useSettings } from "@/app/context/SettingsContext";
 import { Mail, Phone, MapPin, Send, Loader2, Clock, Globe } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -14,6 +15,9 @@ export default function ContactPage() {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+  const { settings } = useSettings();
+  const email = settings?.global?.support_email || "care@kaira.com";
+  const phone = settings?.global?.support_phone || "+91 90000 00000";
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -81,7 +85,7 @@ We will get back to you within 24 hours.
                   </div>
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Email Support</p>
-                    <p className="text-gray-900 font-semibold">care@kaira.com</p>
+                    <p className="text-gray-900 font-semibold">{email}</p>
                   </div>
                 </div>
 
@@ -91,7 +95,7 @@ We will get back to you within 24 hours.
                   </div>
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Support</p>
-                    <p className="text-gray-900 font-semibold">+91 90000 00000</p>
+                    <p className="text-gray-900 font-semibold">{phone}</p>
                   </div>
                 </div>
 

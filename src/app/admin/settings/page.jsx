@@ -24,6 +24,18 @@ const SettingsPage = () => {
     const [isAddingStaff, setIsAddingStaff] = useState(false);
 
     const defaultData = {
+        global: {
+            site_title: "Kaira Fashion Store",
+            store_name: "Kaira Fashion Store",
+            support_email: "support@kaira.com",
+            support_phone: "+91 00000 00000",
+            currency: "INR",
+            tax_rate: 18,
+            maintenance_mode: false,
+            checkout_enabled: true,
+            shipping_flat_rate: 50,
+            shipping_free_above: 2000,
+        },
         apps: {
             razorpay_key: "",
             razorpay_secret: "",
@@ -69,6 +81,7 @@ const SettingsPage = () => {
                 setFormData({
                     ...defaultData,
                     ...data.settings_json,
+                    global: { ...defaultData.global, ...data.settings_json.global },
                     apps: { ...defaultData.apps, ...data.settings_json.apps },
                     notifications: {
                         ...defaultData.notifications,
@@ -274,11 +287,23 @@ const SettingsPage = () => {
                                             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Store Details</h4>
                                             <div className="flex flex-col gap-2">
                                                 <label className="text-xs font-semibold text-gray-500">Store Name</label>
-                                                <input type="text" placeholder="e.g. Kaira Fashion Store" className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                <input
+                                                    type="text"
+                                                    value={formData.global.store_name}
+                                                    onChange={(e) => handleUpdate('global', 'store_name', e.target.value)}
+                                                    placeholder="e.g. Kaira Fashion Store"
+                                                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                />
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <label className="text-xs font-semibold text-gray-500">Support Email</label>
-                                                <input type="email" placeholder="support@kaira.com" className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                <input
+                                                    type="email"
+                                                    value={formData.global.support_email}
+                                                    onChange={(e) => handleUpdate('global', 'support_email', e.target.value)}
+                                                    placeholder="support@kaira.com"
+                                                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                />
                                             </div>
                                         </div>
 
@@ -316,6 +341,135 @@ const SettingsPage = () => {
                                 )}
 
                                 {/* --- 2. MANAGE USERS --- */}
+                                {selectedSetting?.id === 'store' && (
+                                    <div className="space-y-6">
+                                        <div className="space-y-4">
+                                            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Global Store Settings</h4>
+                                            <div className="grid gap-4">
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-xs font-semibold text-gray-500">Site Title</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.global.site_title}
+                                                        onChange={(e) => handleUpdate('global', 'site_title', e.target.value)}
+                                                        placeholder="Kaira Fashion Store"
+                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-xs font-semibold text-gray-500">Store Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.global.store_name}
+                                                        onChange={(e) => handleUpdate('global', 'store_name', e.target.value)}
+                                                        placeholder="Kaira Fashion Store"
+                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-xs font-semibold text-gray-500">Support Email</label>
+                                                        <input
+                                                            type="email"
+                                                            value={formData.global.support_email}
+                                                            onChange={(e) => handleUpdate('global', 'support_email', e.target.value)}
+                                                            placeholder="support@kaira.com"
+                                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-xs font-semibold text-gray-500">Support Phone</label>
+                                                        <input
+                                                            type="tel"
+                                                            value={formData.global.support_phone}
+                                                            onChange={(e) => handleUpdate('global', 'support_phone', e.target.value)}
+                                                            placeholder="+91 00000 00000"
+                                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-xs font-semibold text-gray-500">Currency</label>
+                                                        <select
+                                                            value={formData.global.currency}
+                                                            onChange={(e) => handleUpdate('global', 'currency', e.target.value)}
+                                                            className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                                                        >
+                                                            <option value="INR">INR (₹)</option>
+                                                            <option value="USD">USD ($)</option>
+                                                            <option value="EUR">EUR (€)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-xs font-semibold text-gray-500">GST / Tax %</label>
+                                                        <input
+                                                            type="number"
+                                                            value={formData.global.tax_rate}
+                                                            onChange={(e) => handleUpdate('global', 'tax_rate', Number(e.target.value))}
+                                                            placeholder="18"
+                                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-gray-700">Maintenance Mode</p>
+                                                            <p className="text-[10px] text-gray-400">Hide store pages from customers.</p>
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.global.maintenance_mode}
+                                                            onChange={(e) => handleUpdate('global', 'maintenance_mode', e.target.checked)}
+                                                            className="w-5 h-5 accent-blue-600"
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-gray-700">Checkout Enabled</p>
+                                                            <p className="text-[10px] text-gray-400">Allow customers to complete orders.</p>
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.global.checkout_enabled}
+                                                            onChange={(e) => handleUpdate('global', 'checkout_enabled', e.target.checked)}
+                                                            className="w-5 h-5 accent-blue-600"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-xs font-semibold text-gray-500">Shipping Flat Rate</label>
+                                                        <input
+                                                            type="number"
+                                                            value={formData.global.shipping_flat_rate}
+                                                            onChange={(e) => handleUpdate('global', 'shipping_flat_rate', Number(e.target.value))}
+                                                            placeholder="50"
+                                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-xs font-semibold text-gray-500">Free Shipping Over</label>
+                                                        <input
+                                                            type="number"
+                                                            value={formData.global.shipping_free_above}
+                                                            onChange={(e) => handleUpdate('global', 'shipping_free_above', Number(e.target.value))}
+                                                            placeholder="2000"
+                                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {selectedSetting?.id === 'users' && (
                                     <div className="space-y-6">
                                         {/* જો યુઝર ઉમેરવાનું ચાલુ ન હોય તો લિસ્ટ બતાવો */}
