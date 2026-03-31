@@ -21,23 +21,26 @@ export default function UserHistory() {
         const { data: user } = await supabase.from("users").select("*").eq("id", id).single();
         setUserData(user);
 
-        // 2. ઓર્ડર્સ ડેટા 
-        const { data: userOrders, error: orderError } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", id)
-          .order("created_at", { ascending: false });
+        // 2. ઓર્ડર્સ ડેટા (સર્વિસ રોલ દ્વારા)
+        const orderParams = new URLSearchParams({ id });
+        if (user?.email) orderParams.append("email", user.email);
 
-        if (orderError) throw orderError;
+        const ordersResponse = await fetch(
+          `/api/admin/user-orders?${orderParams.toString()}`,
+          { cache: "no-store" }
+        );
+        const ordersResult = await ordersResponse.json();
 
-        console.log("User Orders Found:", userOrders);
+        if (!ordersResult.success) {
+          throw new Error(ordersResult.error || "Failed to fetch user orders");
+        }
 
-
-        setOrders(userOrders || []);
+        const fetchedOrders = ordersResult.orders || [];
+        setOrders(fetchedOrders);
 
         // 3. એડ્રેસ સેટ કરવાનું લોજિક
-        if (userOrders && userOrders.length > 0) {
-          const latest = userOrders[0];
+        if (fetchedOrders.length > 0) {
+          const latest = fetchedOrders[0];
           console.log("Latest Order for Address:", latest);
 
           setUserContact({

@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   Truck,
   XCircle,
-  LogOut,
+
 } from "lucide-react";
 
 export default function AdminOrders() {
@@ -81,10 +81,10 @@ export default function AdminOrders() {
   };
 
   // ૪. Logout ફંક્શન
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/admin/login");
-  };
+  // const handleLogout = async () => {
+  //   await supabase.auth.signOut();
+  //   router.push("/admin/login");
+  // };
 
   if (loading && orders.length === 0) {
     return (
