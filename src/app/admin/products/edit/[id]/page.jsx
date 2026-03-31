@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AiOutlineDown } from "react-icons/ai";
 import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 
@@ -24,6 +25,9 @@ export default function EditProduct() {
   const [preview3, setPreview3] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true); // ડેટા લોડિંગ સ્ટેટ
+  const [isDescOpen, setIsDescOpen] = useState(true);
+  const [isSizeOpen, setIsSizeOpen] = useState(false);
+  const [isFabricOpen, setIsFabricOpen] = useState(false);
 
   const sizesOptions = ["S", "M", "L", "XL", "XXL"];
   const colorsOptions = ["Red", "Blue", "Black", "White", "Beige", "Green", "Pink", "olive green"];
@@ -209,19 +213,71 @@ export default function EditProduct() {
           </div>
         </div>
 
-        <div className="mb-3">
-          <label className="fw-bold small mb-1 text-uppercase">Description</label>
-          <textarea name="description" value={product.description} onChange={handleChange} className="form-control mb-3" rows="3" />
-        </div>
+        <div className="border-top mt-4">
+          <div className="py-3 border-bottom">
+            <button
+              type="button"
+              className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-2 bg-transparent border-0"
+              style={{ cursor: "pointer" }}
+              onClick={() => setIsDescOpen((prev) => !prev)}
+            >
+              <span className="fw-bold text-uppercase">Description</span>
+              <AiOutlineDown style={{ transform: isDescOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+            </button>
+            {isDescOpen && (
+              <textarea
+                name="description"
+                value={product.description}
+                onChange={handleChange}
+                className="form-control mt-3"
+                rows="3"
+              />
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="fw-bold small mb-1 text-uppercase">Size & Fit Details</label>
-          <textarea name="size_fit" placeholder="e.g. Model is wearing size S." value={product.size_fit} onChange={handleChange} className="form-control mb-3" rows="2" />
-        </div>
+          <div className="py-3 border-bottom">
+            <button
+              type="button"
+              className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-2 bg-transparent border-0"
+              style={{ cursor: "pointer" }}
+              onClick={() => setIsSizeOpen((prev) => !prev)}
+            >
+              <span className="fw-bold text-uppercase">Size & Fit Details</span>
+              <AiOutlineDown style={{ transform: isSizeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+            </button>
+            {isSizeOpen && (
+              <textarea
+                name="size_fit"
+                placeholder="e.g. Model is wearing size S. Regular fit."
+                value={product.size_fit}
+                onChange={handleChange}
+                className="form-control mt-3"
+                rows="2"
+              />
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="fw-bold small mb-1 text-uppercase">Fabric & Care Details</label>
-          <textarea name="fabric_care" placeholder="e.g. 100% Cotton." value={product.fabric_care} onChange={handleChange} className="form-control mb-4" rows="2" />
+          <div className="py-3 border-bottom">
+            <button
+              type="button"
+              className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-2 bg-transparent border-0"
+              style={{ cursor: "pointer" }}
+              onClick={() => setIsFabricOpen((prev) => !prev)}
+            >
+              <span className="fw-bold text-uppercase">Fabric & Care Details</span>
+              <AiOutlineDown style={{ transform: isFabricOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+            </button>
+            {isFabricOpen && (
+              <textarea
+                name="fabric_care"
+                placeholder="e.g. 100% Cotton, Machine wash cold."
+                value={product.fabric_care}
+                onChange={handleChange}
+                className="form-control mt-3"
+                rows="2"
+              />
+            )}
+          </div>
         </div>
 
         <h5 className="mb-3">Product Images (Update only if changing)</h5>

@@ -10,6 +10,7 @@ import {
   AiFillHeart,
   AiFillStar,
   AiOutlineStar,
+  AiOutlineDown,
 } from "react-icons/ai";
 
 // કલર મેપિંગ
@@ -46,6 +47,9 @@ export default function ProductDetail() {
   const [newReview, setNewReview] = useState({ rating: 5, comment: "", name: "" });
   const [reviewLoading, setReviewLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isDescOpen, setIsDescOpen] = useState(false);
+  const [isSizeOpen, setIsSizeOpen] = useState(false);
+  const [isFabricOpen, setIsFabricOpen] = useState(false);
 
   // ૧. ડેટા ફેચિંગ
   useEffect(() => {
@@ -148,7 +152,7 @@ export default function ProductDetail() {
           comment: newReview.comment,
           review_image: imageUrl,
           status: "pending",
-          user_id: userId // યુઝર આઈડી પણ સેવ કરીએ
+          user_id: userId 
         }
       ]);
 
@@ -232,7 +236,7 @@ export default function ProductDetail() {
 
         
 
-          {/* કલર સિલેક્શન */}
+          {/*color selection */}
           <div className="mb-4">
             <h6 className="fw-bold mb-3">Available Colors:</h6>
             <div className="d-flex gap-3 flex-wrap">
@@ -279,7 +283,7 @@ export default function ProductDetail() {
           </div>
 
 
-          {/* એક્શન બટન્સ અને સ્ટોક સ્ટેટસ */}
+          {/*action button*/}
           <div className="mb-4">
             {/* સ્ટોક મેસેજ */}
             <div className="mb-2">
@@ -312,36 +316,57 @@ export default function ProductDetail() {
             </div>
           </div>
           {/* Accordion Details */}
-          <div className="accordion accordion-flush border-top mt-4" id="productAccordion">
-            <div className="accordion-item">
-              <h2 className="accordion-header">
-                <button className="accordion-button fw-bold text-uppercase px-0 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDesc">Description</button>
-              </h2>
-              <div id="collapseDesc" className="accordion-collapse collapse show" data-bs-parent="#productAccordion">
-                <div className="accordion-body px-0 py-2 text-muted small" style={{ whiteSpace: "pre-wrap" }}>{product.description || "No description available."}</div>
-              </div>
+          <div className="border-top mt-4">
+            <div className="py-3 border-bottom">
+              <button
+                type="button"
+                className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-0 bg-transparent border-0"
+                style={{ cursor: "pointer" }}
+                onClick={() => setIsDescOpen((prev) => !prev)}
+              >
+                <span className="fw-bold text-uppercase">Description</span>
+                <AiOutlineDown className={`transition-transform ${isDescOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isDescOpen && (
+                <div className="mt-3 text-muted small" style={{ whiteSpace: "pre-wrap" }}>
+                  {product.description || "No description available."}
+                </div>
+              )}
             </div>
-            {product.size_fit && (
-              <div className="accordion-item">
-                <h2 className="accordion-header">
-                  <button className="accordion-button collapsed fw-bold text-uppercase px-0 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSize">Size and Fit</button>
-                </h2>
-                <div id="collapseSize" className="accordion-collapse collapse" data-bs-parent="#productAccordion">
-                  <div className="accordion-body px-0 py-2 text-muted small" style={{ whiteSpace: "pre-wrap" }}>{product.size_fit}</div>
-                </div>
-              </div>
-            )}
 
-            {product.fabric_care && (
-              <div className="accordion-item">
-                <h2 className="accordion-header">
-                  <button className="accordion-button collapsed fw-bold text-uppercase px-0 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFabric">Fabric and Care</button>
-                </h2>
-                <div id="collapseFabric" className="accordion-collapse collapse" data-bs-parent="#productAccordion">
-                  <div className="accordion-body px-0 py-2 text-muted small" style={{ whiteSpace: "pre-wrap" }}>{product.fabric_care}</div>
+            <div className="py-3 border-bottom">
+              <button
+                type="button"
+                className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-0 bg-transparent border-0"
+                style={{ cursor: "pointer" }}
+                onClick={() => setIsSizeOpen((prev) => !prev)}
+              >
+                <span className="fw-bold text-uppercase">Size and Fit</span>
+                <AiOutlineDown className={`transition-transform ${isSizeOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isSizeOpen && (
+                <div className="mt-3 text-muted small" style={{ whiteSpace: "pre-wrap" }}>
+                  {product.size_fit || "No size and fit information available."}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <div className="py-3 border-bottom">
+              <button
+                type="button"
+                className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-0 bg-transparent border-0"
+                style={{ cursor: "pointer" }}
+                onClick={() => setIsFabricOpen((prev) => !prev)}
+              >
+                <span className="fw-bold text-uppercase">Fabric and Care</span>
+                <AiOutlineDown className={`transition-transform ${isFabricOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isFabricOpen && (
+                <div className="mt-3 text-muted small" style={{ whiteSpace: "pre-wrap" }}>
+                  {product.fabric_care || "No fabric and care information available."}
+                </div>
+              )}
+            </div>
           </div>
           {/* --- રિવ્યુ સેક્શન --- */}
           <div className="mt-5 border-top pt-4">
