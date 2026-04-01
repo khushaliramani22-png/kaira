@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client' // પાથ બરાબર ચેક કરી લેજો
+import { createClient } from '@/utils/supabase/client' 
 import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
@@ -22,7 +22,7 @@ export default function AdminLogin() {
     setErrorMsg('')
 
     try {
-      // ૧. સાઈન-ઈન પ્રોસેસ (Email & Password)
+      // ૧. (Email & Password)
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email: email.trim(), 
         password: password.trim() 
@@ -30,16 +30,14 @@ export default function AdminLogin() {
       
       if (error) throw error
 
-      // ૨. એડમિન ચેક
-      // અહીં સીધું 'khushaliramani22@gmail.com' ચેક કરવાથી લોગિન થઈ જશે
+      // ૨. admin chack
+    
       const adminEmail = 'khushaliramani22@gmail.com'; 
       
       if (data.user?.email === adminEmail) {
-        // સફળ લોગિન - સીધા જ ઓર્ડર પેજ પર મોકલો
-        // router.push ને બદલે window.location વાપરવું વધુ સેફ છે જેથી સેશન રિફ્રેશ થઈ જાય
-        window.location.href = '/admin/orders';
+   
+        window.location.href = '/admin';
       } else {
-        // જો બીજો કોઈ યુઝર હોય તો લોગઆઉટ કરી દેવું
         await supabase.auth.signOut()
         setErrorMsg("Access Denied: Admin only.")
       }
@@ -51,7 +49,6 @@ export default function AdminLogin() {
     }
   }
 
-  // --- ડિઝાઈન એ જ રાખી છે જે તમારી પાસે હતી ---
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 font-sans text-black">
       <div className="w-full max-w-md bg-white border border-gray-200 p-10 shadow-2xl relative">
