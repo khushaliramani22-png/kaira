@@ -20,79 +20,39 @@ export default function OrderDetail() {
   const [loading, setLoading] = useState(true);
 
   const supabase = createClient();
-
-  // const fetchOrderDetails = useCallback(async () => {
-  //   if (!params?.id) return;
-
-  //   try {
-  //     setLoading(true);
-
-  //     // ૧. ઓર્ડર ડેટા મેળવો (URL માં UUID હોય કે Order Number, બંને ચાલશે)
-  //     const { data: orderData, error: orderError } = await supabase
-  //       .from("orders")
-  //       .select("*")
-  //       .or(
-  //         `id.eq.${params.id},order_number.eq.${!isNaN(params.id) ? parseInt(params.id) : 0}`,
-  //       )
-  //       .maybeSingle();
-
-  //     if (orderError) throw orderError;
-
-  //     if (orderData) {
-  //       setOrder(orderData);
-
-  //       // ૨. ઓર્ડરના સાચા UUID થી items ફેચ કરો
-  //       // આ સ્ટેપ તમારી Array(0) વાળી ભૂલને સોલ્વ કરશે
-  //       const { data: itemsData, error: itemsError } = await supabase
-  //         .from("order_items")
-  //         .select("*")
-  //         .eq("order_id", orderData.id);
-
-  //       if (itemsError) throw itemsError;
-
-  //       setItems(itemsData || []);
-  //       console.log("Success! Items found:", itemsData);
-  //     }
-  //   } catch (err) {
-  //     console.error("Fetch Error:", err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [params?.id, supabase]);
-
   const fetchOrderDetails = useCallback(async () => {
-  if (!params?.id) return;
-  try {
-    setLoading(true);
-    
-    // સાચો રસ્તો: પહેલા ચેક કરો કે ID નંબર છે કે UUID
-    let query = supabase.from("orders").select("*");
-    if (!isNaN(params.id)) {
-      query = query.eq("order_number", parseInt(params.id));
-    } else {
-      query = query.eq("id", params.id);
+    if (!params?.id) return;
+    try {
+      setLoading(true);
+
+
+      let query = supabase.from("orders").select("*");
+      if (!isNaN(params.id)) {
+        query = query.eq("order_number", parseInt(params.id));
+      } else {
+        query = query.eq("id", params.id);
+      }
+
+      const { data: orderData, error: orderError } = await query.maybeSingle();
+
+      if (orderError) throw orderError;
+
+      if (orderData) {
+        setOrder(orderData);
+        const { data: itemsData, error: itemsError } = await supabase
+          .from("order_items")
+          .select("*")
+          .eq("order_id", orderData.id);
+
+        if (itemsError) throw itemsError;
+        setItems(itemsData || []);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err.message);
+    } finally {
+      setLoading(false);
     }
-
-    const { data: orderData, error: orderError } = await query.maybeSingle();
-
-    if (orderError) throw orderError;
-
-    if (orderData) {
-      setOrder(orderData);
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("order_items")
-        .select("*")
-        .eq("order_id", orderData.id);
-
-      if (itemsError) throw itemsError;
-      setItems(itemsData || []);
-    }
-  } catch (err) {
-    console.error("Fetch Error:", err.message);
-  } finally {
-    setLoading(false);
-  }
-}, [params?.id, supabase]);
+  }, [params?.id, supabase]);
 
   useEffect(() => {
     fetchOrderDetails();
@@ -141,7 +101,13 @@ export default function OrderDetail() {
             </p>
           </div>
           <div className="md:text-right">
-            <div className="bg-black text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-3 inline-block">
+            {/* <div className="bg-black text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-3 inline-block">
+              {order.status || "Pending"}
+            </div> */}
+
+            <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-3 inline-block ${order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
+                order.status === 'Delivered' ? 'bg-green-100 text-green-600' : 'bg-black text-white'
+              }`}>
               {order.status || "Pending"}
             </div>
             <p className="text-sm font-black text-gray-900 uppercase">
@@ -183,6 +149,23 @@ export default function OrderDetail() {
             </p>
           </div>
         </div>
+
+        {/*show onliy for cancel order*/}
+        {order.status === "Cancelled" && (
+          <div className="mx-8 mb-8 p-6 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4">
+            <div className="bg-red-500 text-white p-2 rounded-lg">
+              <Package size={16} />
+            </div>
+            <div>
+              <h4 className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-1">
+                Order Cancellation Reason
+              </h4>
+              <p className="text-sm font-bold text-gray-800 uppercase italic">
+                "{order.cancel_reason || "No reason specified"}"
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Items Table */}
         <div className="overflow-x-auto">

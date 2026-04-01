@@ -210,7 +210,8 @@ export default function ProductDetail() {
           </div>
           <div className="d-flex gap-2 overflow-auto pb-2">
             {[product.image1, product.image2, product.image3].filter(Boolean).map((img, i) => (
-              <img key={i} src={img} onClick={() => setMainImage(img)} className={`img-thumbnail rounded-3 ${mainImage === img ? "border-dark border-2 shadow-sm" : ""}`} style={{ width: "75px", height: "75px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }} />
+              <img key={i} src={img} onClick={() => setMainImage(img)} className={`img-thumbnail rounded-3 ${mainImage === img ? "border-dark border-2 shadow-sm" : ""}`} 
+              style={{ width: "75px", height: "75px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }} />
             ))}
           </div>
         </div>
