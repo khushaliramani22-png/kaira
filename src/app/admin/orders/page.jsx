@@ -12,7 +12,7 @@ import {
   XCircle,
   Search,
 } from "lucide-react";
-
+import Swal from "sweetalert2"
 export default function AdminOrders() {
   const router = useRouter();
   const supabase = createClient();
@@ -23,8 +23,51 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
+    const itemsPerPage = 10; 
+  const [selectedOrders, setSelectedOrders] = useState([]);
+// all order select
+const toggleSelectAll = () => {
+    if (selectedOrders.length === currentItems.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(currentItems.map(o => o.id));
+    }
+  };
 
+  // ૩.singal order select
+  const toggleSelectOrder = (id) => {
+    setSelectedOrders(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkUpdate = async (newStatus) => {
+    const containsCancelled = orders.some(o => selectedOrders.includes(o.id) && o.status === "Cancelled");
+    if (containsCancelled) {
+    Swal.fire("Action Blocked", "Selection contains cancelled orders. They cannot be confirmed or shipped.", "error");
+    return;
+  }
+  
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `${selectedOrders.length} orders will be marked as ${newStatus}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#000',
+      confirmButtonText: 'Yes, update all!'
+    });
+    if (result.isConfirmed) {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .in("id", selectedOrders);
+        if (!error) {
+        Swal.fire("Updated!", "Selected orders have been updated.", "success");
+        setSelectedOrders([]);
+        fetchOrders();
+      }
+    }
+  };
   const tabs = [
     { id: "All", label: "All" },
     { id: "Pending", label: "Pending" },
@@ -94,14 +137,22 @@ useEffect(() => {
     checkAdmin();
   }, [router]);
 
-  const updateStatus = async (id, currentStatus, newStatus) => {
-    if (currentStatus === "Cancelled" && newStatus === "Confirmed") {
-      alert("This order is already cancelled.");
-      return;
-    }
-
-
-
+const updateStatus = async (id, currentStatus, newStatus) => {
+  if (currentStatus === "Cancelled") {
+    Swal.fire("Error", "Cancelled orders cannot be updated.", "error");
+    return;
+  }
+  if (currentStatus === "Cancelled" && newStatus === "Confirmed") {
+    Swal.fire("Error", "This order is already cancelled.", "error");
+    return;
+  }
+  const loadingAlert = Swal.fire({
+    title: 'Updating Status...',
+    html: 'Please wait while we update **Kaira** order system.',
+    didOpen: () => { Swal.showLoading() },
+    allowOutsideClick: false
+  });
+  try {
     if (newStatus === "Returned") {
       const { data: items } = await supabase
         .from("order_items")
@@ -131,12 +182,30 @@ useEffect(() => {
       .update({ status: newStatus })
       .eq("id", id);
 
-    if (error) {
-      alert("Update failed: " + error.message);
-    } else {
-      fetchOrders();
-    }
-  };
+      Swal.close(); // લોડર બંધ કરો
+
+    if (error) throw error;
+
+    // ૫. સફળતાનો મેસેજ અને ડેટા રિફ્રેશ
+    fetchOrders(); 
+    Swal.fire({
+      icon: 'success',
+      title: 'Status Updated',
+      text: `Order is now ${newStatus}`,
+      timer: 1500,
+      showConfirmButton: false
+    });
+    } catch (error) {
+    Swal.close();
+    Swal.fire("Error", "Update failed: " + error.message, "error");
+  }
+};
+  //   if (error) {
+  //     alert("Update failed: " + error.message);
+  //   } else {
+  //     fetchOrders();
+  //   }
+  // };
 
   if (loading && orders.length === 0) {
     return (
@@ -216,6 +285,33 @@ useEffect(() => {
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
               />
             </div>
+            {/* Bulk Actions Section */}
+        {selectedOrders.length > 0 && (
+          <div className="max-w-7xl mx-auto px-6 mb-4">
+            <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl animate-in fade-in slide-in-from-top-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  {selectedOrders.length} Selected
+                </div>
+                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest italic">Kaira Bulk Management</p>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleBulkUpdate('Confirmed')}
+                  className="bg-white border border-blue-200 text-blue-600 text-[9px] font-black uppercase px-4 py-2 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                >
+                  Confirm All
+                </button>
+                <button 
+                  onClick={() => handleBulkUpdate('Shipped')}
+                  className="bg-black text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl hover:scale-105 transition-all shadow-lg shadow-black/10"
+                >
+                  Mark Shipped
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
           </div>
         </div>
 
@@ -224,6 +320,14 @@ useEffect(() => {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-[#fcfcfc] text-gray-400 text-[10px] font-black uppercase tracking-widest border-b border-gray-50">
+                <th className="p-6 text-left w-10">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded accent-black cursor-pointer"
+                    checked={selectedOrders.length === currentItems.length && currentItems.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="p-6 text-left">Order Details</th>
                 <th className="p-6 text-left">Customer</th>
                 <th className="p-6 text-left">Shipping Info</th>
@@ -237,6 +341,14 @@ useEffect(() => {
                 <tr key={order.id} className="hover:bg-[#fafafa] transition-colors group">
                   {/* ORDER ID & STATUS */}
                   <td className="p-6">
+               
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded accent-black cursor-pointer"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => toggleSelectOrder(order.id)}
+                    />
+                
                     <div className="font-black text-black text-sm mb-2">
                       #
                       {order.order_number || order.id.slice(0, 6).toUpperCase()}
@@ -356,14 +468,19 @@ useEffect(() => {
                           </p>
                         </>
                       )}
-
+<button
+                        onClick={() => window.print()}
+                        className="w-32 bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-blue-300 hover:text-blue-600 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Truck size={12} className="opacity-50" /> Invoice
+                      </button>
                       <button
                         onClick={() =>
                           (window.location.href = `/admin/orders/${order.id}`)
                         }
-                        className="text-[10px] font-bold text-gray-300 uppercase tracking-widest hover:text-black transition-colors mt-2"
+                        className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:text-black transition-colors mt-2"
                       >
-                        View Invoice
+                        View details
                       </button>
                     </div>
                   </td>
@@ -372,7 +489,7 @@ useEffect(() => {
             </tbody>
           </table>
 
-          {/* --- TABLE પત્યા પછી અહીં આ કોડ મુકો --- */}
+        
 <div className="flex items-center justify-between px-8 py-5 bg-gray-50/50 border-t border-gray-100">
   <div className="flex items-center gap-4">
     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">

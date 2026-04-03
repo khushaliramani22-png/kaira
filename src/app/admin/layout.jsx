@@ -1,28 +1,84 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from "next/navigation"
 
 export default function AdminLayout({ children }) {
   const router = useRouter()
   const supabase = createClient()
+  const pathname = usePathname()
 
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [adminEmail, setAdminEmail] = useState('Loading...')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const getAdminData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setAdminEmail(user.email)
+    const checkAdminAccess = async () => {
+      if (pathname === '/admin/login') {
+        setLoading(false)
+        return
       }
-    };
-    getAdminData();
-  }, [supabase]);
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+      if (!user || authError) {
+        console.log("User not logged in. Redirecting to login...");
+        router.push('/admin/login')
+        return
+      }
+
+      const { data: userData, error: dbError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      console.log("Log-in ID:", user.email);
+      console.log("Database Role:", userData?.role);
+
+      if (dbError || !userData || userData.role !== 'admin') {
+        console.error("Access Denied: this id is not admin!");
+        router.push('/')
+        return
+      }
+
+      setAdminEmail(user.email)
+      setLoading(false)
+    }
+
+    checkAdminAccess()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' && pathname !== '/admin/login') {
+        router.push('/admin/login')
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase, router, pathname])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/admin/login')
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      router.push('/admin/login');
+    } else {
+      console.error("Logout Error:", error.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white font-sans text-black">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Verifying Admin Session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
   }
 
   return (
@@ -36,11 +92,11 @@ export default function AdminLayout({ children }) {
 
         <ul className="list-unstyled">
           <li className="mb-3">
-            <a href="/admin" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+            <div onClick={() => router.push('/admin')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📊 Dashboard
-            </a>
+            </div>
           </li>
-          
+
           {/* Products Dropdown */}
           <li className="mb-2">
             <div
@@ -61,51 +117,55 @@ export default function AdminLayout({ children }) {
             {isProductOpen && (
               <ul className="list-unstyled ms-4 mt-1">
                 <li className="mb-1">
-                  <a href="/admin/products" className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white">
+                  <div onClick={() => router.push('/admin/products')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
                     • All Products
-                  </a>
+                  </div>
                 </li>
                 <li className="mb-1">
-                  <a href="/admin/products/add" className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white">
+                  <div onClick={() => router.push('/admin/products/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
                     • Add New Product
-                  </a>
+                  </div>
                 </li>
               </ul>
             )}
           </li>
 
           <li className="mb-3">
-            <a href="/admin/orders" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+            <div onClick={() => router.push('/admin/orders')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📜 Orders
-            </a>
+            </div>
           </li>
 
           {/* --- ન્યૂઝલેટર ઓપ્શન અહીં એડ કર્યું છે --- */}
           <li className="mb-3">
-            <a href="/admin/subscribers" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+            <div onClick={() => router.push('/admin/subscribers')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📧 Subscribers
-            </a>
+            </div>
           </li>
 
           <li className="mb-3">
-            <a href="/admin/users" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+            <div onClick={() => router.push('/admin/users')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               👥 Users
-            </a>
+            </div>
           </li>
           <li className="mb-3">
-            <a href="/admin/reviews" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+            <div
+              onClick={() => router.push('/admin/reviews')}
+              className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded"
+              style={{ cursor: 'pointer' }}
+            >
               ⭐ Reviews
-            </a>
+            </div>
           </li>
           <li className="mb-3">
-            <a href="/admin/messages" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
+            <div onClick={() => router.push('/admin/messages')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               💬 Messages
-            </a>
+            </div>
           </li>
           <li className="mb-3">
-             <a href="/admin/settings" className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded">
-             ⚙️ Settings
-             </a>
+            <div onClick={() => router.push('/admin/settings')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
+              ⚙️ Settings
+            </div>
           </li>
 
         </ul>
@@ -113,17 +173,17 @@ export default function AdminLayout({ children }) {
 
       {/* Main Content Area */}
       <div className="flex-grow-1 bg-light">
-        
+
         {/* Admin Header - Added 'no-print' class */}
         <header className="navbar navbar-white bg-white border-bottom px-4 py-2 shadow-sm no-print">
           <div className="container-fluid d-flex justify-content-between align-items-center">
             <span className="navbar-text fw-bold text-dark">
               Welcome back, Admin
             </span>
-            
+
             <div className="d-flex align-items-center">
               <span className="me-3 text-muted small">{adminEmail}</span>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="btn btn-outline-danger btn-sm"
               >

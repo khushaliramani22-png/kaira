@@ -8,151 +8,180 @@ import {
   AiOutlineDelete, 
   AiOutlineLink 
 } from "react-icons/ai";
+import Swal from "sweetalert2";
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
+
+ const [user, setUser] = useState(null); 
+
   useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      
+      
+    };
+
+    checkUser();
     fetchReviews();
   }, []);
 
-  const fetchReviews = async () => {
-    setLoading(true);
+const fetchReviews = async () => {
+  setLoading(true);
+  try {
+  
+    const { data, error } = await supabase
+      .from("product_reviews")
+    .select(`*,products ( name )`)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase Error:", error.message);
+      throw error;
+    }
+
+    console.log("Data Received:", data);
+    setReviews(data || []);
+  } catch (err) {
+    console.error("Fetch error:", err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+  // --- REVIEW APPROVE LOGIC ---
+
+const approveReview = async (id) => {
+  try {
+    const { error } = await supabase
+      .from("product_reviews")
+      .update({ status: "approved" }) 
+      .eq("id", id);
+
+    if (error) throw error;
+
+    
+    await fetchReviews(); 
+
+    Swal.fire({
+      icon: "success",
+      title: "Approved!",
+      text: "Review is now visible to customers.",
+      timer: 1500, 
+      showConfirmButton: false
+    });
+  } catch (error) {
+    console.error("Approve Error:", error.message);
+    Swal.fire("Error", error.message, "error");
+  }
+};
+
+// --- DELETE LOGIC ---
+const deleteReview = async (id) => {
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "This action cannot be undone!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#000",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!"
+  });
+
+  if (result.isConfirmed) {
     try {
-      // products!product_id નો ઉપયોગ કરીને કન્ફ્યુઝન દૂર કર્યું છે
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("product_reviews")
-        .select(`
-          *,
-          products!product_id ( name )
-        `)
-        .order("created_at", { ascending: false });
+        .delete()
+        .eq("id", id);
 
       if (error) throw error;
-      setReviews(data || []);
-    } catch (err) {
-      console.error("Fetch error:", err.message);
-    } finally {
-      setLoading(false);
+
+      await fetchReviews();
+      Swal.fire("Deleted!", "Review removed.", "success");
+    } catch (error) {
+      console.error("Delete Error:", error.message);
+      Swal.fire("Error", error.message, "error");
     }
-  };
+  }
+};
 
-  // રિવ્યુ એપ્રુવ કરવાનું ફંક્શન
-  const approveReview = async (id) => {
-    const { error } = await supabase
-      .from("product_reviews")
-      .update({ status: "approved" })
-      .eq("id", id);
+  
 
-    if (!error) {
-      alert("Review Approved!");
-      fetchReviews();
-    } else {
-      alert("Error: " + error.message);
-    }
-  };
-
-  // રિવ્યુ ડિલીટ કરવાનું ફંક્શન
-  const deleteReview = async (id) => {
-    if (!confirm("Are you sure you want to delete this review?")) return;
-    
-    const { error } = await supabase
-      .from("product_reviews")
-      .delete()
-      .eq("id", id);
-
-    if (!error) {
-      fetchReviews();
-    }
-  };
-
-  if (loading) return <div className="p-5 text-center fw-bold">Loading reviews...</div>;
+  if (loading) return <div className="p-5 text-center font-bold">Loading reviews...</div>;
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
+    <div className="container-fluid py-4 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border">
         <div>
-          <h2 className="fw-black text-uppercase italic tracking-tighter mb-0">Review Moderation</h2>
-          <p className="text-muted small mb-0">Manage customer feedback for Kaira</p>
+          <h2 className="text-2xl font-black uppercase tracking-tighter mb-0 italic">Review Moderation</h2>
+          <p className="text-gray-500 text-xs font-bold uppercase">Manage Kaira Customer Feedback</p>
         </div>
-        <span className="badge bg-dark px-3 py-2 shadow-sm">{reviews.length} Total Reviews</span>
+        <span className="bg-black text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
+          {reviews.length} Total Reviews
+        </span>
       </div>
 
-      <div className="table-responsive shadow-sm rounded-4 border bg-white">
-        <table className="table table-hover align-middle mb-0">
-          <thead className="table-light">
-            <tr className="small text-uppercase fw-bold">
-              <th className="ps-4">Product & Image</th>
+      <div className="overflow-hidden shadow-sm rounded-3xl border bg-white">
+        <table className="w-full text-left align-middle border-collapse">
+          <thead className="bg-gray-50 border-b">
+            <tr className="text-[10px] text-gray-400 uppercase font-black tracking-widest">
+              <th className="p-4">Product</th>
               <th>Customer</th>
               <th>Rating</th>
               <th>Comment</th>
               <th>Status</th>
-              <th className="text-end pe-4">Actions</th>
+              <th className="text-right p-4">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {reviews.map((rev) => (
-              <tr key={rev.id}>
-                <td className="ps-4">
-                  <div className="d-flex align-items-center gap-3">
+              <tr key={rev.id} className="hover:bg-gray-50 transition-colors">
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
                     {rev.review_image ? (
-                      <div className="position-relative">
-                        <img 
-                          src={rev.review_image} 
-                          alt="Review" 
-                          className="rounded-2 border shadow-sm" 
-                          style={{ width: "45px", height: "45px", objectFit: "cover" }} 
-                        />
-                        <a 
-                          href={rev.review_image} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-all rounded-2 text-white"
-                        >
-                          <AiOutlineLink size={14} />
-                        </a>
-                      </div>
+                      <img src={rev.review_image} className="w-10 h-10 rounded-lg object-cover border" alt="Review" />
                     ) : (
-                      <div className="bg-light rounded-2 border text-muted d-flex align-items-center justify-content-center" style={{ width: "45px", height: "45px", fontSize: "10px" }}>No Pic</div>
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-[8px] text-gray-400 font-bold border border-dashed">NO PIC</div>
                     )}
-                    <span className="fw-bold text-dark small">{rev.products?.name || "Product Not Found"}</span>
+                    <span className="font-bold text-gray-900 text-xs uppercase tracking-tight">
+                      {rev.products?.name || "Kaira Product"}
+                    </span>
                   </div>
                 </td>
-                <td><span className="small text-muted fw-medium">{rev.customer_name}</span></td>
+                <td><span className="text-xs font-bold text-gray-600 uppercase">{rev.customer_name}</span></td>
                 <td>
-                  <div className="text-warning d-flex">
+                  <div className="flex text-yellow-400">
                     {[...Array(5)].map((_, i) => (
-                      <AiFillStar key={i} size={14} style={{ color: i < rev.rating ? "#FFC107" : "#E5E7EB" }} />
+                      <AiFillStar key={i} size={12} className={i < rev.rating ? "text-yellow-400" : "text-gray-200"} />
                     ))}
                   </div>
                 </td>
-                <td style={{ maxWidth: "250px" }}>
-                  <p className="small mb-0 text-dark italic">"{rev.comment}"</p>
+                <td className="max-w-[200px]">
+                  <p className="text-xs text-gray-700 italic line-clamp-2">"{rev.comment}"</p>
                 </td>
                 <td>
-                  <span className={`badge rounded-pill px-3 py-2 border ${
+                  <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
                     rev.status === 'approved' 
-                      ? 'bg-success-subtle text-success border-success-subtle' 
-                      : 'bg-warning-subtle text-warning border-warning-subtle'
+                      ? 'bg-green-50 text-green-600 border-green-100' 
+                      : 'bg-orange-50 text-orange-600 border-orange-100'
                   }`}>
                     {rev.status || 'pending'}
                   </span>
                 </td>
-                <td className="text-end pe-4">
-                  <div className="d-flex gap-2 justify-content-end">
+                <td className="p-4 text-right">
+                  <div className="flex gap-2 justify-end">
                     {rev.status !== "approved" && (
                       <button 
                         onClick={() => approveReview(rev.id)} 
-                        className="btn btn-sm btn-success d-flex align-items-center gap-1 shadow-sm px-3"
+                        className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 shadow-sm flex items-center gap-1 text-[10px] font-bold uppercase"
                       >
-                        <AiOutlineCheck /> Approve
+                        <AiOutlineCheck size={14} /> Approve
                       </button>
                     )}
-                    <button 
-                      onClick={() => deleteReview(rev.id)} 
-                      className="btn btn-sm btn-outline-danger border-0"
-                    >
+                    <button onClick={() => deleteReview(rev.id)} className="text-red-400 hover:text-red-600 p-2">
                       <AiOutlineDelete size={18} />
                     </button>
                   </div>
@@ -161,9 +190,8 @@ export default function AdminReviews() {
             ))}
           </tbody>
         </table>
-        
         {reviews.length === 0 && (
-          <div className="p-5 text-center text-muted italic">No reviews found.</div>
+          <div className="p-20 text-center text-gray-400 font-bold uppercase text-xs tracking-widest">No reviews to show.</div>
         )}
       </div>
     </div>

@@ -23,18 +23,16 @@ export async function middleware(request) {
     }
   )
 
-  // ૧. યુઝરનું સેશન મેળવો
+
   const { data: { user } } = await supabase.auth.getUser()
 
   const is_admin_page = request.nextUrl.pathname.startsWith('/admin')
   const is_login_page = request.nextUrl.pathname === '/admin/login'
 
-  // ૨. જો એડમિન પેજ પર હોય અને લોગિન ન હોય
   if (is_admin_page && !is_login_page && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  // ૩. જો લોગિન હોય અને ફરી લોગિન પેજ પર જવાની ટ્રાય કરે તો ડેશબોર્ડ મોકલો
   if (user && is_login_page) {
     return NextResponse.redirect(new URL('/admin/orders', request.url))
   }
