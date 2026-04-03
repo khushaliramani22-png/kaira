@@ -258,6 +258,39 @@ a {
   --bs-body-bg-rgb: 17, 17, 41;
 }
 
+/* Responsive Improvements */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, picture, video, iframe, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.container-fluid {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (max-width: 768px) {
+  .navbar, .header, .footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .text-xxl, .display-1 {
+    font-size: 1.4rem;
+  }
+
+  .main-content,
+  .page-content {
+    padding: 0.8rem;
+  }
+}
+
+
 [data-bs-theme=dark] .dropdown-item {
   --bs-dropdown-link-color: var(--bs-light);
   --bs-dropdown-link-hover-color: var(--bs-white);
