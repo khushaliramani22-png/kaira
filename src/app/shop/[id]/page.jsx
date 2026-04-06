@@ -50,65 +50,133 @@ export default function ProductDetail() {
   const [isDescOpen, setIsDescOpen] = useState(false);
   const [isSizeOpen, setIsSizeOpen] = useState(false);
   const [isFabricOpen, setIsFabricOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
-  // ૧. ડેટા ફેચિંગ
   useEffect(() => {
-    const loadProductData = async () => {
-      try {
-        const { data: prod, error } = await supabase
-          .from("products")
-          .select("*")
-          .eq("id", id)
-          .single();
+  const loadProductData = async () => {
+    try {
+      // ૧. પ્રોડક્ટ ડેટા ફેચ કરવો
+      const { data: prod, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-        if (error || !prod) throw error;
+      if (error || !prod) throw error;
 
-        setProduct(prod);
-        setMainImage(prod.image1);
-        const colName = Array.isArray(prod.color) ? prod.color[0] : prod.color;
-        setSelectedColor(colName);
+      setProduct(prod);
+      setMainImage(prod.image1);
+      const colName = Array.isArray(prod.color) ? prod.color[0] : prod.color;
+      setSelectedColor(colName);
 
-        if (prod.size && prod.size.length > 0) {
-          setSelectedSize(prod.size[0]);
-        }
-
-        if (prod.group_id) {
-          const { data: variants } = await supabase
-            .from("products")
-            .select("id, color, image1")
-            .eq("group_id", prod.group_id);
-          setRelatedVariants(variants || []);
-        } else {
-          setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
-        }
-
-        const { data: approvedReviews } = await supabase
-          .from("product_reviews")
-          .select("*")
-          .eq("product_id", id)
-          .eq("status", "approved")
-          .order("created_at", { ascending: false });
-
-        if (approvedReviews) setReviews(approvedReviews);
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUserId(session.user.id);
-          const { data: wishlistData } = await supabase
-            .from("wishlist")
-            .select("*")
-            .eq("user_id", session.user.id)
-            .eq("product_id", id)
-            .single();
-          setIsWishlisted(!!wishlistData);
-        }
-      } catch (err) {
-        console.error("Error:", err.message);
+      if (prod.size && prod.size.length > 0) {
+        setSelectedSize(prod.size[0]);
       }
-    };
 
-    if (id) loadProductData();
-  }, [id]);
+      // ૨. વેરિઅન્ટ્સ ફેચ કરવા
+      if (prod.group_id) {
+        const { data: variants } = await supabase
+          .from("products")
+          .select("id, color, image1")
+          .eq("group_id", prod.group_id);
+        setRelatedVariants(variants || []);
+      } else {
+        setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
+      }
+
+      // ૩. રિવ્યુ ફેચ કરવા
+      const { data: approvedReviews } = await supabase
+        .from("product_reviews")
+        .select("*")
+        .eq("product_id", id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (approvedReviews) setReviews(approvedReviews);
+
+      // ૪. યુઝર સેશન અને ઇમેઇલ ફેચ કરવો (મુખ્ય ફેરફાર અહીં છે)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+        setUserEmail(session.user.email); // ઇમેઇલ સ્ટેટમાં સેવ કર્યો
+        
+        // રિવ્યુ ફોર્મમાં નામની જગ્યાએ ઓટોમેટિક ઇમેઇલ ભરાઈ જશે
+        setNewReview(prev => ({ ...prev, name: session.user.email }));
+
+        // વિશલિસ્ટ ચેક કરવી
+        const { data: wishlistData } = await supabase
+          .from("wishlist")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .eq("product_id", id)
+          .single();
+        setIsWishlisted(!!wishlistData);
+      }
+    } catch (err) {
+      console.error("Error:", err.message);
+    }
+  };
+
+  if (id) loadProductData();
+}, [id]);
+  // ૧. ડેટા ફેચિંગ
+  // useEffect(() => {
+  //   const loadProductData = async () => {
+  //     try {
+  //       const { data: prod, error } = await supabase
+  //         .from("products")
+  //         .select("*")
+  //         .eq("id", id)
+  //         .single();
+
+  //       if (error || !prod) throw error;
+
+  //       setProduct(prod);
+  //       setMainImage(prod.image1);
+  //       const colName = Array.isArray(prod.color) ? prod.color[0] : prod.color;
+  //       setSelectedColor(colName);
+
+  //       if (prod.size && prod.size.length > 0) {
+  //         setSelectedSize(prod.size[0]);
+  //       }
+
+  //       if (prod.group_id) {
+  //         const { data: variants } = await supabase
+  //           .from("products")
+  //           .select("id, color, image1")
+  //           .eq("group_id", prod.group_id);
+  //         setRelatedVariants(variants || []);
+  //       } else {
+  //         setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
+  //       }
+
+  //       const { data: approvedReviews } = await supabase
+  //         .from("product_reviews")
+  //         .select("*")
+  //         .eq("product_id", id)
+  //         .eq("status", "approved")
+  //         .order("created_at", { ascending: false });
+
+  //       if (approvedReviews) setReviews(approvedReviews);
+
+  //       const { data: { session } } = await supabase.auth.getSession();
+  //       if (session?.user) {
+  //         setUserId(session.user.id);
+  //         const { data: wishlistData } = await supabase
+  //           .from("wishlist")
+  //           .select("*")
+  //           .eq("user_id", session.user.id)
+  //           .eq("product_id", id)
+  //           .single();
+  //         setIsWishlisted(!!wishlistData);
+  //       }
+  //     } catch (err) {
+  //       console.error("Error:", err.message);
+  //     }
+  //   };
+
+  //   if (id) loadProductData();
+  // }, [id]);
 
   // રિવ્યુ સબમિટ વિથ લોગિન ચેક
   const handleReviewSubmit = async (e) => {

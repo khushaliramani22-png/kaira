@@ -61,19 +61,24 @@ export default function AdminOrders() {
       confirmButtonText: "Yes, update all!",
     });
 
-    if (result.isConfirmed) {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .in("id", selectedOrders);
-      if (!error) {
-        Swal.fire("Updated!", "Selected orders have been updated.", "success");
-        setSelectedOrders([]);
-        fetchOrders();
-      }
+  if (result.isConfirmed) {
+    const updateData = { status: newStatus };
+    if (newStatus === "Delivered") {
+      updateData.delivery_date = new Date().toISOString();
     }
-  };
 
+    const { error } = await supabase
+      .from("orders")
+      .update(updateData)
+      .in("id", selectedOrders);
+    
+    if (!error) {
+      Swal.fire("Updated!", "Selected orders have been updated.", "success");
+      setSelectedOrders([]);
+      fetchOrders();
+    }
+  }
+};
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -126,11 +131,18 @@ export default function AdminOrders() {
           }
         }
       }
+const updateData = { status: newStatus };
+    if (newStatus === "Delivered") {
+      updateData.delivery_date = new Date().toISOString();
+    }
 
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", id);
+    const { error } = await supabase
+      .from("orders")
+      .update(updateData)
+      .eq("id", id);
+
+   
+    
 
       Swal.close();
       if (error) throw error;

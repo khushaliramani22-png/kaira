@@ -10,6 +10,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 
+
 const RelatedProducts = ({ currentCategory = null, currentProductId = null }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
