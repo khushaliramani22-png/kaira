@@ -80,7 +80,7 @@ export default function OrderDetailsPage() {
                 .from("orders")
                 .update({
                     status: `${requestType} Pending`,
-                    return_reason: reason, // ખાતરી કરજો કે ડેટાબેઝમાં આ કોલમ હોય
+                    return_reason: reason, 
                     return_details: additionalInfo
                 })
                 .eq("id", id);
@@ -321,7 +321,7 @@ export default function OrderDetailsPage() {
                                     value={reason}
                                     onChange={(e) => setReason(e.target.value)}
                                 >
-                                    <option value="">Select a reason</option>
+                                    <option value="">Select a Reason</option>
                                     {requestType === "Exchange" ? (
                                         // --- exchange option ---
                                         <>
