@@ -287,6 +287,7 @@ export default function OrderDetailsPage() {
                             </div>
                             <div className="border-t border-dashed pt-4 flex justify-between items-center">
                                 <span className="font-bold text-lg text-gray-800">
+                                    
                                     Final Order Amount
                                 </span>
                                 <span className="font-black text-3xl text-gray-900">
