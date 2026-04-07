@@ -158,47 +158,7 @@ export default function OrderDetailsPage() {
                         </div>
                     ))}
                 </div>
-                {/* Rating & Review Section */}
-
-                {isDelivered && (
-                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mt-4">
-                        <h3 className="font-bold text-xs uppercase text-gray-500 mb-4 tracking-widest border-b pb-2">
-                            Ratings & Reviews
-                        </h3>
-
-                        {userReview ? (
-                            <div className="space-y-3">
-                                <div className="flex gap-1">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <AiFillStar
-                                            key={star}
-                                            size={20}
-                                            className={
-                                                star <= userReview.rating
-                                                    ? "text-green-600"
-                                                    : "text-gray-200"
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                                <p className="text-gray-800 font-semibold text-sm">
-                                    {userReview.review_text || "Good Product!"}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                    Submitted on{" "}
-                                    {new Date(userReview.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="flex justify-between items-center">
-                                <p className="text-gray-600 text-sm">How is the product?</p>
-                                <button className="text-gray-600 font-bold text-xs uppercase border border-gray-600 px-4 py-2 rounded-lg hover:bg-pink-50">
-                                    Rate Now
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
+               
                 {/* Status and Tracker Section */}
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full">
                     <div className="flex items-center gap-6">

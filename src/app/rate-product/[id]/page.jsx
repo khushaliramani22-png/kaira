@@ -107,22 +107,21 @@ const handleSubmit = async () => {
       rating: rating,
       fabric_rating: fabricRating,
       comment: comment,
-      status: "approved",
-      review_image: imageUrl, // ઈમેજ લિંક અહીં ઉમેરાશે
+      status: "pending",
+      review_image: imageUrl, 
     };
 
     if (existingReview) {
       reviewData.id = existingReview.id;
     }
 
-    // 4. ડેટાબેઝમાં સેવ કરો
     const { error } = await supabase
       .from("product_reviews")
       .upsert(reviewData); 
 
     if (error) throw error;
 
-    await Swal.fire("Success", existingReview ? "Feedback Updated Successfully!" : "Feedback Saved Successfully!", "success");
+    await Swal.fire("Success", "Feedback submitted! It will be visible after admin approval.", "success");
     router.push("/user-order");
   } catch (err) {
     console.error("Submission Error:", err.message);

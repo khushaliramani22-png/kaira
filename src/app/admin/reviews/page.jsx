@@ -92,22 +92,29 @@ const deleteReview = async (id) => {
 
   if (result.isConfirmed) {
     try {
+
+      console.log("Deleting Review ID:", id);
+
       const { error } = await supabase
         .from("product_reviews")
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+
+        console.error("Supabase Delete Error Details:", error);
+        throw error;
+      }
 
       await fetchReviews();
       Swal.fire("Deleted!", "Review removed.", "success");
     } catch (error) {
-      console.error("Delete Error:", error.message);
-      Swal.fire("Error", error.message, "error");
+
+      
+      Swal.fire("Error", error.message || "Failed to delete", "error");
     }
   }
 };
-
   
 
   if (loading) return <div className="p-5 text-center font-bold">Loading reviews...</div>;

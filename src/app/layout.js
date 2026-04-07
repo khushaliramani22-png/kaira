@@ -21,7 +21,24 @@ export default function RootLayout({ children }) {
 
       <head>
         <title>Kaira Fashion Store</title>
+   
+        <meta name="description" content="Discover trendy fashion finds at Kaira. Your one-stop shop for everything you need. Explore high-quality women's clothing and accessories." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        {/* google logo */}
+        
+<link rel="icon" href="/images/colorbox/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="/images/colorbox/favicon.ico" />
+        
+        {/* Search Engine Optimization (SEO) */}
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://kaira-ten.vercel.app/" />
+
+        {/* Bootstrap & Other Links... */}
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+        />
 
         {/* Bootstrap CSS */}
         <link
