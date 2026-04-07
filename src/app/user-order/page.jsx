@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { AiOutlineSearch, AiOutlineRight, AiFillStar } from "react-icons/ai";
+import { AiOutlineSearch, AiOutlineRight, AiFillStar, AiOutlineStar } from "react-icons/ai";
+
 import { IoFilterOutline } from "react-icons/io5";
 
 export default function UserOrderPage() {
@@ -33,25 +34,77 @@ export default function UserOrderPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      const { data: ordersData, error } = await supabase
+
+      const { data: ordersData, error: orderError } = await supabase
         .from("orders")
         .select(`*, order_items (*)`)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setOrders(ordersData || []);
-      setFilteredOrders(ordersData || []);
+      if (orderError) throw orderError;
+      const { data: reviewsData, error: reviewError } = await supabase
+        .from("product_reviews")
+        .select("product_id, rating")
+        .eq("user_id", user.id);
+      if (reviewError) {
+        console.error("Review Fetch Error:", reviewError.message);
+      }
+
+
+      const ordersWithReviews = ordersData.map(order => ({
+        ...order,
+        order_items: order.order_items.map(item => {
+
+          const review = reviewsData?.find(r => r.product_id === item.product_id);
+          return {
+            ...item,
+            user_rating: review ? review.rating : 0
+          };
+        })
+      }));
+
+      setOrders(ordersWithReviews);
+      setFilteredOrders(ordersWithReviews);
     } catch (error) {
-      console.error("Error:", error.message);
+      console.error("General Error:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- આ ફંક્શન ઉમેરવાથી તમારી એરર સોલ્વ થઈ જશે ---
+  const handleCancelOrder = async (orderId) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to cancel this order?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Cancel it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setLoading(true);
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: "Cancelled" })
+          .eq("id", orderId);
+
+        if (error) throw error;
+        Swal.fire("Cancelled!", "Your order has been cancelled.", "success");
+        fetchUserOrders();
+      } catch (error) {
+        console.error("Error:", error.message);
+        Swal.fire("Error", "Could not cancel order", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleRateProduct = (productId, productName) => {
-    // આ યુઝરને નવા બનાવેલા રેટિંગ પેજ પર મોકલશે
+
     router.push(`/rate-product/${productId}?name=${encodeURIComponent(productName)}`);
   };
 
@@ -101,7 +154,7 @@ export default function UserOrderPage() {
                     className="p-4 flex gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     {/* Product Image */}
-                    <div 
+                    <div
                       className="w-20 h-28 flex-shrink-0"
                       onClick={() => router.push(`/user-order/${order.id}`)}
                     >
@@ -116,7 +169,7 @@ export default function UserOrderPage() {
                     <div className="flex-grow">
                       <div className="flex justify-between" onClick={() => router.push(`/user-order/${order.id}`)}>
                         <div>
-                          <h2 className={`text-base font-bold ${isCancelled ? 'text-gray-800' : 'text-gray-900'}`}>
+                          <h2 className={`text-base font-bold ${isCancelled ? 'text-red-600' : 'text-gray-900'}`}>
                             {isCancelled ? "Order Cancelled" : isDelivered ? "Delivered Early" : order.status}
                           </h2>
                           <p className="text-gray-500 text-xs mt-0.5 font-medium">
@@ -129,23 +182,44 @@ export default function UserOrderPage() {
                         <AiOutlineRight className="text-gray-400 mt-1" />
                       </div>
 
+                      {/* --- CANCEL ORDER BUTTON START --- */}
+                      {order.status.toLowerCase() === "pending" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelOrder(order.id);
+                          }}
+                          className="mt-4 bg-white text-red-600 border border-red-200 px-4 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                        >
+                          Cancel Order
+                        </button>
+                      )}
                       {/* Feedback & Stars Section */}
                       {isDelivered && (
                         <div className="mt-4 pt-3 border-t border-gray-50">
-                          <p className="text-gray-700 text-xs font-semibold mb-2">We are glad you liked the product!</p>
+                          <p className="text-gray-700 text-[11px] font-semibold mb-2">
+                            {item.user_rating > 0 ? "Your Rating" : "We are glad you liked the product!"}
+                          </p>
                           <div className="flex items-center justify-between">
-                            <div className="flex gap-1 text-green-500">
-                              {[1, 2, 3, 4].map(s => <AiFillStar key={s} size={22} />)}
-                              <AiFillStar className="text-gray-200" size={22} />
+                            <div className="flex gap-1 text-green-600">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <span key={star}>
+                                  {star <= item.user_rating ? (
+                                    <AiFillStar size={20} />
+                                  ) : (
+                                    <AiOutlineStar className="text-gray-300" size={20} />
+                                  )}
+                                </span>
+                              ))}
                             </div>
                             <button
                               onClick={(e) => {
-                                e.stopPropagation(); // Parent div પર ક્લિક થતું અટકાવવા માટે
+                                e.stopPropagation();
                                 handleRateProduct(item.product_id, item.product_name);
                               }}
                               className="text-pink-600 font-bold text-xs uppercase tracking-tighter"
                             >
-                              Complete Your Feedback
+                              {item.user_rating > 0 ? "Edit Feedback" : "Complete Your Feedback"}
                             </button>
                           </div>
                         </div>

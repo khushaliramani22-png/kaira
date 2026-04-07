@@ -52,66 +52,85 @@ useEffect(() => {
     fetchExistingReview();
   }, [id]);
 
-  const handleImageChange = (e) => {
+    const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const newImgs = files.map(file => ({ file, preview: URL.createObjectURL(file) }));
     setSelectedImages([...selectedImages, ...newImgs]);
   };
+const handleSubmit = async () => {
+  const currentUser = user || (await supabase.auth.getUser()).data.user; 
+  if (!currentUser || !id || id === "undefined") {
+    Swal.fire("Error", "Invalid Session or Product ID", "error");
+    return;
+  }
 
-  const handleSubmit = async () => {
-    const currentUser = user || (await supabase.auth.getUser()).data.user;
-    
-    if (!currentUser || !id || id === "undefined") {
-      Swal.fire("Error", "Invalid Session or Product ID", "error");
-      return;
+  try {
+    setLoading(true);
+
+    let imageUrl = null;
+
+    // 1. જો ઈમેજ સિલેક્ટ કરી હોય, તો તેને સ્ટોરેજમાં અપલોડ કરો
+    if (selectedImages.length > 0) {
+      const img = selectedImages[0]; // અત્યારે આપણે પહેલી ઈમેજ લઈએ છીએ
+      const file = img.file;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`; // યુનિક નામ માટે timestamp
+      const filePath = `review_images/${currentUser.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("products") // તમારું બકેટ નામ
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // ઈમેજની પબ્લિક URL મેળવો
+      const { data: { publicUrl } } = supabase.storage
+        .from("products")
+        .getPublicUrl(filePath);
+
+      imageUrl = publicUrl;
     }
 
-    try {
-      setLoading(true);
+    // 2. જૂનો રિવ્યુ ચેક કરો
+    const { data: existingReview } = await supabase
+      .from("product_reviews")
+      .select("id")
+      .eq("product_id", id)
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
 
-      // ફરી ચેક કરો કે જૂનો રિવ્યુ ડેટાબેઝમાં છે કે નહીં
-      const { data: existingReview } = await supabase
-        .from("product_reviews")
-        .select("id")
-        .eq("product_id", id)
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
+    // 3. ડેટા તૈયાર કરો
+    const reviewData = {
+      product_id: id,
+      user_id: currentUser.id,
+      customer_name: currentUser.user_metadata?.full_name || "Guest",
+      rating: rating,
+      fabric_rating: fabricRating,
+      comment: comment,
+      status: "approved",
+      review_image: imageUrl, // ઈમેજ લિંક અહીં ઉમેરાશે
+    };
 
-      const reviewData = {
-        product_id: id,
-        user_id: currentUser.id,
-        customer_name: currentUser.user_metadata?.full_name || "Guest",
-        rating: rating,
-        fabric_rating: fabricRating,
-        comment: comment,
-        status: "approved",
-        updated_at: new Date().toISOString(),
-      };
-
-      // જો જૂનો રિવ્યુ હોય, તો તેની ID એડ કરો જેથી Supabase તેને Update કરે
-      if (existingReview) {
-        reviewData.id = existingReview.id;
-      } else {
-        reviewData.created_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from("product_reviews")
-        .upsert(reviewData); 
-
-      if (error) throw error;
-
-      await Swal.fire("Success", existingReview ? "Feedback Updated Successfully!" : "Feedback Saved Successfully!", "success");
-      router.push("/user-order");
-    } catch (err) {
-      console.error("Submission Error:", err.message);
-      Swal.fire("Error", "Could not submit: " + err.message, "error");
-    } finally {
-      setLoading(false);
+    if (existingReview) {
+      reviewData.id = existingReview.id;
     }
-  };
 
+    // 4. ડેટાબેઝમાં સેવ કરો
+    const { error } = await supabase
+      .from("product_reviews")
+      .upsert(reviewData); 
 
+    if (error) throw error;
+
+    await Swal.fire("Success", existingReview ? "Feedback Updated Successfully!" : "Feedback Saved Successfully!", "success");
+    router.push("/user-order");
+  } catch (err) {
+    console.error("Submission Error:", err.message);
+    Swal.fire("Error", "Could not submit: " + err.message, "error");
+  } finally {
+    setLoading(false);
+  }
+};
 const getButtonText = () => {
     if (step === 1) return rating > 0 ? "Next" : "Skip";
     if (step === 2) return selectedImages.length > 0 ? "Next" : "skip";

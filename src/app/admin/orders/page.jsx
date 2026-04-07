@@ -61,24 +61,24 @@ export default function AdminOrders() {
       confirmButtonText: "Yes, update all!",
     });
 
-  if (result.isConfirmed) {
-    const updateData = { status: newStatus };
-    if (newStatus === "Delivered") {
-      updateData.delivery_date = new Date().toISOString();
-    }
+    if (result.isConfirmed) {
+      const updateData = { status: newStatus };
+      if (newStatus === "Delivered") {
+        updateData.delivery_date = new Date().toISOString();
+      }
 
-    const { error } = await supabase
-      .from("orders")
-      .update(updateData)
-      .in("id", selectedOrders);
-    
-    if (!error) {
-      Swal.fire("Updated!", "Selected orders have been updated.", "success");
-      setSelectedOrders([]);
-      fetchOrders();
+      const { error } = await supabase
+        .from("orders")
+        .update(updateData)
+        .in("id", selectedOrders);
+
+      if (!error) {
+        Swal.fire("Updated!", "Selected orders have been updated.", "success");
+        setSelectedOrders([]);
+        fetchOrders();
+      }
     }
-  }
-};
+  };
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -131,18 +131,18 @@ export default function AdminOrders() {
           }
         }
       }
-const updateData = { status: newStatus };
-    if (newStatus === "Delivered") {
-      updateData.delivery_date = new Date().toISOString();
-    }
+      const updateData = { status: newStatus };
+      if (newStatus === "Delivered") {
+        updateData.delivery_date = new Date().toISOString();
+      }
 
-    const { error } = await supabase
-      .from("orders")
-      .update(updateData)
-      .eq("id", id);
+      const { error } = await supabase
+        .from("orders")
+        .update(updateData)
+        .eq("id", id);
 
-   
-    
+
+
 
       Swal.close();
       if (error) throw error;
@@ -171,6 +171,9 @@ const updateData = { status: newStatus };
     { id: "Cancelled", label: "Cancelled" },
     { id: "Return Requested", label: "Return-request" },
     { id: "Returned", label: "Returned" },
+
+    { id: "Exchange Requested", label: "Exchange-request" },
+
   ];
 
   const getCount = (status) => {
@@ -219,7 +222,7 @@ const updateData = { status: newStatus };
   return (
     <div className="min-h-screen bg-[#fafafa] p-2 md:p-10 font-sans text-black">
       <div className="max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        
+
         {/* HEADER SECTION */}
         <div className="p-5 md:p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -231,7 +234,7 @@ const updateData = { status: newStatus };
               </p>
             </div>
           </div>
-          
+
           {/* SEARCH BAR */}
           <div className="relative w-full md:w-96">
             <input
@@ -252,9 +255,8 @@ const updateData = { status: newStatus };
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-4 text-xs md:text-sm font-semibold transition-all relative whitespace-nowrap tracking-tight ${
-                  activeTab === tab.id ? "text-blue-600" : "text-gray-400 hover:text-gray-600"
-                }`}
+                className={`pb-4 text-xs md:text-sm font-semibold transition-all relative whitespace-nowrap tracking-tight ${activeTab === tab.id ? "text-blue-600" : "text-gray-400 hover:text-gray-600"
+                  }`}
               >
                 {tab.label} (<span className="text-blue-500 font-bold">{getCount(tab.id)}</span>)
                 {activeTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-600"></div>}
@@ -289,8 +291,8 @@ const updateData = { status: newStatus };
               <thead>
                 <tr className="bg-[#fcfcfc] text-gray-400 text-[10px] font-black uppercase tracking-widest border-b border-gray-50">
                   <th className="p-6 text-left w-10">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="w-4 h-4 rounded accent-black cursor-pointer"
                       checked={selectedOrders.length === currentItems.length && currentItems.length > 0}
                       onChange={toggleSelectAll}
@@ -307,8 +309,8 @@ const updateData = { status: newStatus };
                 {currentItems.map((order) => (
                   <tr key={order.id} className="hover:bg-[#fafafa] transition-colors group">
                     <td className="p-6 text-center">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="w-4 h-4 rounded accent-black cursor-pointer"
                         checked={selectedOrders.includes(order.id)}
                         onChange={() => toggleSelectOrder(order.id)}
@@ -318,13 +320,19 @@ const updateData = { status: newStatus };
                       <div className="font-black text-black text-sm mb-2">
                         #{order.order_number || order.id.slice(0, 6).toUpperCase()}
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                        order.status === "Confirmed" ? "bg-green-100 text-green-700" :
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
                         order.status === "Cancelled" ? "bg-red-100 text-red-700" :
-                        order.status === "Delivered" ? "bg-black text-white" : "bg-blue-100 text-blue-700"
-                      }`}>
+                          order.status === "Delivered" ? "bg-black text-white" : "bg-blue-100 text-blue-700"
+                        }`}>
                         {order.status || "Pending"}
                       </span>
+
+                      {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && order.return_details && (
+                        <div className="mt-3 p-2 bg-blue-50 border-l-2 border-blue-500 rounded-r-md">
+                          <p className="text-[10px] font-bold text-blue-600 uppercase">Reason:</p>
+                          <p className="text-[11px] text-gray-700 italic">"{order.return_details}"</p>
+                        </div>
+                      )}
                       <p className="text-[9px] text-gray-400 mt-3 font-bold">{new Date(order.created_at).toLocaleDateString("en-IN")}</p>
                     </td>
                     <td className="p-6 text-sm font-bold capitalize">{order.customer_name}<div className="text-[11px] text-gray-500 mt-1">{order.phone}</div></td>
@@ -339,12 +347,48 @@ const updateData = { status: newStatus };
                       <div className="flex flex-col gap-2 items-center">
                         {order.status === "Pending" && (
                           <>
-                            <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full sm:w-32 bg-white border-2 border-black text-black py-2 rounded-xl text-[9px] font-black uppercase"><CheckCircle2 size={12} className="inline mr-1"/> Confirm</button>
-                            <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full sm:w-32 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase"><XCircle size={12} className="inline mr-1"/> Cancel</button>
+                            <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full sm:w-32 bg-white border-2 border-black text-black py-2 rounded-xl text-[9px] font-black uppercase"><CheckCircle2 size={12} className="inline mr-1" /> Confirm</button>
+                            <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full sm:w-32 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase"><XCircle size={12} className="inline mr-1" /> Cancel</button>
                           </>
                         )}
                         {order.status === "Confirmed" && (
-                          <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full sm:w-32 bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase"><Truck size={14} className="inline mr-1"/> Deliver</button>
+                          <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full sm:w-32 bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase"><Truck size={14} className="inline mr-1" /> Deliver</button>
+                        )}
+                        {order.status === "Return Requested" && (
+                          <div className="flex flex-col gap-2 w-full sm:w-32">
+                            <button onClick={() => updateStatus(order.id, order.status, "Returned")} className="bg-green-600 text-white py-2 rounded-xl text-[9px] font-black uppercase">Approve Return</button>
+                            <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase">Reject Return</button>
+                          </div>
+                        )}
+
+                      
+                        {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && (
+                          <div className="flex flex-col gap-2 w-full sm:w-32">
+                            <button
+                              onClick={() => updateStatus(order.id, order.status, "Confirmed")}
+                              className="bg-blue-600 text-white py-2 rounded-xl text-[9px] font-black uppercase hover:bg-blue-700"
+                            >
+                              Approve Exchange
+                            </button>
+                            <button
+                              onClick={() => updateStatus(order.id, order.status, "Delivered")}
+                              className="border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-red-50"
+                            >
+                              Reject Exchange
+                            </button>
+                            
+                            {/* <button
+                              onClick={() => Swal.fire({
+                                title: 'Exchange Reason',
+                                text: order.return_details || 'No specific reason provided by customer.',
+                                icon: 'info',
+                                confirmButtonColor: '#000'
+                              })}
+                              className="text-[9px] font-bold text-blue-400 uppercase underline mt-1"
+                            >
+                              View Reason
+                            </button> */}
+                          </div>
                         )}
                         <button onClick={() => window.print()} className="w-full sm:w-32 bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase mt-1">Invoice</button>
                         <button onClick={() => (window.location.href = `/admin/orders/${order.id}`)} className="w-full sm:w-auto text-[10px] font-bold text-gray-500 uppercase mt-2">View details</button>
@@ -374,13 +418,21 @@ const updateData = { status: newStatus };
                 </div>
 
                 <div className="mt-3">
-                  <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                    order.status === "Confirmed" ? "bg-green-100 text-green-700" :
+                  <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
                     order.status === "Cancelled" ? "bg-red-100 text-red-700" :
-                    order.status === "Delivered" ? "bg-black text-white" : "bg-blue-100 text-blue-700"
-                  }`}>
+                      order.status === "Delivered" ? "bg-black text-white" :
+                        order.status === "Return Requested" ? "bg-orange-100 text-orange-700" :
+                          order.status === "Exchange Requested" || order.status === "Exchange Pending" ? "bg-purple-100 text-purple-700" :
+                            "bg-blue-100 text-blue-700"
+                    }`}>
                     {order.status || "Pending"}
                   </span>
+                  {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && order.return_details && (
+                    <div className="mt-2 p-2 bg-purple-50 border border-purple-100 rounded-lg">
+                      <p className="text-[9px] font-black text-purple-700 uppercase">Reason:</p>
+                      <p className="text-[10px] text-gray-600 leading-tight">{order.return_details}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-3 text-xs text-gray-600">
@@ -393,17 +445,59 @@ const updateData = { status: newStatus };
                 <div className="mt-3 font-black text-lg">₹{order.total_amount?.toLocaleString()}</div>
 
                 <div className="grid grid-cols-1 gap-2 mt-3">
+                  {/* 1. Pending Status */}
                   {order.status === "Pending" && (
                     <>
                       <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full bg-white border-2 border-black text-black py-2 rounded-xl text-[9px] font-black uppercase">Confirm</button>
                       <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase">Cancel</button>
                     </>
                   )}
+
+                  {/* 2. Confirmed Status */}
                   {order.status === "Confirmed" && (
                     <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase">Deliver</button>
                   )}
+
+                  {/* 3. Return Requested Status */}
+                  {order.status === "Return Requested" && (
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => updateStatus(order.id, order.status, "Returned")} className="w-full bg-green-600 text-white py-2 rounded-xl text-[9px] font-black uppercase">Approve Return</button>
+                      <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase">Reject Return</button>
+                    </div>
+                  )}
+
+                  {/* 4. Exchange Requested / Pending Status */}
+
+                  {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && (
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => updateStatus(order.id, order.status, "Confirmed")}
+                        className="w-full bg-blue-600 text-white py-2 rounded-xl text-[9px] font-black uppercase"
+                      >
+                        Approve Exchange
+                      </button>
+                      <button
+                        onClick={() => updateStatus(order.id, order.status, "Delivered")}
+                        className="w-full border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase"
+                      >
+                        Reject Exchange
+                      </button>
+                      {/* <button
+                        onClick={() => Swal.fire({
+                          title: 'Exchange Reason',
+                          text: order.return_details || 'No reason provided',
+                          icon: 'info'
+                        })}
+                        className="w-full text-[10px] font-bold text-blue-500 uppercase mt-1 underline"
+                      >
+                        View Reason
+                      </button> */}
+                    </div>
+                  )}
+
+                  {/* Common Buttons */}
                   <button onClick={() => window.print()} className="w-full bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase">Invoice</button>
-                  <button onClick={() => (window.location.href = `/admin/orders/${order.id}`)} className="w-full text-[10px] font-bold text-gray-500 uppercase">View details</button>
+                  <button onClick={() => (window.location.href = `/admin/orders/${order.id}`)} className="w-full text-[10px] font-bold text-gray-500 uppercase mt-1">View details</button>
                 </div>
               </article>
             ))}
@@ -414,15 +508,15 @@ const updateData = { status: newStatus };
         <div className="flex flex-col sm:flex-row items-center justify-between px-8 py-5 bg-gray-50/50 border-t border-gray-100 gap-4">
           <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Page {currentPage} of {totalPages || 1}</p>
           <div className="flex gap-3 w-full sm:w-auto justify-center">
-            <button 
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} 
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-5 py-2 text-[10px] font-black uppercase rounded-xl border bg-white disabled:opacity-50"
             >
               Previous
             </button>
-            <button 
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} 
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages || totalPages === 0}
               className="px-5 py-2 text-[10px] font-black uppercase rounded-xl border bg-black text-white disabled:opacity-50"
             >
