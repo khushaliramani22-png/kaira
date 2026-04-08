@@ -1,28 +1,99 @@
 "use client";
-import React from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link"; 
+import { AiOutlineClose } from "react-icons/ai"; // રિમૂવ આઇકન માટે
 
 export default function WishlistPage() {
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const wishlistItems = []; 
+  // --- આ ફંક્શન ઉમેરો ---
+  const removeFromWishlist = async (id) => {
+    const { error } = await supabase
+      .from("wishlist")
+      .delete()
+      .eq("id", id);
+
+    if (!error) {
+      // ડેટાબેઝમાંથી ડિલીટ થયા પછી લિસ્ટમાંથી પણ કાઢી નાખો
+      setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+    } else {
+      console.error("Error removing item:", error.message);
+    }
+  };
+  // ----------------------
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data, error } = await supabase
+          .from("wishlist")
+          .select(`
+            id,
+            product_id,
+            products (
+              id,
+              name,
+              price,
+              image1
+            )
+          `)
+          .eq("user_id", user.id);
+
+        if (!error) {
+          setWishlistItems(data || []);
+        } else {
+          console.error("Error:", error.message);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchWishlist();
+  }, []);
+
+  if (loading) return <div className="text-center py-5">Loading...</div>;
 
   return (
-    <div className="container py-5" style={{ minHeight: '60vh' }}>
-      <h2 className="mb-4">My Wishlist</h2>
-
+    <div className="container py-5">
+      <h2 className="mb-4">My Wishlist ❤️</h2>
       {wishlistItems.length === 0 ? (
-        <div className="text-center py-5 border rounded bg-light">
-          <div className="mb-3" style={{ fontSize: '50px' }}>❤️</div>
-          <h4>your wishlist is empty!</h4>
-          <p className="text-muted">save your favourit product.</p>
-          <Link href="/shop" className="btn btn-dark px-4 py-2 mt-2">
-            Shop Now
-          </Link>
+        <div className="text-center">
+          <p>Your wishlist is empty</p>
+          <Link href="/shop" className="btn btn-primary">Shop Now</Link>
         </div>
       ) : (
         <div className="row">
-       
-          <p>show your items...</p>
+          {wishlistItems.map((item) => (
+            <div key={item.id} className="col-md-3 mb-4">
+              {/* position-relative ઉમેર્યું જેથી બટન ખૂણામાં સેટ થાય */}
+              <div className="card h-100 shadow-sm position-relative">
+                
+                {/* --- રિમૂવ બટન --- */}
+                <button 
+                  onClick={() => removeFromWishlist(item.id)}
+                  className="btn btn-sm btn-light position-absolute top-0 end-0 m-2 shadow-sm"
+                  style={{ borderRadius: "50%", zIndex: 10 }}
+                  title="Remove"
+                >
+                  <AiOutlineClose size={16} className="text-danger" />
+                </button>
+                {/* ----------------- */}
+
+                <img src={item.products?.image1} className="card-img-top" alt={item.products?.name} />
+                <div className="card-body text-center">
+                  <h6 className="card-title text-truncate">{item.products?.name}</h6>
+                  <p className="text-primary fw-bold">₹{item.products?.price}</p>
+                  <Link href={`/shop/${item.product_id}`} className="btn btn-sm btn-outline-dark w-100">
+                    View Product
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

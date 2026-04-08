@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
         
 <link rel="icon" href="/images/colorbox/favicon.ico" sizes="any" />
 <link rel="apple-touch-icon" href="/images/colorbox/favicon.ico" />
-<link rel="shortcut icon" href="/images/colorbox/favicon.ico" type="image/x-icon" />        
+      <link rel="shortcut icon" href="/images/colorbox/favicon.ico" type="image/x-icon" />        
         {/* Search Engine Optimization (SEO) */}
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://kaira-ten.vercel.app/" />

@@ -158,6 +158,15 @@ export default function AdminLayout({ children }) {
             </div>
           </li>
           <li className="mb-3">
+            <div
+              onClick={() => router.push('/admin/wishlist')}
+              className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded"
+              style={{ cursor: 'pointer' }}
+            >
+             ❤️  wishlist
+            </div>
+          </li>
+          <li className="mb-3">
             <div onClick={() => router.push('/admin/messages')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               💬 Messages
             </div>
