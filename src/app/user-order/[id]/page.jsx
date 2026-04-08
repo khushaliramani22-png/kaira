@@ -86,7 +86,6 @@ export default function OrderDetailsPage() {
                 .eq("id", id);
 
             if (error) throw error;
-
             alert(`${requestType} request submitted successfully!`);
             setIsModalOpen(false);
             window.location.reload();
@@ -111,8 +110,7 @@ export default function OrderDetailsPage() {
                         <AiOutlineLeft
                             size={22}
                             className="cursor-pointer text-gray-700"
-                            onClick={() => router.back()}
-                        />
+                            onClick={() => router.back()} />
                         <h1 className="font-bold text-lg uppercase tracking-wide text-gray-700">
                             Order Details
                         </h1>
@@ -131,13 +129,11 @@ export default function OrderDetailsPage() {
                         <div
                             key={item.id}
                             className="p-6 flex gap-8 cursor-pointer hover:bg-gray-50 transition-all border-b last:border-0 items-center"
-                            onClick={() => router.push(`/shop/${item.product_id}`)}
-                        >
+                            onClick={() => router.push(`/shop/${item.product_id}`)}>
                             <img
                                 src={item.image}
                                 className="w-28 h-36 md:w-40 md:h-52 object-cover rounded-lg border shadow-sm"
-                                alt={item.product_name}
-                            />
+                                alt={item.product_name}/>
                             <div className="flex-grow">
                                 <div className="flex justify-between items-start">
                                     <h2 className="text-lg md:text-2xl font-bold text-gray-800">
@@ -163,8 +159,7 @@ export default function OrderDetailsPage() {
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full">
                     <div className="flex items-center gap-6">
                         <div
-                            className={`p-3 rounded-full ${order.status === "Cancelled" ? "bg-red-100" : "bg-green-100"}`}
-                        >
+                            className={`p-3 rounded-full ${order.status === "Cancelled" ? "bg-red-100" : "bg-green-100"}`}>
                             {order.status === "Cancelled" ? (
                                 <IoCheckmarkCircle className="text-red-600" size={36} />
                             ) : (
@@ -172,19 +167,11 @@ export default function OrderDetailsPage() {
                             )}
                         </div>
                         <div>
-                            <h3
-                                className={`font-bold text-xl ${order.status === "Cancelled" ? "text-red-600" : "text-gray-800"}`}
-                            >
-                                {order.status === "Cancelled"
-                                    ? "Order Cancelled"
-                                    : isDelivered
-                                        ? "Delivered Early"
-                                        : order.status}
+                            <h3 className={`font-bold text-xl ${order.status === "Cancelled" ? "text-red-600" : "text-gray-800"}`}>
+                                {order.status === "Cancelled" ? "Order Cancelled" : isDelivered ? "Delivered Early" : order.status}
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">
-                                {order.status === "Cancelled"
-                                    ? "As per your request"
-                                    : new Date(order.created_at).toDateString()}
+                                {order.status === "Cancelled" ? "As per your request" : new Date(order.created_at).toDateString()}
                             </p>
                         </div>
                     </div>
@@ -192,32 +179,24 @@ export default function OrderDetailsPage() {
              
                     {/* Dynamic Alert Box */}
                     <div
-                        className={`border p-4 rounded-xl mt-6 flex items-center gap-3 ${order.status === "Cancelled"
-                                ? "bg-red-50 border-red-100"
-                                : order.status.includes("Pending") // Return કે Exchange માટે
-                                    ? "bg-yellow-50 border-yellow-100"
-                                    : "bg-green-50 border-green-100"
-                            }`}
-                    >
+                        className={`border p-4 rounded-xl mt-6 flex items-center gap-3 ${order.status === "Cancelled" ? "bg-red-50 border-red-100" : order.status.includes("Pending") ? "bg-yellow-50 border-yellow-100" : "bg-green-50 border-green-100" }`}>
                         <span className="text-2xl">
                             {order.status === "Cancelled" ? "🛑" : order.status.includes("Pending") ? "⏳" : "⚡"}
                         </span>
                         <p
-                            className={`text-sm md:text-base font-bold tracking-wide ${order.status === "Cancelled" ? "text-red-800" : order.status.includes("Pending") ? "text-yellow-800" : "text-green-800"
-                                }`}
-                        >
+                            className={`text-sm md:text-base font-bold tracking-wide ${order.status === "Cancelled" ? "text-red-800" : order.status.includes("Pending") ? "text-yellow-800" : "text-green-800" }`} >
                             {order.status === "Cancelled"
-                                ? "This order was cancelled. Any refund will be credited within 5-7 business days."
-                                : order.status === "Return Pending"
-                                    ? "We have received your Return request. Our team is reviewing it."
-                                    : order.status === "Exchange Pending"
-                                        ? "Your Exchange request is under process. We will update you soon."
-                                        : "Great news! Your order has been processed and successfully delivered."}
+                            ? "This order was cancelled. Any refund will be credited within 5-7 business days."
+                            : order.status === "Return Pending"
+                            ? "We have received your Return request. Our team is reviewing it."
+                            : order.status === "Exchange Pending"  
+                        ? "Your Exchange request is under process. We will update you soon."
+                        : "Great news! Your order has been processed and successfully delivered."}
                         </p>
-                    </div>
-                </div>
+              </div>
+          </div>
 
-                {/* Return & Exchange Section */}
+             {/* Return & Exchange Section */}
                 {canReturnOrExchange && (
                     <div className="flex gap-4 w-full mt-4">
                         <button
@@ -228,8 +207,7 @@ export default function OrderDetailsPage() {
                         </button>
                         <button
                             onClick={() => openModal('Exchange')}
-                            className="flex-1 bg-gray-600 text-white py-3 rounded-lg font-bold uppercase text-xs"
-                        >
+                            className="flex-1 bg-gray-600 text-white py-3 rounded-lg font-bold uppercase text-xs" >
                             Exchange
                         </button>
                     </div>
@@ -242,8 +220,7 @@ export default function OrderDetailsPage() {
                     {order.order_items?.[0] && (
                         <RelatedProduct
                             productId={order.order_items[0].product_id}
-                            categoryId={order.order_items[0].category_id}
-                        />
+                            categoryId={order.order_items[0].category_id}/>
                     )}
                 </div>
 
@@ -287,7 +264,6 @@ export default function OrderDetailsPage() {
                             </div>
                             <div className="border-t border-dashed pt-4 flex justify-between items-center">
                                 <span className="font-bold text-lg text-gray-800">
-                                    
                                     Final Order Amount
                                 </span>
                                 <span className="font-black text-3xl text-gray-900">

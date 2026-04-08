@@ -4,16 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/app/context/CartContext";
-import {
-  AiOutlineShoppingCart,
-  AiOutlineHeart,
-  AiFillHeart,
-  AiFillStar,
-  AiOutlineStar,
-  AiOutlineDown,
-} from "react-icons/ai";
-
-// કલર મેપિંગ
+import {AiOutlineShoppingCart,AiOutlineHeart,AiFillHeart,AiFillStar,AiOutlineStar, AiOutlineDown,} from "react-icons/ai";
+import { toast } from 'react-hot-toast';
+// color meping
 const colorMap = {
   "pink": "#DCAE96",
   "dusty pink": "#DCAE96",
@@ -55,7 +48,7 @@ export default function ProductDetail() {
   useEffect(() => {
   const loadProductData = async () => {
     try {
-      // ૧. પ્રોડક્ટ ડેટા ફેચ કરવો
+      // ૧. Product data fetch
       const { data: prod, error } = await supabase
         .from("products")
         .select("*")
@@ -73,7 +66,7 @@ export default function ProductDetail() {
         setSelectedSize(prod.size[0]);
       }
 
-      // ૨. વેરિઅન્ટ્સ ફેચ કરવા
+      // ૨. veriyant fetch
       if (prod.group_id) {
         const { data: variants } = await supabase
           .from("products")
@@ -84,7 +77,7 @@ export default function ProductDetail() {
         setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
       }
 
-      // ૩. રિવ્યુ ફેચ કરવા
+      // ૩. riview fetch
       const { data: approvedReviews } = await supabase
         .from("product_reviews")
         .select("*")
@@ -94,16 +87,16 @@ export default function ProductDetail() {
 
       if (approvedReviews) setReviews(approvedReviews);
 
-      // ૪. યુઝર સેશન અને ઇમેઇલ ફેચ કરવો (મુખ્ય ફેરફાર અહીં છે)
+      // ૪. user settion and email fetch
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUserId(session.user.id);
-        setUserEmail(session.user.email); // ઇમેઇલ સ્ટેટમાં સેવ કર્યો
+        setUserEmail(session.user.email); 
         
-        // રિવ્યુ ફોર્મમાં નામની જગ્યાએ ઓટોમેટિક ઇમેઇલ ભરાઈ જશે
+        
         setNewReview(prev => ({ ...prev, name: session.user.email }));
 
-        // વિશલિસ્ટ ચેક કરવી
+        // wishlist 
         const { data: wishlistData } = await supabase
           .from("wishlist")
           .select("*")
@@ -119,70 +112,12 @@ export default function ProductDetail() {
 
   if (id) loadProductData();
 }, [id]);
-  // ૧. ડેટા ફેચિંગ
-  // useEffect(() => {
-  //   const loadProductData = async () => {
-  //     try {
-  //       const { data: prod, error } = await supabase
-  //         .from("products")
-  //         .select("*")
-  //         .eq("id", id)
-  //         .single();
-
-  //       if (error || !prod) throw error;
-
-  //       setProduct(prod);
-  //       setMainImage(prod.image1);
-  //       const colName = Array.isArray(prod.color) ? prod.color[0] : prod.color;
-  //       setSelectedColor(colName);
-
-  //       if (prod.size && prod.size.length > 0) {
-  //         setSelectedSize(prod.size[0]);
-  //       }
-
-  //       if (prod.group_id) {
-  //         const { data: variants } = await supabase
-  //           .from("products")
-  //           .select("id, color, image1")
-  //           .eq("group_id", prod.group_id);
-  //         setRelatedVariants(variants || []);
-  //       } else {
-  //         setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
-  //       }
-
-  //       const { data: approvedReviews } = await supabase
-  //         .from("product_reviews")
-  //         .select("*")
-  //         .eq("product_id", id)
-  //         .eq("status", "approved")
-  //         .order("created_at", { ascending: false });
-
-  //       if (approvedReviews) setReviews(approvedReviews);
-
-  //       const { data: { session } } = await supabase.auth.getSession();
-  //       if (session?.user) {
-  //         setUserId(session.user.id);
-  //         const { data: wishlistData } = await supabase
-  //           .from("wishlist")
-  //           .select("*")
-  //           .eq("user_id", session.user.id)
-  //           .eq("product_id", id)
-  //           .single();
-  //         setIsWishlisted(!!wishlistData);
-  //       }
-  //     } catch (err) {
-  //       console.error("Error:", err.message);
-  //     }
-  //   };
-
-  //   if (id) loadProductData();
-  // }, [id]);
-
-  // રિવ્યુ સબમિટ વિથ લોગિન ચેક
+ 
+  // review submit with chack login
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
 
-    // લોગિન ચેક
+    // login chack
     if (!userId) {
       alert("Please login to submit a review!");
       router.push("/login");
@@ -211,7 +146,6 @@ export default function ProductDetail() {
 
         imageUrl = publicData.publicUrl;
       }
-
       const { error: insertError } = await supabase.from("product_reviews").insert([
         {
           product_id: id,
@@ -235,19 +169,41 @@ export default function ProductDetail() {
       setReviewLoading(false);
     }
   };
-
   const toggleWishlist = async () => {
-    if (!userId) { alert("Please login first!"); return; }
-    try {
-      if (isWishlisted) {
-        await supabase.from("wishlist").delete().eq("user_id", userId).eq("product_id", id);
-        setIsWishlisted(false);
-      } else {
-        await supabase.from("wishlist").insert([{ user_id: userId, product_id: id }]);
-        setIsWishlisted(true);
-      }
-    } catch (err) { console.error("Wishlist error:", err.message); }
-  };
+  if (!userId) { 
+    toast.error("Please login first!"); 
+    return; 
+  }
+  
+  try {
+    if (isWishlisted) {
+
+      const { error } = await supabase
+        .from("wishlist")
+        .delete()
+        .eq("user_id", userId)
+        .eq("product_id", id);
+      
+      if (error) throw error;
+      
+      setIsWishlisted(false);
+      toast.success("Removed from Wishlist");
+    } else {
+
+      const { error } = await supabase
+        .from("wishlist")
+        .insert([{ user_id: userId, product_id: id }]);
+      
+      if (error) throw error;
+      
+      setIsWishlisted(true);
+      toast.success("Added to Wishlist");
+    }
+  } catch (err) { 
+    console.error("Wishlist error:", err.message); 
+    toast.error("Something went wrong!");
+  }
+};
 
   const updateCartInDB = async () => {
     if (!userId) { alert("Please login first!"); return; }

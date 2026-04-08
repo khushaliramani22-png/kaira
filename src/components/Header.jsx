@@ -157,8 +157,8 @@ export default function Header() {
                                   className="d-block px-4 py-2 text-decoration-none text-dark hover-bg-white/40"
                                   style={{ fontSize: '13px', letterSpacing: '0.05em', fontWeight: '400' }}
                                   onClick={() => {
-                                    setIsShopOpen(false);   
-                                    closeMobileMenu();      
+                                    setIsShopOpen(false);
+                                    closeMobileMenu();
                                   }}
                                 >
                                   {cat}
@@ -172,36 +172,36 @@ export default function Header() {
                     {/* SHOP DROPDOWN END */}
 
                     {/* BLOG LINK */}
-                <li className="nav-item">
-                  <Link href="/blog" className="nav-link" onClick={closeMobileMenu}>
-                    Blog
-                  </Link>
-                </li>
+                    <li className="nav-item">
+                      <Link href="/blog" className="nav-link" onClick={closeMobileMenu}>
+                        Blog
+                      </Link>
+                    </li>
 
-                {/* PAGE DROPDOWN - સુધારેલું લોજિક */}
-                <li className="nav-item position-relative" ref={pageRef}>
-                  <button
-                    onClick={() => setIsPageOpen(!isPageOpen)}
-                    className="nav-link border-0 bg-transparent text-uppercase small"
-                    style={{ fontWeight: '500' }}
-                  >
-                    Page {isPageOpen ? '▴' : '▾'}
-                  </button>
+                    {/* PAGE DROPDOWN - સુધારેલું લોજિક */}
+                    <li className="nav-item position-relative" ref={pageRef}>
+                      <button
+                        onClick={() => setIsPageOpen(!isPageOpen)}
+                        className="nav-link border-0 bg-transparent text-uppercase small"
+                        style={{ fontWeight: '500' }}
+                      >
+                        Page {isPageOpen ? '▴' : '▾'}
+                      </button>
 
-                  {isPageOpen && (
-                    <div className="position-absolute shadow-lg py-2 z-3 bg-white border" 
-                         style={{ width: '200px', top: '100%', left: '0' }}>
-                      <ul className="list-unstyled m-0">
-                        <li><Link href="/about" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>About</Link></li>
-                        <li><Link href="/cart" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Cart</Link></li>
-                        <li><Link href="/checkout" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Checkout</Link></li>
-                        <li><Link href="/user-order" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}> My Orders</Link></li>
-                        <li><Link href="/contact" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Contact</Link></li>
-                        <li><Link href="/order-tracking" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Order Tracking</Link></li>
-                      </ul>
-                    </div>
-                  )}
-                </li>
+                      {isPageOpen && (
+                        <div className="position-absolute shadow-lg py-2 z-3 bg-white border"
+                          style={{ width: '200px', top: '100%', left: '0' }}>
+                          <ul className="list-unstyled m-0">
+                            <li><Link href="/about" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>About</Link></li>
+                            <li><Link href="/cart" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Cart</Link></li>
+                            <li><Link href="/checkout" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Checkout</Link></li>
+                            <li><Link href="/user-order" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}> My Orders</Link></li>
+                            <li><Link href="/contact" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Contact</Link></li>
+                            <li><Link href="/order-tracking" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Order Tracking</Link></li>
+                          </ul>
+                        </div>
+                      )}
+                    </li>
 
 
                     <li className="nav-item">
@@ -244,7 +244,7 @@ export default function Header() {
                           >
                             <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
                           </svg>
-                          {/* ઈમેજમાં બતાવ્યા પ્રમાણે નીચે પર્પલ ટેક્સ્ટ */}
+
                           <span className="fw-bold" style={{ fontSize: '10px', marginTop: '-2px', borderBottom: isDropdownOpen ? '2px solid #800080' : 'none' }}>
                             Profile
                           </span>
@@ -295,6 +295,16 @@ export default function Header() {
                         >
                           <span>🛍️</span>
                           <span className="fw-medium" onClick={closeMobileMenu}>My Orders</span>
+                        </Link>
+
+                        <Link
+                          href="/wishlist"
+                          className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark hover-bg-light transition-all"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{ gap: '12px' }}
+                        >
+                          <span>❤️</span>
+                          <span className="fw-medium" onClick={closeMobileMenu}>My Wishlist</span>
                         </Link>
 
                         <button

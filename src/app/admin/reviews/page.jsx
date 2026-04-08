@@ -2,29 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { 
-  AiFillStar, 
-  AiOutlineCheck, 
-  AiOutlineDelete, 
-  AiOutlineLink 
-} from "react-icons/ai";
+import { AiFillStar, AiOutlineCheck, AiOutlineDelete, AiOutlineLink } from "react-icons/ai";
 import Swal from "sweetalert2";
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-
-
- const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null); 
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      
-    };
-
+  const checkUser = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  setUser(user); 
+  };
     checkUser();
     fetchReviews();
   }, []);
@@ -37,12 +27,10 @@ const fetchReviews = async () => {
       .from("product_reviews")
     .select(`*,products ( name )`)
       .order("created_at", { ascending: false });
-
     if (error) {
       console.error("Supabase Error:", error.message);
       throw error;
     }
-
     console.log("Data Received:", data);
     setReviews(data || []);
   } catch (err) {
@@ -52,19 +40,14 @@ const fetchReviews = async () => {
   }
 };
   // --- REVIEW APPROVE LOGIC ---
-
 const approveReview = async (id) => {
   try {
     const { error } = await supabase
       .from("product_reviews")
       .update({ status: "approved" }) 
       .eq("id", id);
-
     if (error) throw error;
-
-    
     await fetchReviews(); 
-
     Swal.fire({
       icon: "success",
       title: "Approved!",
@@ -77,7 +60,6 @@ const approveReview = async (id) => {
     Swal.fire("Error", error.message, "error");
   }
 };
-
 // --- DELETE LOGIC ---
 const deleteReview = async (id) => {
   const result = await Swal.fire({
@@ -89,34 +71,24 @@ const deleteReview = async (id) => {
     cancelButtonColor: "#d33",
     confirmButtonText: "Yes, delete it!"
   });
-
   if (result.isConfirmed) {
     try {
-
       console.log("Deleting Review ID:", id);
-
       const { error } = await supabase
         .from("product_reviews")
         .delete()
         .eq("id", id);
-
       if (error) {
-
         console.error("Supabase Delete Error Details:", error);
         throw error;
       }
-
       await fetchReviews();
       Swal.fire("Deleted!", "Review removed.", "success");
     } catch (error) {
-
-      
       Swal.fire("Error", error.message || "Failed to delete", "error");
     }
   }
 };
-  
-
   if (loading) return <div className="p-5 text-center font-bold">Loading reviews...</div>;
 
   return (
@@ -181,10 +153,8 @@ const deleteReview = async (id) => {
                 <td className="p-4 text-right">
                   <div className="flex gap-2 justify-end">
                     {rev.status !== "approved" && (
-                      <button 
-                        onClick={() => approveReview(rev.id)} 
-                        className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 shadow-sm flex items-center gap-1 text-[10px] font-bold uppercase"
-                      >
+                      <button onClick={() => approveReview(rev.id)} 
+                        className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 shadow-sm flex items-center gap-1 text-[10px] font-bold uppercase">
                         <AiOutlineCheck size={14} /> Approve
                       </button>
                     )}
