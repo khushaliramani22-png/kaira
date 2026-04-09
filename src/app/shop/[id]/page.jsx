@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/app/context/CartContext";
-import {AiOutlineShoppingCart,AiOutlineHeart,AiFillHeart,AiFillStar,AiOutlineStar, AiOutlineDown,} from "react-icons/ai";
+import { AiOutlineShoppingCart, AiOutlineHeart, AiFillHeart, AiFillStar, AiOutlineStar, AiOutlineDown, } from "react-icons/ai";
 import { toast } from 'react-hot-toast';
 // color meping
 const colorMap = {
@@ -46,73 +46,73 @@ export default function ProductDetail() {
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-  const loadProductData = async () => {
-    try {
-      // ૧. Product data fetch
-      const { data: prod, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error || !prod) throw error;
-
-      setProduct(prod);
-      setMainImage(prod.image1);
-      const colName = Array.isArray(prod.color) ? prod.color[0] : prod.color;
-      setSelectedColor(colName);
-
-      if (prod.size && prod.size.length > 0) {
-        setSelectedSize(prod.size[0]);
-      }
-
-      // ૨. veriyant fetch
-      if (prod.group_id) {
-        const { data: variants } = await supabase
+    const loadProductData = async () => {
+      try {
+        // ૧. Product data fetch
+        const { data: prod, error } = await supabase
           .from("products")
-          .select("id, color, image1")
-          .eq("group_id", prod.group_id);
-        setRelatedVariants(variants || []);
-      } else {
-        setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
-      }
-
-      // ૩. riview fetch
-      const { data: approvedReviews } = await supabase
-        .from("product_reviews")
-        .select("*")
-        .eq("product_id", id)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false });
-
-      if (approvedReviews) setReviews(approvedReviews);
-
-      // ૪. user settion and email fetch
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUserId(session.user.id);
-        setUserEmail(session.user.email); 
-        
-        
-        setNewReview(prev => ({ ...prev, name: session.user.email }));
-
-        // wishlist 
-        const { data: wishlistData } = await supabase
-          .from("wishlist")
           .select("*")
-          .eq("user_id", session.user.id)
-          .eq("product_id", id)
+          .eq("id", id)
           .single();
-        setIsWishlisted(!!wishlistData);
-      }
-    } catch (err) {
-      console.error("Error:", err.message);
-    }
-  };
 
-  if (id) loadProductData();
-}, [id]);
- 
+        if (error || !prod) throw error;
+
+        setProduct(prod);
+        setMainImage(prod.image1);
+        const colName = Array.isArray(prod.color) ? prod.color[0] : prod.color;
+        setSelectedColor(colName);
+
+        if (prod.size && prod.size.length > 0) {
+          setSelectedSize(prod.size[0]);
+        }
+
+        // ૨. veriyant fetch
+        if (prod.group_id) {
+          const { data: variants } = await supabase
+            .from("products")
+            .select("id, color, image1")
+            .eq("group_id", prod.group_id);
+          setRelatedVariants(variants || []);
+        } else {
+          setRelatedVariants([{ id: prod.id, color: prod.color, image1: prod.image1 }]);
+        }
+
+        // ૩. riview fetch
+        const { data: approvedReviews } = await supabase
+          .from("product_reviews")
+          .select("*")
+          .eq("product_id", id)
+          .eq("status", "approved")
+          .order("created_at", { ascending: false });
+
+        if (approvedReviews) setReviews(approvedReviews);
+
+        // ૪. user settion and email fetch
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUserId(session.user.id);
+          setUserEmail(session.user.email);
+
+
+          setNewReview(prev => ({ ...prev, name: session.user.email }));
+
+          // wishlist 
+          const { data: wishlistData } = await supabase
+            .from("wishlist")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .eq("product_id", id)
+            .single();
+          setIsWishlisted(!!wishlistData);
+        }
+      } catch (err) {
+        console.error("Error:", err.message);
+      }
+    };
+
+    if (id) loadProductData();
+  }, [id]);
+
   // review submit with chack login
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -154,7 +154,7 @@ export default function ProductDetail() {
           comment: newReview.comment,
           review_image: imageUrl,
           status: "pending",
-          user_id: userId 
+          user_id: userId
         }
       ]);
 
@@ -170,40 +170,40 @@ export default function ProductDetail() {
     }
   };
   const toggleWishlist = async () => {
-  if (!userId) { 
-    toast.error("Please login first!"); 
-    return; 
-  }
-  
-  try {
-    if (isWishlisted) {
-
-      const { error } = await supabase
-        .from("wishlist")
-        .delete()
-        .eq("user_id", userId)
-        .eq("product_id", id);
-      
-      if (error) throw error;
-      
-      setIsWishlisted(false);
-      toast.success("Removed from Wishlist");
-    } else {
-
-      const { error } = await supabase
-        .from("wishlist")
-        .insert([{ user_id: userId, product_id: id }]);
-      
-      if (error) throw error;
-      
-      setIsWishlisted(true);
-      toast.success("Added to Wishlist");
+    if (!userId) {
+      toast.error("Please login first!");
+      return;
     }
-  } catch (err) { 
-    console.error("Wishlist error:", err.message); 
-    toast.error("Something went wrong!");
-  }
-};
+
+    try {
+      if (isWishlisted) {
+
+        const { error } = await supabase
+          .from("wishlist")
+          .delete()
+          .eq("user_id", userId)
+          .eq("product_id", id);
+
+        if (error) throw error;
+
+        setIsWishlisted(false);
+        toast.success("Removed from Wishlist");
+      } else {
+
+        const { error } = await supabase
+          .from("wishlist")
+          .insert([{ user_id: userId, product_id: id }]);
+
+        if (error) throw error;
+
+        setIsWishlisted(true);
+        toast.success("Added to Wishlist");
+      }
+    } catch (err) {
+      console.error("Wishlist error:", err.message);
+      toast.error("Something went wrong!");
+    }
+  };
 
   const updateCartInDB = async () => {
     if (!userId) { alert("Please login first!"); return; }
@@ -234,8 +234,8 @@ export default function ProductDetail() {
           </div>
           <div className="d-flex gap-2 overflow-auto pb-2">
             {[product.image1, product.image2, product.image3].filter(Boolean).map((img, i) => (
-              <img key={i} src={img} onClick={() => setMainImage(img)} className={`img-thumbnail rounded-3 ${mainImage === img ? "border-dark border-2 shadow-sm" : ""}`} 
-              style={{ width: "75px", height: "75px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }} />
+              <img key={i} src={img} onClick={() => setMainImage(img)} className={`img-thumbnail rounded-3 ${mainImage === img ? "border-dark border-2 shadow-sm" : ""}`}
+                style={{ width: "75px", height: "75px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }} />
             ))}
           </div>
         </div>
@@ -256,10 +256,15 @@ export default function ProductDetail() {
           <div className="d-flex align-items-center mb-4">
             {product.old_price && <span className="text-muted text-decoration-line-through me-2">₹{product.old_price}</span>}
             <h3 className="text-dark fw-bold mb-0">₹{product.price}</h3>
-            {product.discount && <span className="badge bg-success ms-3">{product.discount}% OFF</span>}
+            {product.old_price && product.price && (
+              <span className="badge bg-success ms-3">
+                {Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF
+              </span>
+            )}
+
           </div>
 
-        
+
 
           {/*color selection */}
           <div className="mb-4">
@@ -353,9 +358,10 @@ export default function ProductDetail() {
                 <AiOutlineDown className={`transition-transform ${isDescOpen ? "rotate-180" : ""}`} />
               </button>
               {isDescOpen && (
-                <div className="mt-3 text-muted small" style={{ whiteSpace: "pre-wrap" }}>
-                  {product.description || "No description available."}
-                </div>
+                <div
+                  className="mt-3 text-muted small ql-editor list-disc ml-5" // 'ql-editor' ક્લાસ લિસ્ટ સ્ટાઇલિંગમાં મદદ કરશે
+                  dangerouslySetInnerHTML={{ __html: product.description || "No description available." }}
+                />
               )}
             </div>
 
@@ -370,9 +376,10 @@ export default function ProductDetail() {
                 <AiOutlineDown className={`transition-transform ${isSizeOpen ? "rotate-180" : ""}`} />
               </button>
               {isSizeOpen && (
-                <div className="mt-3 text-muted small" style={{ whiteSpace: "pre-wrap" }}>
-                  {product.size_fit || "No size and fit information available."}
-                </div>
+                <div
+                  className="mt-3 text-muted small ql-editor list-disc ml-5"
+                  dangerouslySetInnerHTML={{ __html: product.size_fit || "No size and fit information available." }}
+                />
               )}
             </div>
 
@@ -387,13 +394,14 @@ export default function ProductDetail() {
                 <AiOutlineDown className={`transition-transform ${isFabricOpen ? "rotate-180" : ""}`} />
               </button>
               {isFabricOpen && (
-                <div className="mt-3 text-muted small" style={{ whiteSpace: "pre-wrap" }}>
-                  {product.fabric_care || "No fabric and care information available."}
-                </div>
+                <div
+                  className="mt-3 text-muted small ql-editor list-disc ml-5"
+                  dangerouslySetInnerHTML={{ __html: product.fabric_care || "No fabric and care information available." }}
+                />
               )}
             </div>
           </div>
-          {/* --- રિવ્યુ સેક્શન --- */}
+          {/* --- REVIEW SECTION--- */}
           <div className="mt-5 border-top pt-4">
             <h5 className="fw-black uppercase italic mb-4">Customer Experience ({reviews.length})</h5>
 
@@ -407,13 +415,13 @@ export default function ProductDetail() {
                     <span className="fw-bold small">{rev.customer_name}</span>
                   </div>
                   <p className="text-muted small mb-1 italic">"{rev.comment}"</p>
-                  
+
                   {rev.review_image && (
                     <div className="mt-2">
                       <img src={rev.review_image} alt="Customer" className="rounded-3 shadow-sm" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
                     </div>
                   )}
-                  
+
                   <small className="text-muted d-block mt-1" style={{ fontSize: '10px' }}>
                     Verified Buyer • {new Date(rev.created_at).toLocaleDateString()}
                   </small>
@@ -421,7 +429,7 @@ export default function ProductDetail() {
               )) : <p className="text-muted small italic">No reviews yet.</p>}
             </div>
 
-            {/* રિવ્યુ ફોર્મ - લોગિન હોય તો જ દેખાશે */}
+
             <div className="bg-light p-4 rounded-4 shadow-sm">
               {!userId ? (
                 <div className="text-center py-2">
@@ -441,7 +449,7 @@ export default function ProductDetail() {
                     </div>
                     <input type="text" placeholder="Your Name" className="form-control mb-2 rounded-3 border-0 shadow-sm" required value={newReview.name} onChange={e => setNewReview({ ...newReview, name: e.target.value })} />
                     <textarea placeholder="Tell us about the fabric and fit..." className="form-control mb-2 rounded-3 border-0 shadow-sm" rows="3" required value={newReview.comment} onChange={e => setNewReview({ ...newReview, comment: e.target.value })}></textarea>
-                    
+
                     <div className="mb-3">
                       <label className="small fw-bold text-muted mb-1">Add Photo (Optional)</label>
                       <input type="file" accept="image/*" className="form-control form-control-sm rounded-3 border-0 shadow-sm" onChange={(e) => setSelectedFile(e.target.files[0])} />

@@ -11,8 +11,8 @@ function ShopContent() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-  
-  // URL માંથી 'category' મેળવો
+
+
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
 
@@ -20,27 +20,46 @@ function ShopContent() {
     async function fetchProducts() {
       try {
         setLoading(true);
-        let query = supabase.from("products").select("*");
 
-        
+        let query = supabase.from("products").select(`*, product_reviews (rating)`);
+
 
         if (categoryParam) {
-        
+
           const formattedCategory = categoryParam.toUpperCase().replace(/-/g, ' ');
           query = query.eq("category", formattedCategory);
         }
 
         const { data, error } = await query;
         if (error) throw error;
-        setProducts(data || []);
+        // રેટિંગની એવરેજ ગણવાની લોજિક
+        const productsWithReviews = data.map((product) => {
+          const allReviews = product.product_reviews || [];
+          const totalReviews = allReviews.length;
+
+          const avgRating = totalReviews > 0
+            ? (allReviews.reduce((sum, item) => sum + item.rating, 0) / totalReviews).toFixed(1)
+            : null;
+
+          return { ...product, avgRating, totalReviews };
+        });
+
+        setProducts(productsWithReviews);
       } catch (error) {
         console.error("Error:", error.message);
       } finally {
         setLoading(false);
       }
     }
+    //     setProducts(data || []);
+    //   } catch (error) {
+    //     console.error("Error:", error.message);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // }
     fetchProducts();
-  }, [categoryParam]); // જ્યારે પણ કેટેગરી બદલાય ત્યારે આ ફરીથી રન થશે
+  }, [categoryParam]);
 
   if (loading)
     return (
@@ -57,7 +76,8 @@ function ShopContent() {
       </h2>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6 p-2">
         {products.length > 0 ? (
           products.map((product) => (
             <div
@@ -65,7 +85,8 @@ function ShopContent() {
               className="group bg-white rounded-xl overflow-hidden border hover:shadow-xl transition duration-300"
             >
               {/* Image Section */}
-              <div className="relative overflow-hidden">
+              <div className="relative aspect-square w-full">
+
                 <Link href={`/shop/${product.id}`}>
                   <img
                     src={product.image1 || "https://via.placeholder.com/500"}
@@ -74,7 +95,7 @@ function ShopContent() {
                   />
                 </Link>
 
-                <button className="absolute top-3 left-3 bg-white p-2 rounded-full shadow hover:text-red-500">
+                <button className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm text-gray-400">
                   <Heart size={16} />
                 </button>
 
@@ -87,16 +108,18 @@ function ShopContent() {
               </div>
 
               {/* Info Section */}
-              <div className="p-4 text-center">
-                <h3 className="text-sm font-medium text-gray-800 line-clamp-1">
+
+              <div className=" flex flex-col gap-1">
+                <h3 className="text-[12px] leading-tight font-medium mt-1 text-gray-800 line-clamp-2 sm:text-sm md:text-base">
                   {product.name}
                 </h3>
 
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="text-base font-semibold">₹{product.price}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm md:text-base font-bold text-gray-800">₹{product.price}</span>
+
 
                   {product.old_price && Number(product.old_price) > Number(product.price) && (
-                    <span className="text-red-500 line-through text-sm">₹{product.old_price}</span>
+                    <span className="text-[10px] md:text-xs text-gray-400 line-through">₹{product.oldPrice}</span>
                   )}
 
                   {product.old_price && (
@@ -105,9 +128,29 @@ function ShopContent() {
                     </span>
                   )}
                 </div>
+                <div className="flex items-center gap-1 mt-1">
+                  {product.avgRating ? (
+                    <>
+
+                      <span className="bg-green-700 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        {product.avgRating} ★
+                      </span>
+
+                      <span className="text-[10px] text-gray-400">
+                        ({product.totalReviews})
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] text-gray-400 italic">No reviews yet</span>
+                  )}
+                </div>
+
+
                 <p className="text-blue-700 text-[10px] md:text-xs font-medium mt-1 uppercase">
-                  NOW AT ₹{Math.round(product.price * 0.9)} WITH EXTRA10
+                  NOW AT ₹{Math.round(product.price * 0.9)} WITH EXTRA ₹{Math.round(product.price * 0.1)}
                 </p>
+
+
               </div>
             </div>
           ))

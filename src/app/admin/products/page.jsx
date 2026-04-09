@@ -39,7 +39,20 @@ export default function Products() {
     const confirmDelete = confirm("Are you sure you want to delete this product?");
     if (!confirmDelete) return;
 
-    await supabase.from("products").delete().eq("id", id);
+    const response = await fetch('/api/admin/products', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert('Error deleting product: ' + (result.error || 'Unknown error'));
+      return;
+    }
+
     fetchProducts();
   };
 const indexOfLastItem = currentPage * itemsPerPage;

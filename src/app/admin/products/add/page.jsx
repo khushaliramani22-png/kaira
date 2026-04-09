@@ -3,21 +3,36 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { AiOutlineDown } from "react-icons/ai";
+import dynamic from 'next/dynamic';
+const ReactQuill = dynamic(() => import('react-quill-new'), { 
+  ssr: false,
+  loading: () => <p>Loading Editor...</p>
+});
+import 'react-quill-new/dist/quill.snow.css';
 
 export default function AddProduct() {
   const [product, setProduct] = useState({
     name: "", brand: "", gender: "", category: "",
     price: "", old_price: "", discount: "", stock: "",
     description: "",
-    size_fit: "",      // નવું ફિલ્ડ ઉમેર્યું
-    fabric_care: "",    // નવું ફિલ્ડ ઉમેર્યું
+    size_fit: "",      
+    fabric_care: "",    
     image1: null, image2: null, image3: null,
   });
+
+  // Quill Toolbar Config
+  const modules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['clean']
+    ],
+  };
+
 
   // Multi-select mate state
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
-
   const [preview1, setPreview1] = useState(null);
   const [preview2, setPreview2] = useState(null);
   const [preview3, setPreview3] = useState(null);
@@ -84,9 +99,9 @@ export default function AddProduct() {
     return urlData.publicUrl;
   };
 
-  const addProduct = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const addProduct = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
     try {
       const imageUrls = {};
@@ -107,17 +122,36 @@ export default function AddProduct() {
         size: selectedSizes,
         color: selectedColors,
         description: product.description,
-        size_fit: product.size_fit,       // DB માં સેવ થશે
-        fabric_care: product.fabric_care, // DB માં સેવ થશે
+        size_fit: product.size_fit,       
+        fabric_care: product.fabric_care, 
         image1: imageUrls.image1,
         image2: imageUrls.image2,
         image3: imageUrls.image3,
       };
 
-      const { error } = await supabase.from("products").insert([dataToInsert]);
-      if (error) throw error;
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToInsert),
+      });
 
-      alert("Product Uploaded Successfully! ✅");
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        const text = await response.text();
+        console.error('Invalid JSON response from admin product API:', text);
+        throw new Error(response.ok ? 'Invalid JSON response from server' : `Server error: ${response.status}`);
+      }
+
+      if (!response.ok || !result.success) {
+        console.error('Supabase Error Details:', result.error);
+        throw new Error(result.error || 'Failed to create product');
+      }
+
+      alert('Product Uploaded Successfully! ✅');
 
       setProduct({
         name: "", brand: "", gender: "", category: "",
@@ -131,7 +165,7 @@ export default function AddProduct() {
 
     } catch (err) {
       console.error(err);
-      alert("Error: " + err.message);
+      alert("Error: " + (err.details || err.message || err));
     } finally {
       setLoading(false);
     }
@@ -217,14 +251,15 @@ export default function AddProduct() {
               <AiOutlineDown style={{ transform: isDescOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
             </button>
             {isDescOpen && (
-              <textarea
-                name="description"
-                placeholder="Short description..."
-                value={product.description}
-                onChange={handleChange}
-                className="form-control mt-3"
-                rows="3"
-              />
+              <div className="mt-3 bg-white">
+                <ReactQuill 
+                  theme="snow" 
+                  value={product.description} 
+                  onChange={(val) => setProduct({ ...product, description: val })}
+                  modules={modules}
+                  placeholder="product information ..."
+                />
+              </div>
             )}
           </div>
 
@@ -239,14 +274,15 @@ export default function AddProduct() {
               <AiOutlineDown style={{ transform: isSizeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
             </button>
             {isSizeOpen && (
-              <textarea
-                name="size_fit"
-                placeholder="e.g. Model is wearing size S. Regular fit."
-                value={product.size_fit}
-                onChange={handleChange}
-                className="form-control mt-3"
-                rows="2"
-              />
+              <div className="mt-3 bg-white">
+                <ReactQuill 
+                  theme="snow" 
+                  value={product.size_fit} 
+                  onChange={(val) => setProduct({ ...product, size_fit: val })}
+                  modules={modules}
+                  placeholder="write in Detail Size And Fit ..."
+                />
+              </div>
             )}
           </div>
 
@@ -261,17 +297,23 @@ export default function AddProduct() {
               <AiOutlineDown style={{ transform: isFabricOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
             </button>
             {isFabricOpen && (
-              <textarea
-                name="fabric_care"
-                placeholder="e.g. 100% Cotton, Machine wash cold."
-                value={product.fabric_care}
-                onChange={handleChange}
-                className="form-control mt-3"
-                rows="2"
-              />
+             <div className="mt-3 bg-white">
+                <ReactQuill 
+                  theme="snow" 
+                  value={product.fabric_care} 
+                  onChange={(val) => setProduct({ ...product, fabric_care: val })}
+                  modules={modules}
+                  placeholder="Write in Detail Fabric and Care..."
+                />
+              </div>
             )}
           </div>
         </div>
+
+        <style jsx global>{`
+          .ql-container { height: 150px; font-size: 14px; }
+          .ql-editor { background: white; }
+        `}</style>
 
         <h5 className="mb-3">Product Images</h5>
         <div className="row text-center">

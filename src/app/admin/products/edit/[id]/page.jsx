@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { AiOutlineDown } from "react-icons/ai";
 import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 export default function EditProduct() {
   const { id } = useParams();
@@ -13,8 +16,8 @@ export default function EditProduct() {
     name: "", brand: "", gender: "", category: "",
     price: "", old_price: "", discount: "", stock: "",
     description: "",
-    size_fit: "",      // નવું ફિલ્ડ ઉમેર્યું
-    fabric_care: "",    // નવું ફિલ્ડ ઉમેર્યું
+    size_fit: "",      
+    fabric_care: "",  
     image1: null, image2: null, image3: null,
   });
 
@@ -24,7 +27,7 @@ export default function EditProduct() {
   const [preview2, setPreview2] = useState(null);
   const [preview3, setPreview3] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true); // ડેટા લોડિંગ સ્ટેટ
+  const [fetching, setFetching] = useState(true); 
   const [isDescOpen, setIsDescOpen] = useState(true);
   const [isSizeOpen, setIsSizeOpen] = useState(false);
   const [isFabricOpen, setIsFabricOpen] = useState(false);
@@ -112,6 +115,7 @@ export default function EditProduct() {
       const img3 = product.image3 instanceof File ? await uploadImage(product.image3, 3) : preview3;
 
       const dataToUpdate = {
+        id,
         name: product.name,
         brand: product.brand,
         gender: product.gender.toLowerCase(),
@@ -123,15 +127,25 @@ export default function EditProduct() {
         size: selectedSizes,
         color: selectedColors,
         description: product.description,
-        size_fit: product.size_fit,       // નવું ફિલ્ડ
-        fabric_care: product.fabric_care,   // નવું ફિલ્ડ
+        size_fit: product.size_fit,     
+        fabric_care: product.fabric_care, 
         image1: img1,
         image2: img2,
         image3: img3,
       };
 
-      const { error } = await supabase.from("products").update(dataToUpdate).eq("id", id);
-      if (error) throw error;
+      const response = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToUpdate),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to update product');
+      }
 
       alert("Product Updated Successfully! ✅");
       router.push("/admin/products");
@@ -213,69 +227,40 @@ export default function EditProduct() {
           </div>
         </div>
 
-        <div className="border-top mt-4">
+       <div className="border-top mt-4">
           <div className="py-3 border-bottom">
-            <button
-              type="button"
-              className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-2 bg-transparent border-0"
-              style={{ cursor: "pointer" }}
-              onClick={() => setIsDescOpen((prev) => !prev)}
-            >
+            <button type="button" className="d-flex align-items-center justify-content-between w-100 p-2 bg-transparent border-0" onClick={() => setIsDescOpen(!isDescOpen)}>
               <span className="fw-bold text-uppercase">Description</span>
-              <AiOutlineDown style={{ transform: isDescOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+              <AiOutlineDown style={{ transform: isDescOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
             </button>
             {isDescOpen && (
-              <textarea
-                name="description"
-                value={product.description}
-                onChange={handleChange}
-                className="form-control mt-3"
-                rows="3"
-              />
+              <div className="mt-3 bg-white border rounded">
+                <ReactQuill theme="snow" value={product.description} onChange={(content) => setProduct({ ...product, description: content })} />
+              </div>
             )}
           </div>
 
           <div className="py-3 border-bottom">
-            <button
-              type="button"
-              className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-2 bg-transparent border-0"
-              style={{ cursor: "pointer" }}
-              onClick={() => setIsSizeOpen((prev) => !prev)}
-            >
+            <button type="button" className="d-flex align-items-center justify-content-between w-100 p-2 bg-transparent border-0" onClick={() => setIsSizeOpen(!isSizeOpen)}>
               <span className="fw-bold text-uppercase">Size & Fit Details</span>
-              <AiOutlineDown style={{ transform: isSizeOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+              <AiOutlineDown style={{ transform: isSizeOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
             </button>
             {isSizeOpen && (
-              <textarea
-                name="size_fit"
-                placeholder="e.g. Model is wearing size S. Regular fit."
-                value={product.size_fit}
-                onChange={handleChange}
-                className="form-control mt-3"
-                rows="2"
-              />
+              <div className="mt-3 bg-white border rounded">
+                <ReactQuill theme="snow" value={product.size_fit} onChange={(content) => setProduct({ ...product, size_fit: content })} />
+              </div>
             )}
           </div>
 
           <div className="py-3 border-bottom">
-            <button
-              type="button"
-              className="d-flex align-items-center justify-content-between w-100 text-dark text-start p-2 bg-transparent border-0"
-              style={{ cursor: "pointer" }}
-              onClick={() => setIsFabricOpen((prev) => !prev)}
-            >
+            <button type="button" className="d-flex align-items-center justify-content-between w-100 p-2 bg-transparent border-0" onClick={() => setIsFabricOpen(!isFabricOpen)}>
               <span className="fw-bold text-uppercase">Fabric & Care Details</span>
-              <AiOutlineDown style={{ transform: isFabricOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+              <AiOutlineDown style={{ transform: isFabricOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
             </button>
             {isFabricOpen && (
-              <textarea
-                name="fabric_care"
-                placeholder="e.g. 100% Cotton, Machine wash cold."
-                value={product.fabric_care}
-                onChange={handleChange}
-                className="form-control mt-3"
-                rows="2"
-              />
+              <div className="mt-3 bg-white border rounded">
+                <ReactQuill theme="snow" value={product.fabric_care} onChange={(content) => setProduct({ ...product, fabric_care: content })} />
+              </div>
             )}
           </div>
         </div>

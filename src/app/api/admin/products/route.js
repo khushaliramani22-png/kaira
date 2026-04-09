@@ -1,0 +1,125 @@
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+async function getAdminUser() {
+  try {
+ const cookieStore = await cookies();
+   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+      set(name, value, options) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            
+          }
+        },
+        remove(name, options) {
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch (error) {
+           
+          }
+        },
+      },
+    });
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      return { user: null, error: userError?.message || 'Not authenticated' };
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', userData.user.id)
+      .single();
+
+    if (error || !data || data.role !== 'admin') {
+      return { user: null, error: 'Unauthorized' };
+    }
+
+    return { user: userData.user, role: data.role };
+  } catch (err) {
+    console.error('Admin auth validation failed:', err);
+    return { user: null, error: err?.message || 'Auth validation failed' };
+  }
+}
+
+export async function POST(request) {
+  try {
+    const auth = await getAdminUser();
+    if (!auth.user) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { data, error } = await supabaseAdmin.from('products').insert([body]).select();
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (err) {
+    console.error('Admin products POST error:', err);
+    return NextResponse.json({ success: false, error: err?.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const auth = await getAdminUser();
+    if (!auth.user) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, ...updateFields } = body;
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin.from('products').update(updateFields).eq('id', id).select();
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data });
+  } catch (err) {
+    console.error('Admin products PATCH error:', err);
+    return NextResponse.json({ success: false, error: err?.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const auth = await getAdminUser();
+    if (!auth.user) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id } = body;
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
+    }
+
+    const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Admin products DELETE error:', err);
+    return NextResponse.json({ success: false, error: err?.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
