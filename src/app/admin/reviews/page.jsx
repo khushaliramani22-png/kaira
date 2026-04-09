@@ -42,22 +42,30 @@ const fetchReviews = async () => {
   // --- REVIEW APPROVE LOGIC ---
 const approveReview = async (id) => {
   try {
-    const { error } = await supabase
-      .from("product_reviews")
-      .update({ status: "approved" }) 
-      .eq("id", id);
-    if (error) throw error;
-    await fetchReviews(); 
+    const response = await fetch('/api/admin/reviews', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, status: 'approved' }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to approve review');
+    }
+
+    await fetchReviews();
     Swal.fire({
-      icon: "success",
-      title: "Approved!",
-      text: "Review is now visible to customers.",
-      timer: 1500, 
-      showConfirmButton: false
+      icon: 'success',
+      title: 'Approved!',
+      text: 'Review is now visible to customers.',
+      timer: 1500,
+      showConfirmButton: false,
     });
   } catch (error) {
-    console.error("Approve Error:", error.message);
-    Swal.fire("Error", error.message, "error");
+    console.error('Approve Error:', error.message);
+    Swal.fire('Error', error.message, 'error');
   }
 };
 // --- DELETE LOGIC ---
@@ -73,18 +81,25 @@ const deleteReview = async (id) => {
   });
   if (result.isConfirmed) {
     try {
-      console.log("Deleting Review ID:", id);
-      const { error } = await supabase
-        .from("product_reviews")
-        .delete()
-        .eq("id", id);
-      if (error) {
-        console.error("Supabase Delete Error Details:", error);
-        throw error;
+      console.log('Deleting Review ID:', id);
+      const response = await fetch('/api/admin/reviews', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to delete review');
       }
+
       await fetchReviews();
-      Swal.fire("Deleted!", "Review removed.", "success");
+      Swal.fire('Deleted!', 'Review removed.', 'success');
     } catch (error) {
+      console.error("Full Catch Error:", error);
+      Swal.fire("Error", `Code: ${error.code} - ${error.message}`, "error");
       Swal.fire("Error", error.message || "Failed to delete", "error");
     }
   }
@@ -95,7 +110,7 @@ const deleteReview = async (id) => {
     <div className="container-fluid py-4 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tighter mb-0 italic">Review Moderation</h2>
+          <h2 className="text-2xl font-black uppercase tracking-tighter mb-0 ">Review Moderation</h2>
           <p className="text-gray-500 text-xs font-bold uppercase">Manage Kaira Customer Feedback</p>
         </div>
         <span className="bg-black text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">

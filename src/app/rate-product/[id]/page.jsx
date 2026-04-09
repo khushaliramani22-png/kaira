@@ -115,14 +115,21 @@ const handleSubmit = async () => {
       reviewData.id = existingReview.id;
     }
 
-    const { error } = await supabase
-      .from("product_reviews")
-      .upsert(reviewData); 
+    const response = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviewData),
+    });
 
-    if (error) throw error;
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to save review');
+    }
 
-    await Swal.fire("Success", "Feedback submitted! It will be visible after admin approval.", "success");
-    router.push("/user-order");
+    await Swal.fire('Success', 'Feedback submitted! It will be visible after admin approval.', 'success');
+    router.push('/user-order');
   } catch (err) {
     console.error("Submission Error:", err.message);
     Swal.fire("Error", "Could not submit: " + err.message, "error");

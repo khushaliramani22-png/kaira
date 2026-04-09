@@ -4,12 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import {
+  AiOutlinePrinter,
+  AiOutlineEye,
+  AiOutlineCheckCircle,
+  AiOutlineCloseCircle,
+  AiOutlineTruck
+} from "react-icons/ai";
+
+import {
   RefreshCw,
   MapPin,
   AlertCircle,
   CheckCircle2,
   Truck,
+  ArrowLeftRight,
   XCircle,
+  RotateCcw,
   Search,
 } from "lucide-react";
 import Swal from "sweetalert2";
@@ -26,8 +36,6 @@ export default function AdminOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedOrders, setSelectedOrders] = useState([]);
-
-  // --- તમારા ઓરિજિનલ ફંક્શન્સ ---
 
   const toggleSelectAll = () => {
     if (selectedOrders.length === currentItems.length) {
@@ -79,6 +87,7 @@ export default function AdminOrders() {
       }
     }
   };
+
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -141,9 +150,6 @@ export default function AdminOrders() {
         .update(updateData)
         .eq("id", id);
 
-
-
-
       Swal.close();
       if (error) throw error;
 
@@ -161,8 +167,6 @@ export default function AdminOrders() {
     }
   };
 
-  // --- Filtering & Pagination ---
-
   const tabs = [
     { id: "All", label: "All" },
     { id: "Pending", label: "Pending" },
@@ -171,14 +175,18 @@ export default function AdminOrders() {
     { id: "Cancelled", label: "Cancelled" },
     { id: "Return Requested", label: "Return-request" },
     { id: "Returned", label: "Returned" },
-
     { id: "Exchange Requested", label: "Exchange-request" },
-
   ];
 
   const getCount = (status) => {
     if (status === "All") return orders.length;
-    return orders.filter((o) => o.status === status).length;
+    // Flexible check for counts
+    return orders.filter((o) => {
+      if (status === "Return Requested") {
+        return o.status?.toUpperCase().trim() === "RETURN REQUESTED" || o.status?.toUpperCase().trim() === "RETURN PENDING";
+      }
+      return o.status === status;
+    }).length;
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -186,7 +194,15 @@ export default function AdminOrders() {
     const matchesSearch =
       order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       orderID.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTab = activeTab === "All" || order.status === activeTab;
+
+    let matchesTab = activeTab === "All" || order.status === activeTab;
+
+    // Add logic to show RETURN PENDING in Return Requested tab
+    if (activeTab === "Return Requested") {
+      const s = order.status?.toUpperCase().trim();
+      matchesTab = s === "RETURN REQUESTED" || s === "RETURN PENDING";
+    }
+
     return matchesSearch && matchesTab;
   });
 
@@ -222,8 +238,6 @@ export default function AdminOrders() {
   return (
     <div className="min-h-screen bg-[#fafafa] p-2 md:p-10 font-sans text-black">
       <div>
-
-        {/* HEADER SECTION */}
         <div className="p-5 md:p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter leading-none">Manage Orders</h1>
@@ -235,7 +249,6 @@ export default function AdminOrders() {
             </div>
           </div>
 
-          {/* SEARCH BAR */}
           <div className="relative w-full md:w-96">
             <input
               type="text"
@@ -248,7 +261,6 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* TABS - Responsive Scroll */}
         <div className="border-b border-gray-100 sticky top-0 bg-white z-10 overflow-x-auto scrollbar-hide">
           <div className="flex px-6 gap-2 md:gap-8 pt-6">
             {tabs.map((tab) => (
@@ -265,7 +277,6 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* BULK ACTIONS */}
         {selectedOrders.length > 0 && (
           <div className="px-4 md:px-6 py-4">
             <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl gap-3">
@@ -283,9 +294,7 @@ export default function AdminOrders() {
           </div>
         )}
 
-        {/* TABLE SECTION - Responsive container */}
         <div className="overflow-x-auto md:overflow-visible">
-          {/* Desktop table */}
           <div className="hidden md:block">
             <table className="w-full border-collapse min-w-[800px]">
               <thead>
@@ -302,209 +311,255 @@ export default function AdminOrders() {
                   <th className="p-6 text-left">Customer</th>
                   <th className="p-6 text-left">Shipping Info</th>
                   <th className="p-6 text-left">Total</th>
-                  <th className="p-6 text-center">Actions</th>
+                  <th className="p-7 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {currentItems.map((order) => (
-                  <tr key={order.id} className="hover:bg-[#fafafa] transition-colors group">
-                    <td className="p-6 text-center">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded accent-black cursor-pointer"
-                        checked={selectedOrders.includes(order.id)}
-                        onChange={() => toggleSelectOrder(order.id)}
-                      />
-                    </td>
-                    <td className="p-6">
-                      <div className="font-black text-black text-sm mb-2">
-                        #{order.order_number || order.id.slice(0, 6).toUpperCase()}
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
-                        order.status === "Cancelled" ? "bg-red-100 text-red-700" :
-                          order.status === "Delivered" ? "bg-black text-white" : "bg-blue-100 text-blue-700"
-                        }`}>
-                        {order.status || "Pending"}
-                      </span>
+                {currentItems.map((order) => {
+                  const statusUpper = order.status?.toUpperCase().trim();
+                  const isReturnRequested = statusUpper === "RETURN REQUESTED" || statusUpper === "RETURN PENDING";
 
-                      {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && order.return_details && (
-                        <div className="mt-3 p-2 bg-blue-50 border-l-2 border-blue-500 rounded-r-md">
-                          <p className="text-[10px] font-bold text-blue-600 uppercase">Reason:</p>
-                          <p className="text-[11px] text-gray-700 italic">"{order.return_details}"</p>
+                  return (
+                    <tr key={order.id} className="hover:bg-[#fafafa] transition-colors group">
+                      <td className="p-6 text-center">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded accent-black cursor-pointer"
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={() => toggleSelectOrder(order.id)}
+                        />
+                      </td>
+                      <td className="p-6">
+                        <div className="font-black text-black text-sm mb-2">
+                          #{order.order_number || order.id.slice(0, 6).toUpperCase()}
                         </div>
-                      )}
-                      <p className="text-[9px] text-gray-400 mt-3 font-bold">{new Date(order.created_at).toLocaleDateString("en-IN")}</p>
-                    </td>
-                    <td className="p-6 text-sm font-bold capitalize">{order.customer_name}<div className="text-[11px] text-gray-500 mt-1">{order.phone}</div></td>
-                    <td className="p-6">
-                      <div className="text-[11px] text-gray-600 max-w-[200px] truncate md:whitespace-normal">{order.address}</div>
-                      <div className="flex items-center gap-1 text-gray-400 mt-2 font-bold uppercase text-[9px]">
-                        <MapPin size={10} /> {order.city} {order.pincode}
-                      </div>
-                    </td>
-                    <td className="p-6 font-black text-lg">₹{order.total_amount?.toLocaleString()}</td>
-                    <td className="p-6">
-                      <div className="flex flex-col gap-2 items-center">
-                        {order.status === "Pending" && (
-                          <>
-                            <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full sm:w-32 bg-white border-2 border-black text-black py-2 rounded-xl text-[9px] font-black uppercase"><CheckCircle2 size={12} className="inline mr-1" /> Confirm</button>
-                            <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full sm:w-32 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase"><XCircle size={12} className="inline mr-1" /> Cancel</button>
-                          </>
-                        )}
-                        {order.status === "Confirmed" && (
-                          <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full sm:w-32 bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase"><Truck size={14} className="inline mr-1" /> Deliver</button>
-                        )}
-                        {order.status === "Return Requested" && (
-                          <div className="flex flex-col gap-2 w-full sm:w-32">
-                            <button onClick={() => updateStatus(order.id, order.status, "Returned")} className="bg-green-600 text-white py-2 rounded-xl text-[9px] font-black uppercase">Approve Return</button>
-                            <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase">Reject Return</button>
-                          </div>
-                        )}
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
+                          order.status === "Cancelled" ? "bg-red-100 text-red-700" :
+                            order.status === "Delivered" ? "bg-black text-white" : "bg-blue-100 text-blue-700"
+                          }`}>
+                          {order.status || "Pending"}
+                        </span>
+                        <p className="text-[9px] text-gray-400 mt-3 font-bold">{new Date(order.created_at).toLocaleDateString("en-IN")}</p>
+                      </td>
+                      <td className="p-6 text-sm font-bold capitalize">{order.customer_name}<div className="text-[11px] text-gray-500 mt-1">{order.phone}</div></td>
+                      <td className="p-6">
+                        <div className="text-[11px] text-gray-600 max-w-[200px] truncate md:whitespace-normal">{order.address}</div>
+                        <div className="flex items-center gap-1 text-gray-400 mt-2 font-bold uppercase text-[9px]">
+                          <MapPin size={10} /> {order.city} {order.pincode}
+                        </div>
+                      </td>
+                      <td className="p-6 font-black text-lg">₹{order.total_amount?.toLocaleString()}</td>
+                      <td className="p-4 text-right">
+                        <div className="grid grid-cols-2 gap-2 justify-end w-fit ">
+                          {order.status === "Pending" && (
+                            <>
+                              <button
+                                onClick={() => updateStatus(order.id, order.status, "Confirmed")}
+                                className="w-full sm:w-10 h-10 bg-gray-50 border border-gray-200 text-gray-500 rounded-xl flex items-center justify-center mt-2 hover:bg-black hover:text-white transition-all shadow-sm"
 
-                      
-                        {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && (
-                          <div className="flex flex-col gap-2 w-full sm:w-32">
-                            <button
-                              onClick={() => updateStatus(order.id, order.status, "Confirmed")}
-                              className="bg-blue-600 text-white py-2 rounded-xl text-[9px] font-black uppercase hover:bg-blue-700"
-                            >
-                              Approve Exchange
-                            </button>
+                                title="Confirm Order"  >
+
+                                <AiOutlineCheckCircle size={18} />
+                              </button>
+                              <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full sm:w-10 h-10 bg-gray-50 border border-gray-200 text-gray-500 rounded-xl flex items-center justify-center mt-2 hover:bg-black hover:text-white transition-all shadow-sm">
+                                <AiOutlineCloseCircle size={14} />
+                              </button>
+
+                            </>
+                          )}
+                          {order.status === "Confirmed" && (
                             <button
                               onClick={() => updateStatus(order.id, order.status, "Delivered")}
-                              className="border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-red-50"
+                              className="p-2.5 bg-black text-white rounded-xl hover:bg-gray-600 transition-all shadow-sm flex items-center justify-center"
                             >
-                              Reject Exchange
-                            </button>
-                            
-                            {/* <button
-                              onClick={() => Swal.fire({
-                                title: 'Exchange Reason',
-                                text: order.return_details || 'No specific reason provided by customer.',
-                                icon: 'info',
-                                confirmButtonColor: '#000'
-                              })}
-                              className="text-[9px] font-bold text-blue-400 uppercase underline mt-1"
-                            >
-                              View Reason
-                            </button> */}
-                          </div>
-                        )}
-                        <button onClick={() => window.print()} className="w-full sm:w-32 bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase mt-1">Invoice</button>
-                        <button onClick={() => (window.location.href = `/admin/orders/${order.id}`)} className="w-full sm:w-auto text-[10px] font-bold text-gray-500 uppercase mt-2">View details</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                              <Truck size={16} />
+                            </button>)}
+
+                          {/* Updated Return Buttons for Desktop */}
+                          {isReturnRequested && (
+                            <div className="flex gap-2 items-center">
+
+                              {/* Approve Return - Icon Only with Tooltip */}
+                              <div className="relative group inline-block">
+                                <button
+                                  onClick={() => updateStatus(order.id, order.status, "Returned")}
+                                  className="p-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center justify-center"
+                                >
+                                  <CheckCircle2 size={16} />
+                                </button>
+
+                                {/* Tooltip text */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
+                                  <span className="bg-gray-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap font-black uppercase tracking-wider">
+                                    Approve Return
+                                  </span>
+                                  <div className="w-2 h-2 bg-gray-800 rotate-45 -mt-1"></div>
+                                </div>
+                              </div>
+
+                              {/* Reject Return - Icon Only with Tooltip */}
+                              <div className="relative group inline-block">
+                                <button
+                                  onClick={() => updateStatus(order.id, order.status, "Delivered")}
+                                  className="p-2.5 border border-red-200 text-red-500 rounded-xl hover:bg-red-50 transition-all flex items-center justify-center"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+
+                                {/* Tooltip text */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
+                                  <span className="bg-red-600 text-white text-[10px] px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap font-black uppercase tracking-wider">
+                                    Reject Return
+                                  </span>
+                                  <div className="w-2 h-2 bg-red-600 rotate-45 -mt-1"></div>
+                                </div>
+                              </div>
+
+                            </div>
+                          )}
+                          {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && (
+                            <div className="flex gap-3 justify-center items-center">
+
+                              {/* Approve Exchange Button */}
+                              <div className="relative group inline-block">
+                                <button
+                                  onClick={() => updateStatus(order.id, order.status, "Confirmed")}
+                                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                                >
+                                  <ArrowLeftRight size={16} />
+                                </button>
+
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
+                                  <span className="bg-gray-800 text-white text-[10px] px-2 py-1 rounded shadow-xl whitespace-nowrap font-bold uppercase">
+                                    Approve Exchange
+                                  </span>
+                                  {/* Tooltip Arrow */}
+                                  <div className="w-2 h-2 bg-gray-800 rotate-45 -mt-1"></div>
+                                </div>
+                              </div>
+
+
+                              {/* Reject Exchange Button */}
+                              <div className="relative group inline-block">
+                                <button
+                                  onClick={() => updateStatus(order.id, order.status, "Cancelled")}
+                                  className="p-2 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
+                                  <span className="bg-red-600 text-white text-[10px] px-2 py-1 rounded shadow-xl whitespace-nowrap font-bold uppercase">
+                                    Reject
+                                  </span>
+                                  <div className="w-2 h-2 bg-red-600 rotate-45 -mt-1"></div>
+                                </div>
+                              </div>
+
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => window.print()}
+                            className="w-full sm:w-12 bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl flex items-center justify-center mt-1 hover:bg-gray-100 transition-colors"
+                            title="Print"
+                          >
+                            <AiOutlinePrinter size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => (window.location.href = `/admin/orders/${order.id}`)}
+                            className="w-full sm:w-10 h-10 bg-gray-50 border border-gray-200 text-gray-500 rounded-xl flex items-center justify-center mt-2 hover:bg-black hover:text-white transition-all shadow-sm"
+                            title="View Details"
+                          >
+                            <AiOutlineEye size={18} />
+                          </button>
+
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
 
-          {/* Mobile card view */}
           <div className="md:hidden space-y-4 p-2">
-            {currentItems.map((order) => (
-              <article key={order.id} className="bg-white border border-gray-100 shadow-sm rounded-xl p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-sm font-black">#{order.order_number || order.id.slice(0, 6).toUpperCase()}</div>
-                    <div className="text-[10px] text-gray-500">{new Date(order.created_at).toLocaleDateString("en-IN")}</div>
+            {currentItems.map((order) => {
+              const statusUpper = order.status?.toUpperCase().trim();
+              const isReturnRequested = statusUpper === "RETURN REQUESTED" || statusUpper === "RETURN PENDING";
+
+              return (
+                <article key={order.id} className="bg-white border border-gray-100 shadow-sm rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-black">#{order.order_number || order.id.slice(0, 6).toUpperCase()}</div>
+                      <div className="text-[10px] text-gray-500">{new Date(order.created_at).toLocaleDateString("en-IN")}</div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded accent-black"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => toggleSelectOrder(order.id)}
+                    />
                   </div>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded accent-black"
-                    checked={selectedOrders.includes(order.id)}
-                    onChange={() => toggleSelectOrder(order.id)}
-                  />
-                </div>
 
-                <div className="mt-3">
-                  <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
-                    order.status === "Cancelled" ? "bg-red-100 text-red-700" :
-                      order.status === "Delivered" ? "bg-black text-white" :
-                        order.status === "Return Requested" ? "bg-orange-100 text-orange-700" :
-                          order.status === "Exchange Requested" || order.status === "Exchange Pending" ? "bg-purple-100 text-purple-700" :
-                            "bg-blue-100 text-blue-700"
-                    }`}>
-                    {order.status || "Pending"}
-                  </span>
-                  {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && order.return_details && (
-                    <div className="mt-2 p-2 bg-purple-50 border border-purple-100 rounded-lg">
-                      <p className="text-[9px] font-black text-purple-700 uppercase">Reason:</p>
-                      <p className="text-[10px] text-gray-600 leading-tight">{order.return_details}</p>
-                    </div>
-                  )}
-                </div>
+                  <div className="mt-3">
+                    <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
+                      order.status === "Cancelled" ? "bg-red-100 text-red-700" :
+                        order.status === "Delivered" ? "bg-black text-white" :
+                          isReturnRequested ? "bg-orange-100 text-orange-700" :
+                            order.status === "Exchange Requested" || order.status === "Exchange Pending" ? "bg-purple-100 text-purple-700" :
+                              "bg-blue-100 text-blue-700"
+                      }`}>
+                      {order.status || "Pending"}
+                    </span>
+                  </div>
 
-                <div className="mt-3 text-xs text-gray-600">
-                  <p className="font-bold">{order.customer_name}</p>
-                  <p>{order.phone}</p>
-                  <p>{order.address}</p>
-                  <p className="flex items-center gap-1"><MapPin size={10} /> {order.city} {order.pincode}</p>
-                </div>
+                  <div className="mt-3 text-xs text-gray-600">
+                    <p className="font-bold">{order.customer_name}</p>
+                    <p>{order.phone}</p>
+                    <p>{order.address}</p>
+                    <p className="flex items-center gap-1"><MapPin size={10} /> {order.city} {order.pincode}</p>
+                  </div>
 
-                <div className="mt-3 font-black text-lg">₹{order.total_amount?.toLocaleString()}</div>
+                  <div className="mt-3 font-black text-lg">₹{order.total_amount?.toLocaleString()}</div>
 
-                <div className="grid grid-cols-1 gap-2 mt-3">
-                  {/* 1. Pending Status */}
-                  {order.status === "Pending" && (
-                    <>
-                      <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full bg-white border-2 border-black text-black py-2 rounded-xl text-[9px] font-black uppercase">Confirm</button>
-                      <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase">Cancel</button>
-                    </>
-                  )}
+                  <div className="grid grid-cols-1 gap-2 mt-3">
+                    {order.status === "Pending" && (
+                      <>
+                        <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full bg-white border-2 border-black text-black py-2 rounded-xl text-[9px] font-black uppercase">Confirm</button>
+                        <button onClick={() => updateStatus(order.id, order.status, "Cancelled")} className="w-full border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase">Cancel</button>
+                      </>
+                    )}
 
-                  {/* 2. Confirmed Status */}
-                  {order.status === "Confirmed" && (
-                    <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase">Deliver</button>
-                  )}
+                    {order.status === "Confirmed" && (
+                      <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase">Deliver</button>
+                    )}
 
-                  {/* 3. Return Requested Status */}
-                  {order.status === "Return Requested" && (
-                    <div className="flex flex-col gap-2">
-                      <button onClick={() => updateStatus(order.id, order.status, "Returned")} className="w-full bg-green-600 text-white py-2 rounded-xl text-[9px] font-black uppercase">Approve Return</button>
-                      <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase">Reject Return</button>
-                    </div>
-                  )}
+                    {/* Updated Return Buttons for Mobile */}
+                    {isReturnRequested && (
+                      <div className="flex flex-col gap-2">
+                        <button onClick={() => updateStatus(order.id, order.status, "Returned")} className="w-full bg-green-600 text-white py-2 rounded-xl text-[9px] font-black uppercase">Approve Return</button>
+                        <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase">Reject Return</button>
+                      </div>
+                    )}
 
-                  {/* 4. Exchange Requested / Pending Status */}
+                    {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && (
+                      <div className="flex flex-col gap-2">
+                        <button onClick={() => updateStatus(order.id, order.status, "Confirmed")} className="w-full bg-blue-600 text-white py-2 rounded-xl text-[9px] font-black uppercase">Approve Exchange</button>
+                        <button onClick={() => updateStatus(order.id, order.status, "Delivered")} className="w-full border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase">Reject Exchange</button>
+                      </div>
+                    )}
 
-                  {(order.status === "Exchange Requested" || order.status === "Exchange Pending") && (
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => updateStatus(order.id, order.status, "Confirmed")}
-                        className="w-full bg-blue-600 text-white py-2 rounded-xl text-[9px] font-black uppercase"
-                      >
-                        Approve Exchange
-                      </button>
-                      <button
-                        onClick={() => updateStatus(order.id, order.status, "Delivered")}
-                        className="w-full border border-red-200 text-red-500 py-2 rounded-xl text-[9px] font-black uppercase"
-                      >
-                        Reject Exchange
-                      </button>
-                      {/* <button
-                        onClick={() => Swal.fire({
-                          title: 'Exchange Reason',
-                          text: order.return_details || 'No reason provided',
-                          icon: 'info'
-                        })}
-                        className="w-full text-[10px] font-bold text-blue-500 uppercase mt-1 underline"
-                      >
-                        View Reason
-                      </button> */}
-                    </div>
-                  )}
-
-                  {/* Common Buttons */}
-                  <button onClick={() => window.print()} className="w-full bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase">Invoice</button>
-                  <button onClick={() => (window.location.href = `/admin/orders/${order.id}`)} className="w-full text-[10px] font-bold text-gray-500 uppercase mt-1">View details</button>
-                </div>
-              </article>
-            ))}
+                    <button onClick={() => window.print()} className="w-full bg-gray-50 border border-gray-200 text-gray-400 py-2 rounded-xl text-[9px] font-black uppercase">Invoice</button>
+                    <button onClick={() => (window.location.href = `/admin/orders/${order.id}`)} className="w-full text-[10px] font-bold text-gray-500 uppercase mt-1">View details</button>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </div>
 
-        {/* PAGINATION - Responsive layout */}
         <div className="flex flex-col sm:flex-row items-center justify-between px-8 py-5 bg-gray-50/50 border-t border-gray-100 gap-4">
           <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Page {currentPage} of {totalPages || 1}</p>
           <div className="flex gap-3 w-full sm:w-auto justify-center">

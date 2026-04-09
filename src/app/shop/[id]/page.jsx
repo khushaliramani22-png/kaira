@@ -227,7 +227,7 @@ export default function ProductDetail() {
   return (
     <div className="container py-4 py-md-5">
       <div className="row g-4 g-lg-5">
-        {/* ઈમેજ સેક્શન */}
+        {/* img section */}
         <div className="col-12 col-md-6">
           <div className="card border-0 shadow-sm mb-3 rounded-4 overflow-hidden">
             <img src={mainImage} className="img-fluid w-100" alt={product.name} style={{ minHeight: "450px", maxHeight: "600px", objectFit: "cover" }} />
@@ -240,12 +240,12 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* ડિટેલ્સ સેક્શન */}
+        {/* detail section */}
         <div className="col-12 col-md-6">
           <p className="text-muted text-uppercase small mb-1">{product.brand || "KAIRA"}</p>
           <h2 className="fw-bold mb-2 h3">{product.name}</h2>
 
-          {/* એવરેજ રેટિંગ ડિસ્પ્લે */}
+          {/*reting average display */}
           <div className="d-flex align-items-center gap-2 mb-3">
             <div className="bg-success text-white px-2 py-1 rounded small d-flex align-items-center gap-1 fw-bold">
               {reviews.length > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1) : "5.0"} <AiFillStar size={14} />

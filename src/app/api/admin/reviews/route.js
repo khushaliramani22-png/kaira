@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const parseCookies = (cookieHeader = '') => {
   return Object.fromEntries(
@@ -55,27 +55,6 @@ async function getAdminUser(request) {
   }
 }
 
-export async function POST(request) {
-  try {
-    const auth = await getAdminUser(request);
-    if (!auth.user) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { data, error } = await supabaseAdmin.from('products').insert([body]).select();
-
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, data }, { status: 201 });
-  } catch (err) {
-    console.error('Admin products POST error:', err);
-    return NextResponse.json({ success: false, error: err?.message || 'Internal Server Error' }, { status: 500 });
-  }
-}
-
 export async function PATCH(request) {
   try {
     const auth = await getAdminUser(request);
@@ -84,19 +63,24 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    const { id, ...updateFields } = body;
+    const { id, status = 'approved' } = body;
     if (!id) {
-      return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin.from('products').update(updateFields).eq('id', id).select();
+    const { data, error } = await supabaseAdmin
+      .from('product_reviews')
+      .update({ status })
+      .eq('id', id)
+      .select();
+
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
   } catch (err) {
-    console.error('Admin products PATCH error:', err);
+    console.error('Admin reviews PATCH error:', err);
     return NextResponse.json({ success: false, error: err?.message || 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -111,17 +95,17 @@ export async function DELETE(request) {
     const body = await request.json();
     const { id } = body;
     if (!id) {
-      return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
+    const { error } = await supabaseAdmin.from('product_reviews').delete().eq('id', id);
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Admin products DELETE error:', err);
+    console.error('Admin reviews DELETE error:', err);
     return NextResponse.json({ success: false, error: err?.message || 'Internal Server Error' }, { status: 500 });
   }
 }
