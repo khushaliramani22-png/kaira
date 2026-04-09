@@ -9,6 +9,7 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname()
 
   const [isProductOpen, setIsProductOpen] = useState(false)
+  const [isBannerOpen, setIsBannerOpen] = useState(false) 
   const [adminEmail, setAdminEmail] = useState('Loading...')
   const [loading, setLoading] = useState(true)
 
@@ -129,7 +130,38 @@ export default function AdminLayout({ children }) {
               </ul>
             )}
           </li>
+{/* Banners Dropdown - અહીં એડ કર્યું છે */}
+          <li className="mb-2">
+            <div
+              onClick={() => setIsBannerOpen(!isBannerOpen)}
+              className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect"
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="d-flex align-items-center">
+                <span className="me-2">🖼️</span> Banners
+              </div>
+              <span style={{
+                transform: isBannerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: '0.3s',
+                fontSize: '12px'
+              }}>▼</span>
+            </div>
 
+            {isBannerOpen && (
+              <ul className="list-unstyled ms-4 mt-1">
+                <li className="mb-1">
+                  <div onClick={() => router.push('/admin/banner')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
+                    • All Banners
+                  </div>
+                </li>
+                <li className="mb-1">
+                  <div onClick={() => router.push('/admin/banner/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
+                    • Add New Banner
+                  </div>
+                </li>
+              </ul>
+            )}
+          </li>
           <li className="mb-3">
             <div onClick={() => router.push('/admin/orders')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📜 Orders

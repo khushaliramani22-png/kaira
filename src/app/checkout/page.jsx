@@ -52,7 +52,6 @@ export default function CheckoutPage() {
     }
   };
 
-  // યુઝર સ્ટેટ ચેક કરો
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -145,7 +144,7 @@ export default function CheckoutPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Please login to place an order.");
 
-      // A. સ્ટોક ચેક કરો અને અપડેટ કરો
+      // 1.stock chack and update
       for (const item of cartItems) {
         const productId = item.product_id || item.id;
         const { data: productData, error: productError } = await supabase
@@ -161,7 +160,7 @@ export default function CheckoutPage() {
         await supabase.from("products").update({ stock: productData.stock - item.quantity }).eq("id", productId);
       }
 
-      // B. ઓર્ડર સેવ કરો
+      // 2.order save
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -182,7 +181,7 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError;
 
-      // C. આઈટમ્સ સેવ કરો (ઈમેજ સાથે)
+      // 3.item save with image
       const itemsToInsert = cartItems.map((item) => ({
         order_id: orderData.id,
         product_id: item.product_id || item.id,
@@ -197,7 +196,7 @@ export default function CheckoutPage() {
       const { error: itemError } = await supabase.from("order_items").insert(itemsToInsert);
       if (itemError) throw itemError;
 
-      // D. ઇનવોઇસ જનરેટ
+      // D. invoice janret
       generateInvoicePDF(orderData, itemsToInsert);
 
       // E. Meesho Style Success Popup
@@ -243,10 +242,10 @@ export default function CheckoutPage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4">Checkout</h1>
         
-        {/* મુખ્ય ગ્રીડ: અહીંથી layout નક્કી થાય છે */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           
-          {/* ડાબી બાજુનો ભાગ (Shipping & Payment) */}
+          {/* Shipping & Payment */}
           <div className="lg:col-span-7 space-y-6">
             
             <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
@@ -257,7 +256,7 @@ export default function CheckoutPage() {
 
               <div className="p-6">
                 {hasPreviousOrder && !showAddressForm ? (
-                  /* જૂના યુઝર માટે એડ્રેસ કાર્ડ */
+                  /* old user address card */
                   <div className="flex justify-between items-start animate-in fade-in duration-500">
                     <div className="space-y-1">
                       <p className="font-bold text-lg text-gray-800">{formData.name}</p>
@@ -275,8 +274,7 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                 ) : (
-                  /* નવો યુઝર અથવા ફોર્મ */
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
                     <input name="name" value={formData.name} placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
                     <input name="phone" value={formData.phone} placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
                     <input name="email" value={formData.email} placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
@@ -308,7 +306,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* જમણી બાજુનો ભાગ (Order Summary) */}
+          {/* Order Summary */}
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-black sticky top-10">
               <h3 className="font-black mb-6 uppercase italic text-lg">Order Summary</h3>

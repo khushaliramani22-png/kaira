@@ -13,6 +13,7 @@ import Collection from "@/components/Collection";
 import BestSellers from "@/components/BestSellers";
 import RelatedProducts from "@/components/RelatedProduct";
 import Newsletter from "@/components/Newsletter";
+import Banner from "@/components/Banner";
 
 export default function Page() {
   useEffect(() => {
@@ -25,9 +26,12 @@ export default function Page() {
   return (
     <>
       <div data-aos="fade-up">
+        <Banner />
         <HeroSlider />
         <Features />
+        <div id="Categories" className="scroll-mt-20">
         <Categories />
+        </div>
         <NewArrivals />
         <Collection />
         <BestSellers />

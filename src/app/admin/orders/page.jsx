@@ -221,7 +221,7 @@ export default function AdminOrders() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] p-2 md:p-10 font-sans text-black">
-      <div className="max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div>
 
         {/* HEADER SECTION */}
         <div className="p-5 md:p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -250,7 +250,7 @@ export default function AdminOrders() {
 
         {/* TABS - Responsive Scroll */}
         <div className="border-b border-gray-100 sticky top-0 bg-white z-10 overflow-x-auto scrollbar-hide">
-          <div className="flex px-6 gap-6 md:gap-8 pt-6">
+          <div className="flex px-6 gap-2 md:gap-8 pt-6">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

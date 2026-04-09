@@ -1,63 +1,3 @@
-// "use client";
-
-// import Image from "next/image";
-// import Link from "next/link";
-
-// export default function Categories() {
-//   const categories = [
-//     {
-//       title: "Shop for men",
-//       img: "/images/colorbox/cat-item1.jpg",
-//       href: "/",
-//     },
-//     {
-//       title: "Shop for women",
-//       img: "/images/colorbox/cat-item2.jpg",
-//       href: "/",
-//     },
-//     {
-//       title: "Shop accessories",
-//       img: "/images/colorbox/cat-item3.jpg",
-//       href: "/",
-//     },
-//   ];
-
-//   return (
-//     <section className="categories overflow-hidden">
-//       <div className="container">
-//         <div className="open-up" data-aos="zoom-out">
-//           <div className="row">
-//             {categories.map((cat, index) => (
-//               <div className="col-md-4" key={index}>
-//                 <div className="cat-item image-zoom-effect">
-//                   <div className="image-holder">
-//                     <Link href={cat.href}>
-//                       <Image
-//                         src={cat.img}
-//                         alt={cat.title}
-//                         className="product-image img-fluid"
-//                         width={500}
-//                         height={500}
-//                       />
-//                     </Link>
-//                   </div>
-//                   <div className="category-content">
-//                     <div className="product-button">
-//                       <Link href={cat.href} className="btn btn-common text-uppercase">
-//                         {cat.title}
-//                       </Link>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </section>
-//   );
-// }
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -116,7 +56,7 @@ export default function Categories() {
     <section className="categories overflow-hidden py-5">
       <div className="container">
         <div className="open-up" data-aos="zoom-out">
-          {/* Swiper Slider - તમારી જૂની ડિઝાઈન મુજબ */}
+        
           <Swiper
             modules={[Navigation]}
             navigation={true}
@@ -131,7 +71,7 @@ export default function Categories() {
           >
             {categories.map((cat, index) => (
               <SwiperSlide key={index}>
-                {/* અહીં તમારી ઓરિજિનલ ડિઝાઈન અને ક્લાસ છે */}
+    
                 <div className="cat-item image-zoom-effect">
                   <div className="image-holder">
                     <Link href={cat.href}>
@@ -159,11 +99,11 @@ export default function Categories() {
         </div>
       </div>
 
-      {/* ફક્ત એરો માટે થોડી CSS */}
+  
       <style jsx global>{`
         .category-slider .swiper-button-next,
         .category-slider .swiper-button-prev {
-          color: #000 !important; /* એરોનો કલર કાળો કરવા માટે */
+          color: #000 !important; 
         }
         .category-slider .swiper-button-next:after,
         .category-slider .swiper-button-prev:after {
