@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from "react";
+
 import { usePathname } from "next/navigation";
 import { CartProvider } from "./context/CartContext";
 import { SettingsProvider } from "./context/SettingsContext";
@@ -15,6 +17,10 @@ import { Toaster } from 'react-hot-toast';
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith("/admin");
+
+  useEffect(() => {
+    import("bootstrap/dist/js/bootstrap.bundle.min.js");
+  }, []);
 
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
