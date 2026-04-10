@@ -56,10 +56,10 @@ export default function Products() {
 
     fetchProducts();
   };
-const indexOfLastItem = currentPage * itemsPerPage;
-const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
-const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
 
   return (
@@ -86,7 +86,7 @@ const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
               <th>Image</th>
               <th>Name</th>
               <th>Price</th>
-           
+
               <th>Size</th>
               <th>Color</th>
               <th>Stock</th>
@@ -96,94 +96,81 @@ const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
           <tbody>
             {products.length > 0 ? (
-        
-                currentItems.map((item, index) => (
-                  <tr key={item.id}>
-                    <td className="text-muted">{indexOfFirstItem + index + 1}</td>
 
-                    <td>
-                      {item.image1 ? (
-                        <img
-                          src={item.image1}
-                          alt={item.name}
-                          style={{
-                            width: "50px",
-                            height: "50px",
-                            objectFit: "cover",
-                            borderRadius: "8px",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="bg-light d-flex align-items-center justify-content-center"
-                          style={{ width: "50px", height: "50px", borderRadius: "8px" }}
-                        >
-                          <small className="text-muted">No img</small>
-                        </div>
-                      )}
-                    </td>
+              currentItems.map((item, index) => (
+                <tr key={item.id}>
+                  <td className="text-muted">{indexOfFirstItem + index + 1}</td>
 
-                    <td className="fw-medium">{item.name}</td>
-                    <td>₹{item.price}</td>
+                  <td>
+                    {item.image1 ? (
+                      <img
+                        src={item.image1}
+                        alt={item.name}
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="bg-light d-flex align-items-center justify-content-center"
+                        style={{ width: "50px", height: "50px", borderRadius: "8px" }}
+                      >
+                        <small className="text-muted">No img</small>
+                      </div>
+                    )}
+                  </td>
 
-                    {/* સાઈઝ અને કલરનો ડેટા બતાવવા માટે */}
-                    <td className="text-muted small">
-                      {item.size ? item.size : "—"}
-                    </td>
-                    <td className="text-muted small">
-                      {item.color ? item.color : "—"}
-                    </td>
+                  <td className="fw-medium">{item.name}</td>
+                  <td>₹{item.price}</td>
 
-                    <td>
-                      {item.stock > 0 ? (
-                        <span className="badge bg-success-subtle text-success">
-                          {item.stock} in stock
-                        </span>
-                      ) : (
-                        <span className="badge bg-danger-subtle text-danger">
-                          Out of stock
-                        </span>
-                      )}
-                    </td>
+          
+                  <td className="text-muted small">
+                    {item.size ? item.size : "—"}
+                  </td>
+                  <td className="text-muted small">
+                    {item.color ? item.color : "—"}
+                  </td>
 
-                    {/* <td className="text-end">
+                  <td>
+                    {item.stock > 0 ? (
+                      <span className="badge bg-success-subtle text-success">
+                        {item.stock} in stock
+                      </span>
+                    ) : (
+                      <span className="badge bg-danger-subtle text-danger">
+                        Out of stock
+                      </span>
+                    )}
+                  </td>
+
+                
+                  <td className="text-end pe-4">
+                    <div className="d-flex justify-content-end gap-2">
+                      {/* Edit Button */}
                       <Link
                         href={`/admin/products/edit/${item.id}`}
-                        className="btn btn-outline-warning btn-sm me-2"
+                        className="btn btn-sm btn-outline-dark"
+                        title="Edit Product"
                       >
-                        Edit
+                        <AiOutlineEdit size={18} />
                       </Link>
-                      <button
-                        className="btn btn-outline-danger btn-sm"
-                        onClick={() => deleteProduct(item.id)}
-                      >
-                        Delete
-                      </button>
-                    </td> */}
-                    <td className="text-end pe-4">
-  <div className="d-flex justify-content-end gap-2">                  
-    {/* Edit Button */}
-    <Link 
-      href={`/admin/products/edit/${item.id}`} 
-      className="btn btn-sm btn-outline-dark"
-      title="Edit Product"
-    >
-      <AiOutlineEdit size={18} />
-    </Link>
 
-    {/* Delete Button */}
-    <button
-      onClick={() => deleteProduct(item.id)}
-      className="btn btn-sm btn-outline-danger"
-      title="Delete Product"
-    >
-      <AiOutlineDelete size={18} />
-    </button>
-  </div>
-</td>
-                  </tr>
-                ))
-              
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => deleteProduct(item.id)}
+                        className="btn btn-sm btn-outline-danger"
+                        title="Delete Product"
+                      >
+                        <AiOutlineDelete size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+
             ) : (
               <tr>
                 <td colSpan="8" className="text-center py-4 text-muted">
