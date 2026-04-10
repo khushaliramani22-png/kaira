@@ -6,12 +6,27 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const parseCookies = (cookieHeader = '') => {
-  return Object.fromEntries(
-    cookieHeader
-      .split(';')
-      .map((cookie) => cookie.split('='))
-      .map(([name, ...rest]) => [name.trim(), decodeURIComponent(rest.join('=').trim())])
-  );
+  try {
+    return Object.fromEntries(
+      cookieHeader
+        .split(';')
+        .filter(cookie => cookie.includes('='))
+        .map((cookie) => {
+          const [name, ...rest] = cookie.split('=');
+          const trimmedName = name.trim();
+          const trimmedValue = rest.join('=').trim();
+          try {
+            return [trimmedName, decodeURIComponent(trimmedValue)];
+          } catch (err) {
+            console.warn(`Failed to decode cookie "${trimmedName}":`, err.message);
+            return [trimmedName, trimmedValue];
+          }
+        })
+    );
+  } catch (err) {
+    console.error('Cookie parsing failed:', err);
+    return {};
+  }
 };
 
 const createSupabaseClientFromRequest = (request) => {
@@ -35,7 +50,9 @@ async function getUser(request) {
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData?.user) {
-      return { user: null, error: userError?.message || 'Not authenticated' };
+      const errorMsg = userError?.message || 'Not authenticated';
+      console.warn('Auth error:', errorMsg);
+      return { user: null, error: errorMsg };
     }
 
     return { user: userData.user };
@@ -49,6 +66,7 @@ export async function POST(request) {
   try {
     const auth = await getUser(request);
     if (!auth.user) {
+      console.warn('POST /api/reviews: User not authenticated -', auth.error);
       return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
     }
 
@@ -65,21 +83,25 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Product and rating are required' }, { status: 400 });
     }
 
+    const customerName = auth.user.user_metadata?.full_name || auth.user.email || 'Guest';
+
+    // Check for existing review by product_id AND customer_name (matches the unique constraint)
     const existingReviewQuery = await supabaseAdmin
       .from('product_reviews')
       .select('id,user_id')
       .eq('product_id', product_id)
-      .eq('user_id', auth.user.id)
+      .eq('customer_name', customerName)
       .maybeSingle();
 
     if (existingReviewQuery.error) {
+      console.error('Query error checking existing review:', existingReviewQuery.error);
       return NextResponse.json({ success: false, error: existingReviewQuery.error.message }, { status: 500 });
     }
 
     const payload = {
       product_id,
       user_id: auth.user.id,
-      customer_name: auth.user.user_metadata?.full_name || auth.user.email || 'Guest',
+      customer_name: customerName,
       rating,
       fabric_rating,
       comment,
@@ -89,12 +111,16 @@ export async function POST(request) {
 
     let result;
     if (existingReviewQuery.data) {
+      // Update existing review
+      console.log('Updating existing review:', existingReviewQuery.data.id);
       result = await supabaseAdmin
         .from('product_reviews')
         .update(payload)
         .eq('id', existingReviewQuery.data.id)
         .select();
     } else {
+      // Insert new review
+      console.log('Inserting new review for product:', product_id);
       result = await supabaseAdmin
         .from('product_reviews')
         .insert([payload])
@@ -102,6 +128,38 @@ export async function POST(request) {
     }
 
     if (result.error) {
+      // Handle unique constraint violations (code 23505)
+      if (result.error.code === '23505') {
+        console.warn('Unique constraint violation - attempting recovery:', result.error.message);
+        // Try to find and update by product_id and customer_name
+        const recoveryQuery = await supabaseAdmin
+          .from('product_reviews')
+          .select('id')
+          .eq('product_id', product_id)
+          .eq('customer_name', customerName)
+          .maybeSingle();
+
+        if (recoveryQuery.data && recoveryQuery.data.id) {
+          console.log('Found conflicting review, updating:', recoveryQuery.data.id);
+          const recoveryResult = await supabaseAdmin
+            .from('product_reviews')
+            .update(payload)
+            .eq('id', recoveryQuery.data.id)
+            .select();
+
+          if (recoveryResult.error) {
+            console.error('Recovery update failed:', recoveryResult.error);
+            return NextResponse.json({ 
+              success: false, 
+              error: 'Failed to update review: ' + recoveryResult.error.message 
+            }, { status: 500 });
+          }
+
+          return NextResponse.json({ success: true, data: recoveryResult.data });
+        }
+      }
+
+      console.error('Database operation error:', result.error);
       return NextResponse.json({ success: false, error: result.error.message }, { status: 500 });
     }
 

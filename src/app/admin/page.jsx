@@ -46,8 +46,6 @@ export default function AdminDashboard() {
           .select("*")
           .order("created_at", { ascending: false });
 
-
-
         // ૪. count product and stock
         const { data: allProducts, count: productCount } = await supabase
           .from("products")
@@ -158,7 +156,7 @@ export default function AdminDashboard() {
         {/* ૧. salse analitics graph -  */}
         <div className="lg:col-span-2 p-6 bg-black rounded-3xl border border-gray-800 shadow-xl flex flex-col justify-between">
           <div className="mb-4">
-            <h3 className="font-black uppercase tracking-tight text-md italic text-white">Sales Analytics</h3>
+            <h3 className="font-black uppercase tracking-tight text-md text-white">Sales Analytics</h3>
             <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Last 7 Days Performance</p>
           </div>
 

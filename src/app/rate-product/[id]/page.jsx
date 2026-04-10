@@ -8,7 +8,6 @@ import { IoCameraOutline } from "react-icons/io5";
 import Swal from "sweetalert2";
 
 export default function RateProductPage() {
-
   const { id } = useParams();
   const searchParams = useSearchParams();
   const productName = searchParams.get("name") || "Product";
@@ -22,143 +21,150 @@ export default function RateProductPage() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [existingReviewId, setExistingReviewId] = useState(null);
 
   const labels = ["Very Bad", "Bad", "Ok-Ok", "Good", "Very Good"];
 
-  
-useEffect(() => {
-    if (!id || id === "undefined") return;
+ useEffect(() => {
+  if (!id) return;
 
-    const fetchExistingReview = async () => {
-    
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
-      setUser(authUser);
+  const fetchExistingReview = async () => {
+    // console.log("🔍 Fetching review for ID:", id); 
 
-      const { data, error } = await supabase
-        .from("product_reviews")
-        .select("*")
-        .eq("product_id", id)
-        .eq("user_id", authUser.id) 
-        .maybeSingle();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) {
+      // console.log("🛑 User not logged in");
+      return;
+    }
+    setUser(authUser);
 
-      if (data) {
-        setRating(Number(data.rating));
-        setFabricRating(Number(data.fabric_rating));
-        setComment(data.comment || "");
+    const { data, error } = await supabase
+      .from("product_reviews")
+      .select("*")
+      .eq("product_id", id)
+      .eq("user_id", authUser.id)
+      .maybeSingle();
+
+    if (error) {
+      // console.error("❌ Fetch error:", error.message);
+      return;
+    }
+
+    if (data) {
+      // console.log(" Data loaded from DB:", data);
+      setExistingReviewId(data.id);
+      setRating(Number(data.rating));
+      setFabricRating(Number(data.fabric_rating));
+      setComment(data.comment || "");
+      if (data.review_image) {
+        setSelectedImages([{ preview: data.review_image, isExisting: true }]);
       }
-    };
+    } else {
+      // console.log("No existing review found for this product/user.");
+    }
+  };
 
-    fetchExistingReview();
-  }, [id]);
+  fetchExistingReview();
+}, [id, supabase]); 
 
-    const handleImageChange = (e) => {
+  const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    const newImgs = files.map(file => ({ file, preview: URL.createObjectURL(file) }));
+    const newImgs = files.map(file => ({ file, preview: URL.createObjectURL(file), isExisting: false }));
     setSelectedImages([...selectedImages, ...newImgs]);
   };
-const handleSubmit = async () => {
-  const currentUser = user || (await supabase.auth.getUser()).data.user; 
+
+ const handleSubmit = async () => {
+  const currentUser = user || (await supabase.auth.getUser()).data.user;
   if (!currentUser || !id || id === "undefined") {
-    Swal.fire("Error", "Invalid Session or Product ID", "error");
+    Swal.fire("Error", "Invalid Session", "error");
+    return;
+  }
+
+  if (rating === 0) {
+    Swal.fire("Error", "Please select a product rating", "error");
     return;
   }
 
   try {
     setLoading(true);
+    let imageUrl = selectedImages[0]?.isExisting ? selectedImages[0].preview : null;
 
-    let imageUrl = null;
-
-    // 1. જો ઈમેજ સિલેક્ટ કરી હોય, તો તેને સ્ટોરેજમાં અપલોડ કરો
-    if (selectedImages.length > 0) {
-      const img = selectedImages[0]; // અત્યારે આપણે પહેલી ઈમેજ લઈએ છીએ
-      const file = img.file;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`; // યુનિક નામ માટે timestamp
+    // Image Upload Logic
+    if (selectedImages.length > 0 && !selectedImages[0].isExisting) {
+      const file = selectedImages[0].file;
+      const fileName = `${Date.now()}-${file.name}`;
       const filePath = `review_images/${currentUser.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("products") // તમારું બકેટ નામ
-        .upload(filePath, file);
-
+      const { error: uploadError } = await supabase.storage.from("products").upload(filePath, file);
       if (uploadError) throw uploadError;
-
-      // ઈમેજની પબ્લિક URL મેળવો
-      const { data: { publicUrl } } = supabase.storage
-        .from("products")
-        .getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(filePath);
       imageUrl = publicUrl;
     }
 
-    // 2. જૂનો રિવ્યુ ચેક કરો
-    const { data: existingReview } = await supabase
-      .from("product_reviews")
-      .select("id")
-      .eq("product_id", id)
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    // 3. ડેટા તૈયાર કરો
     const reviewData = {
       product_id: id,
-      user_id: currentUser.id,
+      user_id: currentUser.id, // અહીં ચેક કરો કે આ સાચો UUID છે
       customer_name: currentUser.user_metadata?.full_name || "Guest",
-      rating: rating,
-      fabric_rating: fabricRating,
-      comment: comment,
+      rating: Number(rating),
+      fabric_rating: Number(fabricRating),
+      comment,
       status: "pending",
-      review_image: imageUrl, 
+      review_image: imageUrl,
     };
 
-    if (existingReview) {
-      reviewData.id = existingReview.id;
+    let result;
+    if (existingReviewId) {
+      // જો રિવ્યૂ પહેલેથી હોય તો Update કરો
+      result = await supabase
+        .from("product_reviews")
+        .update(reviewData)
+        .eq("id", existingReviewId);
+    } else {
+      // નવો રિવ્યૂ Insert કરો
+      result = await supabase
+        .from("product_reviews")
+        .insert([reviewData]);
     }
 
-    const response = await fetch('/api/reviews', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-    });
+    if (result.error) throw result.error;
 
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || 'Failed to save review');
-    }
-
-    await Swal.fire('Success', 'Feedback submitted! It will be visible after admin approval.', 'success');
+    await Swal.fire('Success', existingReviewId ? 'Review Updated!' : 'Feedback Submitted!', 'success');
     router.push('/user-order');
   } catch (err) {
-    console.error("Submission Error:", err.message);
-    Swal.fire("Error", "Could not submit: " + err.message, "error");
+    console.error("❌ Submission Error:", err.message);
+    Swal.fire("Error", err.message, "error");
   } finally {
     setLoading(false);
   }
 };
-const getButtonText = () => {
-    if (step === 1) return rating > 0 ? "Next" : "Skip";
-    if (step === 2) return selectedImages.length > 0 ? "Next" : "skip";
-    return "Submit";
+
+  const getButtonText = () => {
+    if (loading) return "Processing...";
+    if (step === 3) return existingReviewId ? "Update Review" : "Submit Review";
+    if (step === 1 && rating === 0) return "Skip";
+    if (step === 2 && selectedImages.length === 0) return "Skip";
+    return "Next";
   };
 
   return (
     <div className="bg-white min-h-screen flex flex-col font-sans">
+      {/* Header */}
       <div className="flex items-center p-4 border-b">
         <button onClick={() => (step > 1 ? setStep(step - 1) : router.back())}>
           <AiOutlineLeft size={20} className="mr-4" />
         </button>
-        <span className="font-bold uppercase text-xs tracking-widest">Add Feedback</span>
+        <div className="flex flex-col">
+          <span className="font-bold text-sm uppercase">Rating & Review</span>
+          <span className="text-[10px] text-gray-500 truncate w-40">{productName}</span>
+        </div>
       </div>
 
-      {/* Progress Bar */}
+     
       <div className="flex justify-between px-12 py-6 relative">
-        <div className="absolute top-1/2 left-12 right-12 h-[1px] bg-gray-200 -translate-y-1/2">
-          <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${(step - 1) * 50}%` }}></div>
+        <div className="absolute top-1/2 left-12 right-12 h-[2px] bg-gray-100 -translate-y-1/2">
+          <div className="h-full bg-purple-600 transition-all duration-300" style={{ width: `${(step - 1) * 50}%` }}></div>
         </div>
         {[1, 2, 3].map((s) => (
-          <div key={s} className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${step >= s ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"}`}>
+          <div key={s} className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step >= s ? "bg-purple-700 text-white" : "bg-gray-200 text-gray-500"}`}>
             {step > s ? "✓" : s}
           </div>
         ))}
@@ -166,25 +172,26 @@ const getButtonText = () => {
 
       <div className="flex-grow px-6">
         {step === 1 && (
-          <div className="text-center">
-            <div className="flex justify-center gap-2 mb-4">
+          <div className="text-center animate-in fade-in duration-500">
+            <h2 className="text-lg font-bold mb-1">How was the product?</h2>
+            <p className="text-xs text-gray-400 mb-6">Your feedback helps other shoppers</p>
+            <div className="flex justify-center gap-3 mb-8">
               {[1, 2, 3, 4, 5].map((s) => (
-                <div key={s} onClick={() => setRating(s)} className="cursor-pointer flex flex-col items-center">
-                  {rating >= s ? <AiFillStar size={38} className="text-green-500" /> : <AiOutlineStar size={38} className="text-gray-300" />}
-                  
-                </div>
+                <button key={s} onClick={() => setRating(s)} className="focus:outline-none">
+                  {rating >= s ? <AiFillStar size={48} className="text-yellow-400" /> : <AiOutlineStar size={48} className="text-gray-200" />}
+                </button>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mb-10">We are glad you liked the product!</p>
             
-            <div className="text-left">
-              <h3 className="text-gray-400 font-bold text-[10px] uppercase mb-4 tracking-wider">Tell us more about the product</h3>
-              <p className="text-sm font-bold text-gray-800 mb-4">Fabric</p>
-              <div className="flex gap-4">
+            <div className="text-left bg-gray-50 p-5 rounded-2xl">
+              <h3 className="text-gray-800 font-bold text-sm mb-4">Fabric Quality</h3>
+              <div className="flex justify-between items-center">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <div key={s} onClick={() => setFabricRating(s)} className="cursor-pointer">
-                    {fabricRating >= s ? <AiFillStar size={32} className="text-green-500" /> : <AiOutlineStar size={32} className="text-gray-300" />}
-                 <p className="text-[9px] text-gray-400 mt-1">{labels[s-1]}</p>
+                  <div key={s} className="flex flex-col items-center">
+                    <button onClick={() => setFabricRating(s)} className={`w-10 h-10 rounded-full border-2 mb-1 flex items-center justify-center font-bold ${fabricRating === s ? 'bg-purple-800 border-purple-800 text-white' : 'bg-white border-gray-200 text-gray-400'}`}>
+                      {s}
+                    </button>
+                    <span className="text-[9px] text-gray-400 uppercase">{labels[s-1]}</span>
                   </div>
                 ))}
               </div>
@@ -193,47 +200,49 @@ const getButtonText = () => {
         )}
 
         {step === 2 && (
-          <div>
-            <h3 className="font-bold text-gray-800 mb-4">Add Photos and Videos</h3>
-            <input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
-            <div className="flex flex-wrap gap-2 mb-4">
+          <div className="animate-in slide-in-from-right duration-300">
+            <h3 className="font-bold text-gray-800 text-lg mb-1">Add Photos</h3>
+            <p className="text-xs text-gray-400 mb-6">Real images help people decide better</p>
+            
+            <div className="flex flex-wrap gap-3 mb-6">
               {selectedImages.map((img, i) => (
-                <div key={i} className="relative w-20 h-20">
-                  <img src={img.preview} className="w-full h-full object-cover rounded border" />
-                  <button onClick={() => setSelectedImages(selectedImages.filter((_, idx) => idx !== i))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-[10px]">✕</button>
+                <div key={i} className="relative w-24 h-24">
+                  <img src={img.preview} className="w-full h-full object-cover rounded-xl border-2 border-purple-100" />
+                  <button onClick={() => setSelectedImages(selectedImages.filter((_, idx) => idx !== i))} className="absolute -top-2 -right-2 bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg">✕</button>
                 </div>
               ))}
+              <button onClick={() => fileInputRef.current.click()} className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                <IoCameraOutline size={28} />
+                <span className="text-[10px] mt-1 font-bold">Add More</span>
+              </button>
             </div>
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 flex items-center justify-between cursor-pointer" onClick={() => fileInputRef.current.click()}>
-               <span className="text-blue-700 text-sm font-medium">Show us what your product looks like</span>
-               <div className="text-3xl">📷</div>
-            </div>
-            <button onClick={() => fileInputRef.current.click()} className="w-full py-4 bg-purple-800 text-white rounded-lg font-bold flex items-center justify-center gap-2 mt-4 uppercase text-xs tracking-widest">
-              <IoCameraOutline size={22} /> Add Photos & Videos
-            </button>
+            
+            <input type="file" hidden ref={fileInputRef} onChange={handleImageChange} accept="image/*" />
           </div>
         )}
 
         {step === 3 && (
-          <div>
-            <h3 className="font-bold text-gray-800 mb-6">Type Comment</h3>
-            <textarea 
-              className="w-full border-b border-gray-300 outline-none py-2 text-sm h-32 resize-none focus:border-purple-800 transition-colors" 
-              placeholder="Type Comment" 
-              value={comment} 
-              onChange={(e) => setComment(e.target.value)} 
-            />
+          <div className="animate-in slide-in-from-right duration-300">
+            <h3 className="font-bold text-gray-800 text-lg mb-4">Write a Review</h3>
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              <textarea 
+                className="w-full bg-transparent outline-none py-2 text-sm h-40 resize-none" 
+                placeholder="Share your experience with the product..." 
+                value={comment} 
+                onChange={(e) => setComment(e.target.value)} 
+              />
+            </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 border-t bg-white">
+      <div className="p-4 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
         <button 
           onClick={step === 3 ? handleSubmit : () => setStep(step + 1)}
           disabled={loading}
-          className={`w-full py-3.5 rounded font-bold uppercase text-xs tracking-widest transition-all ${getButtonText() === "Skip" ? "border border-gray-300 text-gray-600" : "bg-purple-800 text-white"}`}
+          className={`w-full py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all ${getButtonText() === "Skip" ? "bg-gray-100 text-gray-500" : "bg-purple-800 text-white shadow-lg shadow-purple-200"}`}
         >
-          {loading ? "Submitting..." : getButtonText()}
+          {getButtonText()}
         </button>
       </div>
     </div>

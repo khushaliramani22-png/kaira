@@ -34,6 +34,8 @@ export default function UserOrderPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
+      console.log("=== STARTING FETCH ===");
+      console.log("User ID:", user.id);
 
       const { data: ordersData, error: orderError } = await supabase
         .from("orders")
@@ -42,31 +44,78 @@ export default function UserOrderPage() {
         .order("created_at", { ascending: false });
 
       if (orderError) throw orderError;
+      
+      console.log("✅ Orders fetched:", ordersData?.length, "orders");
+
+      // Fetch ALL reviews first to see what's in the database
+      const { data: allReviews } = await supabase
+        .from("product_reviews")
+        .select("*");
+      
+      console.log("🔍 ALL REVIEWS in database:", allReviews?.length, "total");
+      
+      // Now fetch only user's reviews
       const { data: reviewsData, error: reviewError } = await supabase
         .from("product_reviews")
-        .select("product_id, rating")
+        .select("*")
         .eq("user_id", user.id);
-      if (reviewError) {
-        console.error("Review Fetch Error:", reviewError.message);
+      
+      console.log("⭐ USER REVIEWS:", reviewsData?.length, "reviews for this user");
+      
+      if (reviewsData && reviewsData.length > 0) {
+        console.table(reviewsData.map(r => ({
+          product_id: r.product_id,
+          rating: r.rating,
+          comment: r.comment ? r.comment.substring(0, 20) : "No comment"
+        })));
       }
-
+      
+      if (reviewError) {
+        console.error("❌ Review Fetch Error:", reviewError.message);
+      }
 
       const ordersWithReviews = ordersData.map(order => ({
         ...order,
         order_items: order.order_items.map(item => {
+          const itemProductId = String(item.product_id).trim().toLowerCase();
+          
+          const review = reviewsData?.find(r => {
+            const reviewProductId = String(r.product_id).trim().toLowerCase();
+            return reviewProductId === itemProductId;
+          });
 
-          const review = reviewsData?.find(r => r.product_id === item.product_id);
+          if (review) {
+            console.log(`✅ Review found for: ${item.product_name} (Rating: ${review.rating})`);
+          }
+
           return {
             ...item,
-            user_rating: review ? review.rating : 0
+            user_review: review || null,
+            user_rating: review ? Number(review.rating) : 0 
           };
         })
       }));
 
       setOrders(ordersWithReviews);
       setFilteredOrders(ordersWithReviews);
+      
+      // Debug: Check what's in state - DETAILED
+      console.log("=== FINAL STATE CHECK ===");
+      ordersWithReviews.forEach((order, idx) => {
+        const deliveredStatus = order.status.toLowerCase().includes("delivered");
+        console.log(`\nOrder ${idx}: Status="${order.status}", isDelivered=${deliveredStatus}`);
+        
+        order.order_items.forEach((item, itemIdx) => {
+          console.log(`  Item ${itemIdx}: "${item.product_name}"`);
+          console.log(`    - product_id: ${item.product_id}`);
+          console.log(`    - user_rating: ${item.user_rating} (${typeof item.user_rating})`);
+          console.log(`    - user_review: ${item.user_review ? `YES (rating: ${item.user_review.rating})` : "NO"}`);
+        });
+      });
+      
+      console.log("\n=== FETCH COMPLETE ===");
     } catch (error) {
-      console.error("General Error:", error.message);
+      console.error("❌ General Error:", error.message);
     } finally {
       setLoading(false);
     }
@@ -146,7 +195,7 @@ export default function UserOrderPage() {
             <div key={order.id} className="mb-2 bg-white border-b border-gray-100">
               {order.order_items?.map((item) => {
                 const isCancelled = order.status.toLowerCase() === "cancelled";
-                const isDelivered = order.status.toLowerCase() === "delivered";
+                const isDelivered = order.status.toLowerCase().includes("delivered"); // Now catches "delivered", "delivered early", etc.
 
                 return (
                   <div
@@ -197,17 +246,29 @@ export default function UserOrderPage() {
                       {/* Feedback & Stars Section */}
                       {isDelivered && (
                         <div className="mt-4 pt-3 border-t border-gray-50">
+                          {/* VISIBLE DEBUG */}
+                          <div style={{
+                            backgroundColor: '#f0f0f0',
+                            padding: '8px',
+                            marginBottom: '8px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            color: '#666'
+                          }}>
+                            DEBUG: user_rating={item.user_rating}, has_review={item.user_review ? 'YES' : 'NO'}
+                          </div>
+                          
                           <p className="text-gray-700 text-[11px] font-semibold mb-2">
                             {item.user_rating > 0 ? "Your Rating" : "We are glad you liked the product!"}
                           </p>
                           <div className="flex items-center justify-between">
-                            <div className="flex gap-1 text-green-600">
+                            <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <span key={star}>
-                                  {star <= item.user_rating ? (
-                                    <AiFillStar size={20} />
+                                  {star <= (item.user_rating || 0) ? (
+                                    <AiFillStar size={20} className="text-green-600" />
                                   ) : (
-                                    <AiOutlineStar className="text-gray-300" size={20} />
+                                    <AiOutlineStar size={20} className="text-gray-300" />
                                   )}
                                 </span>
                               ))}
@@ -222,6 +283,22 @@ export default function UserOrderPage() {
                               {item.user_rating > 0 ? "Edit Feedback" : "Complete Your Feedback"}
                             </button>
                           </div>
+                          
+                          {/* Display Review Comment & Image if exists */}
+                          {item.user_review && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              {item.user_review.comment && (
+                                <p className="text-xs text-gray-600 mb-2">{item.user_review.comment}</p>
+                              )}
+                              {item.user_review.review_image && (
+                                <img 
+                                  src={item.user_review.review_image} 
+                                  alt="Review" 
+                                  className="w-16 h-16 object-cover rounded" 
+                                />
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
