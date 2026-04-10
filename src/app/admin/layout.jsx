@@ -9,7 +9,8 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname()
 
   const [isProductOpen, setIsProductOpen] = useState(false)
-  const [isBannerOpen, setIsBannerOpen] = useState(false) 
+  const [isBannerOpen, setIsBannerOpen] = useState(false)
+  const [isBlogOpen, setIsBlogOpen] = useState(false)
   const [adminEmail, setAdminEmail] = useState('Loading...')
   const [loading, setLoading] = useState(true)
 
@@ -157,6 +158,39 @@ export default function AdminLayout({ children }) {
                 <li className="mb-1">
                   <div onClick={() => router.push('/admin/banner/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
                     • Add New Banner
+                  </div>
+                </li>
+              </ul>
+            )}
+          </li>
+
+          {/* Blog Dropdown */}
+          <li className="mb-2">
+            <div
+              onClick={() => setIsBlogOpen(!isBlogOpen)}
+              className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect"
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="d-flex align-items-center">
+                <span className="me-2">📚</span> Blog
+              </div>
+              <span style={{
+                transform: isBlogOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: '0.3s',
+                fontSize: '12px'
+              }}>▼</span>
+            </div>
+
+            {isBlogOpen && (
+              <ul className="list-unstyled ms-4 mt-1">
+                <li className="mb-1">
+                  <div onClick={() => router.push('/admin/blogs')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
+                    • Blog List
+                  </div>
+                </li>
+                <li className="mb-1">
+                  <div onClick={() => router.push('/admin/blogs/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
+                    • Add Blog
                   </div>
                 </li>
               </ul>

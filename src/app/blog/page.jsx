@@ -3,16 +3,60 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase'; 
 
 async function getBlogs() {
-  const { data, error } = await supabase
-    .from('blogs')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching blogs:', error);
-    return [];
+ 
+    if (error) {
+      console.warn('Using demo blog data. Error:', error?.message);
+      return getDemoBlogs();
+    }
+    
+
+    if (!data || data.length === 0) {
+      console.warn('No published blogs found in database. Using demo data.');
+      return getDemoBlogs();
+    }
+    
+    return data;
+  } catch (err) {
+    console.warn('Blog fetch error:', err?.message);
+    return getDemoBlogs();
   }
-  return data;
+}
+
+
+function getDemoBlogs() {
+  return [
+    {
+      id: '1',
+      title: 'How to Look Outstanding in Pastel',
+      description: 'Discover the art of wearing pastels with confidence. Learn color combinations and styling tips to make pastels work for every season.',
+      image_url: '/images/colorbox/post-image1.jpg',
+      category: 'Fashion Tips',
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: '2',
+      title: 'Top 10 Fashion Trends for Summer',
+      description: 'Explore the hottest fashion trends this summer. From sustainable fashion to bold colors, here\'s what\'s in.',
+      image_url: '/images/colorbox/post-image2.jpg',
+      category: 'Trends',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: '3',
+      title: 'The Art of Fabric Care',
+      description: 'Learn how to properly care for your favorite clothing pieces. Essential tips for maintaining quality and longevity.',
+      image_url: '/images/colorbox/post-image3.jpg',
+      category: 'Care Guide',
+      created_at: new Date(Date.now() - 172800000).toISOString(),
+    },
+  ];
 }
 
 export default async function ProfessionalBlogPage() {

@@ -35,7 +35,7 @@ export default function Newsletter() {
   return (
     <section
       className="newsletter bg-light"
-      style={{ background: "url('/images/pattern-bg.png') no-repeat" }}
+      style={{ background: "url('/images/colorbox/pattern-bg.png') no-repeat" }}
     >
       <div className="container">
         <div className="row justify-content-center">

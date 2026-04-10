@@ -86,9 +86,10 @@ export default function NewArrivals() {
               <SwiperSlide key={product.id}>
               
                 <div className="group relative">
+
                   <div className="relative aspect-[3/4] overflow-hidden  bg-gray-100 shadow-sm">
              
-                    <Link href={`/shop/${product.id}`}>
+                    <Link href={`/shop/${product.id}`} className="relative w-full h-full block">
                       <Image
                         src={product.image1 || "/images/placeholder.jpg"}
                         
