@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -85,7 +86,7 @@ const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
               <th>Image</th>
               <th>Name</th>
               <th>Price</th>
-              {/* નવી કોલમ્સ અહીં ઉમેરી */}
+           
               <th>Size</th>
               <th>Color</th>
               <th>Stock</th>
@@ -145,7 +146,7 @@ const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
                       )}
                     </td>
 
-                    <td className="text-end">
+                    {/* <td className="text-end">
                       <Link
                         href={`/admin/products/edit/${item.id}`}
                         className="btn btn-outline-warning btn-sm me-2"
@@ -158,7 +159,28 @@ const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
                       >
                         Delete
                       </button>
-                    </td>
+                    </td> */}
+                    <td className="text-end pe-4">
+  <div className="d-flex justify-content-end gap-2">                  
+    {/* Edit Button */}
+    <Link 
+      href={`/admin/products/edit/${item.id}`} 
+      className="btn btn-sm btn-outline-dark"
+      title="Edit Product"
+    >
+      <AiOutlineEdit size={18} />
+    </Link>
+
+    {/* Delete Button */}
+    <button
+      onClick={() => deleteProduct(item.id)}
+      className="btn btn-sm btn-outline-danger"
+      title="Delete Product"
+    >
+      <AiOutlineDelete size={18} />
+    </button>
+  </div>
+</td>
                   </tr>
                 ))
               
