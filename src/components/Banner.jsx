@@ -1,25 +1,4 @@
 
-//   {
-//     id: 3,
-//     image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070",
-//     title: "MODERN WESTERN",
-//     subtitle: "Casual Trends",
-//     desc: "Be it college or office, get a perfect modern look with Kaira."
-//   },
-//   {
-//     id: 4,
-//     image: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=2070",
-//     title: "FESTIVE VIBES",
-//     subtitle: "Traditional Wear",
-//     desc: "Make your every festival memorable with our ethnic collection."
-//   },
-//   {
-//     id: 5,
-//     image: "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?q=80&w=2070",
-//     title: "CHIC ESSENTIALS",
-//     subtitle: "Limited Edition",
-//     desc: "Premium designs specially selected just for you that will give you a unique style."
-// 
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';

@@ -33,14 +33,14 @@ export async function GET(request) {
       return NextResponse.redirect(`${origin}${next}`)
     }
   else {
-      // જો Session એક્સચેન્જમાં એરર આવે તો કન્સોલમાં પ્રિન્ટ કરો
+     
       console.error("Supabase Auth Error:", error.message)
     }
   } else {
-    // જો URL માં કોડ જ ના મળે તો કન્સોલમાં જણાવો
+  
     console.error("No auth code found in the URL")
   }
 
-  // ભૂલ હોય તો પણ યુઝરને લોગિન પેજને બદલે હોમ પેજ પર જ મોકલી દો
+
   return NextResponse.redirect(`${origin}/`)
 }

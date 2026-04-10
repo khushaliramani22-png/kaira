@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useSettings } from "@/app/context/SettingsContext";
-import { Mail, Phone, MapPin, Send, Loader2, Clock, Globe } from "lucide-react";
+import { Mail, Phone, Send, Loader2, Clock, Globe } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function ContactPage() {
@@ -73,7 +73,7 @@ We will get back to you within 24 hours.
       <div className="max-w-7xl mx-auto -mt-12 px-4 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Side: Contact Information (4 columns) */}
+          {/* Left Side: Contact Information */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white border border-gray-100 p-8 rounded-[40px] shadow-xl shadow-gray-200/50">
               <h3 className="text-2xl font-bold text-gray-900 mb-8">Contact Info</h3>
@@ -119,7 +119,7 @@ We will get back to you within 24 hours.
             </div>
           </div>
 
-          {/* Right Side: Contact Form (8 columns) */}
+          {/* Right Side: Contact Form */}
           <div className="lg:col-span-8">
             <div className="bg-white border border-gray-100 p-8 md:p-12 rounded-[40px] shadow-xl shadow-gray-200/50">
               <form onSubmit={handleSubmit} className="space-y-8">

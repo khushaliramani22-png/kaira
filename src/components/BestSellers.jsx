@@ -88,7 +88,7 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 
-// Swiper CSS (તમારી ડિઝાઈન માટે જરૂરી)
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -101,7 +101,7 @@ export default function BestSellers() {
     const fetchBestSellers = async () => {
       try {
         setLoading(true);
-        // એડમિન પેનલમાંથી લેટેસ્ટ 8 પ્રોડક્ટ્સ ખેંચવા માટે
+
         const { data, error } = await supabase
           .from("products")
           .select("*")
@@ -126,7 +126,7 @@ export default function BestSellers() {
   return (
     <section id="best-sellers" className="best-sellers product-carousel py-5 relative overflow-hidden">
       <div className="container">
-        {/* તમારી ઓરિજિનલ હેડિંગ ડિઝાઈન */}
+      
         <div className="flex flex-wrap justify-between items-center mt-5 mb-3">
           <h4 className="text-uppercase">Best Selling Items</h4>
           <Link href="/shop" className="btn-link no-underline text-black hover:text-black">
@@ -137,7 +137,7 @@ export default function BestSellers() {
         <Swiper
           modules={[Navigation, Pagination]}
           spaceBetween={20}
-          slidesPerView={3} // તમારી મૂળ સ્લાઈડ સંખ્યા
+          slidesPerView={3} 
           navigation
           pagination={{ clickable: true }}
           breakpoints={{
@@ -148,7 +148,7 @@ export default function BestSellers() {
         >
           {products.map((product) => (
             <SwiperSlide key={product.id}>
-              {/* તમારી ઓરિજિનલ પ્રોડક્ટ આઈટમ ડિઝાઈન */}
+          
               <div className="product-item image-zoom-effect link-effect relative">
                 <div className="image-holder relative">
                   <Link href={`/shop/${product.id}`}>
@@ -162,7 +162,7 @@ export default function BestSellers() {
                     />
                   </Link>
 
-                  {/* તમારી ઓરિજિનલ કન્ટેન્ટ ડિઝાઈન */}
+             
                   <div className="product-content mt-2">
                     <h5 className="text-uppercase fs-5 mt-3">
                       <Link
@@ -173,7 +173,7 @@ export default function BestSellers() {
                         {product.name}
                       </Link>
                     </h5>
-                    {/* પ્રાઈસ ડિસ્પ્લે */}
+                  
                     <span className="fw-bold">₹{product.price}</span>
                     {product.old_price && (
                       <span className="text-muted text-decoration-line-through ms-2 small">

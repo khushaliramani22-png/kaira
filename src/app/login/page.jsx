@@ -107,9 +107,9 @@ setMessage("");
               <input
                 type="text"
                 className="form-control py-2 text-center fw-bold"
-                style={{ letterSpacing: '0.3rem', fontSize: '1.2rem' }} // 8 આંકડા માટે સ્પેસ થોડી ઓછી કરી
+                style={{ letterSpacing: '0.3rem', fontSize: '1.2rem' }}
                 placeholder="00000000"
-                maxLength={8} // અહીં 8 કરી દો
+                maxLength={8} 
                 value={otp}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, ""); // ફક્ત નંબર્સ

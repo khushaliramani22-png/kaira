@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
-import { ShoppingBag, X, Plus, Minus } from "lucide-react"; // Icons import karya
+import { ShoppingBag, X, Plus, Minus } from "lucide-react"; 
 import { useEffect } from "react";
 
 export default function CartPage() {
-  // Context mathi jaruri badhi vastu lidhi
+
   const { cartItems, updateQuantity, removeFromCart, refreshCart, loading } = useCart();
 
-  // Page load thay tyare data fetch karva mate
+ 
   useEffect(() => {
     if (refreshCart) refreshCart();
   }, [refreshCart]);
@@ -18,7 +18,7 @@ export default function CartPage() {
     0
   );
 
-  // Loading state handle kari jethi empty cart no photo turant na dekhay
+
   if (loading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
@@ -75,7 +75,7 @@ export default function CartPage() {
 
         <div className="flex flex-col lg:flex-row gap-20 items-start">
 
-          {/* LEFT: Cart Table Section */}
+          
           <div className="w-full lg:w-[65%]">
             <table className="w-full border-collapse">
               <thead>
@@ -151,7 +151,6 @@ export default function CartPage() {
             </table>
           </div>
 
-          {/* RIGHT: Totals Summary Panel */}
           <div className="w-full lg:w-[35%] lg:sticky lg:top-10">
             <div className="bg-[#fcfcfc] border border-gray-100 p-8 md:p-10 shadow-sm">
               <h2 className="text-2xl font-normal mb-10 border-b border-gray-100 pb-4 tracking-tight">

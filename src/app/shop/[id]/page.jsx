@@ -288,7 +288,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* સાઈઝ સિલેક્શન */}
+          {/* size selection */}
           <div className="mb-4">
             <h6 className="fw-bold mb-3">Select Size:</h6>
             <div className="d-flex gap-2 flex-wrap">
@@ -298,7 +298,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* સ્ટોક સ્ટેટસ */}
+          {/* stock status */}
           <div className="mb-3">
             {product.stock > 0 ? (
               <div className="d-flex align-items-center gap-2">
@@ -315,7 +315,7 @@ export default function ProductDetail() {
 
           {/*action button*/}
           <div className="mb-4">
-            {/* સ્ટોક મેસેજ */}
+            {/* stock msg */}
             <div className="mb-2">
               {product.stock > 0 ? (
                 <span className={`small fw-bold ${product.stock <= 5 ? "text-warning" : "text-success"}`}>

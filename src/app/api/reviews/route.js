@@ -85,7 +85,7 @@ export async function POST(request) {
 
     const customerName = auth.user.user_metadata?.full_name || auth.user.email || 'Guest';
 
-    // Check for existing review by product_id AND customer_name (matches the unique constraint)
+
     const existingReviewQuery = await supabaseAdmin
       .from('product_reviews')
       .select('id,user_id')
@@ -111,7 +111,7 @@ export async function POST(request) {
 
     let result;
     if (existingReviewQuery.data) {
-      // Update existing review
+   
       console.log('Updating existing review:', existingReviewQuery.data.id);
       result = await supabaseAdmin
         .from('product_reviews')
@@ -128,10 +128,10 @@ export async function POST(request) {
     }
 
     if (result.error) {
-      // Handle unique constraint violations (code 23505)
+    
       if (result.error.code === '23505') {
         console.warn('Unique constraint violation - attempting recovery:', result.error.message);
-        // Try to find and update by product_id and customer_name
+     
         const recoveryQuery = await supabaseAdmin
           .from('product_reviews')
           .select('id')

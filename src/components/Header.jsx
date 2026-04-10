@@ -10,7 +10,7 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isPageOpen, setIsPageOpen] = useState(false); // નવી સ્ટેટ Page માટે
+  const [isPageOpen, setIsPageOpen] = useState(false); 
   const pageRef = useRef(null);
 
   const dropdownRef = useRef(null);
@@ -23,7 +23,7 @@ export default function Header() {
     "BLAZERS", "TROUSERS", "JEANS", "LIVIN PANTS", "SKIRTS & SKORTS"
   ];
 
-  // મોબાઈલ મેનુ બંધ કરવા માટેનું ફંક્શન
+
   const closeMobileMenu = () => {
     if (typeof window !== "undefined") {
       const menuElement = document.getElementById('offcanvasNavbar');
@@ -47,6 +47,14 @@ export default function Header() {
       setUser(session?.user || null);
     });
 
+    // Listen for custom profile picture update event
+    const handleProfileUpdate = (event) => {
+      console.log('Profile update event received:', event.detail);
+      setUser(event.detail.user);
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfileUpdate);
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
@@ -63,6 +71,7 @@ export default function Header() {
 
     return () => {
       if (authListener) authListener.subscription.unsubscribe();
+      window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
@@ -70,7 +79,7 @@ export default function Header() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsDropdownOpen(false);
-    closeMobileMenu(); // લોગઆઉટ વખતે મેનુ બંધ થશે
+    closeMobileMenu(); 
     router.push("/login");
   };
 
@@ -169,7 +178,7 @@ export default function Header() {
                         </div>
                       )}
                     </li>
-                    {/* SHOP DROPDOWN END */}
+                 
 
                     {/* BLOG LINK */}
                     <li className="nav-item">
@@ -178,7 +187,7 @@ export default function Header() {
                       </Link>
                     </li>
 
-                    {/* PAGE DROPDOWN - સુધારેલું લોજિક */}
+                    {/* PAGE DROPDOWN */}
                     <li className="nav-item position-relative" ref={pageRef}>
                       <button
                         onClick={() => setIsPageOpen(!isPageOpen)}
@@ -196,6 +205,8 @@ export default function Header() {
                             <li><Link href="/cart" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Cart</Link></li>
                             <li><Link href="/checkout" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Checkout</Link></li>
                             <li><Link href="/user-order" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}> My Orders</Link></li>
+                             <li><Link href="/myaccount" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}> My Account</Link></li>
+                           
                             <li><Link href="/contact" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Contact</Link></li>
                             <li><Link href="/order-tracking" className="dropdown-item py-2 px-3" onClick={() => { setIsPageOpen(false); closeMobileMenu(); }}>Order Tracking</Link></li>
                           </ul>
@@ -274,10 +285,19 @@ export default function Header() {
                     >
                       {/* Header: User Info */}
                       <div className="p-3 d-flex align-items-center gap-3 border-bottom">
-                        <div className="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '48px', height: '48px' }}>
-                          <svg className="text-blue-300" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
-                          </svg>
+                        <div className="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden" style={{ width: '48px', height: '48px' }}>
+                          {user?.user_metadata?.avatar_url ? (
+                            <img 
+                              src={user.user_metadata.avatar_url} 
+                              alt="User Avatar" 
+                              className="w-100 h-100"
+                              style={{ objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <svg className="text-blue-300" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3z" />
+                            </svg>
+                          )}
                         </div>
                         <div className="overflow-hidden">
                           <h6 className="mb-0 fw-bold text-dark">Hello {user.user_metadata?.full_name || "User"}</h6>
@@ -297,6 +317,8 @@ export default function Header() {
                           <span className="fw-medium" onClick={closeMobileMenu}>My Orders</span>
                         </Link>
 
+                        
+
                         <Link
                           href="/wishlist"
                           className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark hover-bg-light transition-all"
@@ -305,6 +327,16 @@ export default function Header() {
                         >
                           <span>❤️</span>
                           <span className="fw-medium" onClick={closeMobileMenu}>My Wishlist</span>
+                        </Link>
+
+                        <Link
+                          href="/myaccount"
+                          className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark hover-bg-light transition-all"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{ gap: '12px' }}
+                        >
+                          <span></span>
+                          <span className="fw-medium" onClick={closeMobileMenu}>My Account</span>
                         </Link>
 
                         <button

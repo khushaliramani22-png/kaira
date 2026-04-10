@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function OrderTracking() {
-  const [orderId, setOrderId] = useState(""); // આમાં યુઝર સાદો નંબર (101, 102) નાખશે
+  const [orderId, setOrderId] = useState(""); 
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -15,7 +15,7 @@ export default function OrderTracking() {
     setError("");
     setOrderData(null);
 
-    // હવે આપણે order_number થી સર્ચ કરીશું
+    
     const { data, error } = await supabase
       .from("orders")
       .select("order_number, status, customer_name, total_amount, created_at")

@@ -199,7 +199,7 @@ export default function CheckoutPage() {
       // D. invoice janret
       generateInvoicePDF(orderData, itemsToInsert);
 
-      // E. Meesho Style Success Popup
+   
       Swal.fire({
         html: `
           <div style="background-color: #03a66d; margin: -20px; padding: 50px 20px; color: white; text-align: center;">
@@ -333,7 +333,7 @@ export default function CheckoutPage() {
             </div>
           </div>
           
-        </div> {/* grid end */}
+        </div> 
       </div>
     </div>
   );

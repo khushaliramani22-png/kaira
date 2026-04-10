@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase'; // Ensure this path is correct
+import { supabase } from '@/lib/supabase'; 
 
 async function getBlogs() {
   const { data, error } = await supabase

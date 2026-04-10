@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation"; // URL Parameters વાંચવા માટે
+import { useSearchParams } from "next/navigation"; 
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/app/context/CartContext";
 import { ShoppingBag, Heart, Eye } from "lucide-react";
@@ -32,7 +32,7 @@ function ShopContent() {
 
         const { data, error } = await query;
         if (error) throw error;
-        // રેટિંગની એવરેજ ગણવાની લોજિક
+        //ratng calculetion
         const productsWithReviews = data.map((product) => {
           const allReviews = product.product_reviews || [];
           const totalReviews = allReviews.length;
@@ -51,13 +51,7 @@ function ShopContent() {
         setLoading(false);
       }
     }
-    //     setProducts(data || []);
-    //   } catch (error) {
-    //     console.error("Error:", error.message);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // }
+ 
     fetchProducts();
   }, [categoryParam]);
 
@@ -82,7 +76,7 @@ function ShopContent() {
           products.map((product) => (
             <div
               key={product.id}
-              className="group bg-white rounded-xl overflow-hidden border hover:shadow-xl transition duration-300"
+              className="group bg-white  overflow-hidden border hover:shadow-xl transition duration-300"
             >
               {/* Image Section */}
               <div className="relative aspect-square w-full">

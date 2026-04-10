@@ -2,13 +2,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link"; 
-import { AiOutlineClose } from "react-icons/ai"; // રિમૂવ આઇકન માટે
+import { AiOutlineClose } from "react-icons/ai"; 
 
 export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- આ ફંક્શન ઉમેરો ---
   const removeFromWishlist = async (id) => {
     const { error } = await supabase
       .from("wishlist")
@@ -16,13 +15,13 @@ export default function WishlistPage() {
       .eq("id", id);
 
     if (!error) {
-      // ડેટાબેઝમાંથી ડિલીટ થયા પછી લિસ્ટમાંથી પણ કાઢી નાખો
+     
       setWishlistItems((prev) => prev.filter((item) => item.id !== id));
     } else {
       console.error("Error removing item:", error.message);
     }
   };
-  // ----------------------
+
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -69,10 +68,10 @@ export default function WishlistPage() {
         <div className="row">
           {wishlistItems.map((item) => (
             <div key={item.id} className="col-md-3 mb-4">
-              {/* position-relative ઉમેર્યું જેથી બટન ખૂણામાં સેટ થાય */}
+             
               <div className="card h-100 shadow-sm position-relative">
                 
-                {/* --- રિમૂવ બટન --- */}
+             
                 <button 
                   onClick={() => removeFromWishlist(item.id)}
                   className="btn btn-sm btn-light position-absolute top-0 end-0 m-2 shadow-sm"
@@ -81,7 +80,7 @@ export default function WishlistPage() {
                 >
                   <AiOutlineClose size={16} className="text-danger" />
                 </button>
-                {/* ----------------- */}
+        
 
                 <img src={item.products?.image1} className="card-img-top" alt={item.products?.name} />
                 <div className="card-body text-center">

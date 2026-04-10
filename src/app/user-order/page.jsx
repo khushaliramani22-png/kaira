@@ -47,14 +47,13 @@ export default function UserOrderPage() {
       
       console.log("✅ Orders fetched:", ordersData?.length, "orders");
 
-      // Fetch ALL reviews first to see what's in the database
       const { data: allReviews } = await supabase
         .from("product_reviews")
         .select("*");
       
       console.log("🔍 ALL REVIEWS in database:", allReviews?.length, "total");
       
-      // Now fetch only user's reviews
+
       const { data: reviewsData, error: reviewError } = await supabase
         .from("product_reviews")
         .select("*")
@@ -99,7 +98,7 @@ export default function UserOrderPage() {
       setOrders(ordersWithReviews);
       setFilteredOrders(ordersWithReviews);
       
-      // Debug: Check what's in state - DETAILED
+      
       console.log("=== FINAL STATE CHECK ===");
       ordersWithReviews.forEach((order, idx) => {
         const deliveredStatus = order.status.toLowerCase().includes("delivered");

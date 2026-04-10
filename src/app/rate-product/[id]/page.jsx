@@ -29,11 +29,11 @@ export default function RateProductPage() {
   if (!id) return;
 
   const fetchExistingReview = async () => {
-    // console.log("🔍 Fetching review for ID:", id); 
+
 
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) {
-      // console.log("🛑 User not logged in");
+
       return;
     }
     setUser(authUser);
@@ -46,12 +46,12 @@ export default function RateProductPage() {
       .maybeSingle();
 
     if (error) {
-      // console.error("❌ Fetch error:", error.message);
+    
       return;
     }
 
     if (data) {
-      // console.log(" Data loaded from DB:", data);
+      
       setExistingReviewId(data.id);
       setRating(Number(data.rating));
       setFabricRating(Number(data.fabric_rating));
@@ -60,7 +60,7 @@ export default function RateProductPage() {
         setSelectedImages([{ preview: data.review_image, isExisting: true }]);
       }
     } else {
-      // console.log("No existing review found for this product/user.");
+      console.log("No existing review found for this product/user.");
     }
   };
 
@@ -102,7 +102,7 @@ export default function RateProductPage() {
 
     const reviewData = {
       product_id: id,
-      user_id: currentUser.id, // અહીં ચેક કરો કે આ સાચો UUID છે
+      user_id: currentUser.id, 
       customer_name: currentUser.user_metadata?.full_name || "Guest",
       rating: Number(rating),
       fabric_rating: Number(fabricRating),
@@ -113,13 +113,13 @@ export default function RateProductPage() {
 
     let result;
     if (existingReviewId) {
-      // જો રિવ્યૂ પહેલેથી હોય તો Update કરો
+  
       result = await supabase
         .from("product_reviews")
         .update(reviewData)
         .eq("id", existingReviewId);
     } else {
-      // નવો રિવ્યૂ Insert કરો
+
       result = await supabase
         .from("product_reviews")
         .insert([reviewData]);

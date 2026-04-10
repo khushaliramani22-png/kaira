@@ -1,4 +1,4 @@
-// components/Newsletter.jsx
+
 "use client";
 
 import { useState } from "react";

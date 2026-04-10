@@ -21,7 +21,6 @@ export default function HeroSlider() {
 
         if (error) throw error;
 
-        // દરેક કેટેગરીમાંથી ૧-૧ લેટેસ્ટ પ્રોડક્ટ ફિલ્ટર કરો
         const filtered = targetCategories.map(cat =>
           data.find(p => p.category === cat)
         ).filter(Boolean);
@@ -58,7 +57,6 @@ export default function HeroSlider() {
             <div className="col-md-4" key={item.id}>
               <div className="banner-item image-zoom-effect">
                 <div className="image-holder">
-                  {/* ઈમેજ પર ક્લિક કરતા શોપ પેજ ખુલશે */}
                   <Link href={`/shop/${item.id}`}>
                     <img
                       src={item.image1 || "/images/colorbox/placeholder.jpg"}
@@ -72,22 +70,14 @@ export default function HeroSlider() {
                 <div className="banner-content py-4">
                   <h5 className="element-title text-uppercase">
                     <Link href={`/shop/${item.id}`} className="item-anchor text-decoration-none">
-                      {item.category} {/* અહીં તમારી કેટેગરીનું નામ આવશે */}
+                      {item.category}
                     </Link>
                   </h5>
 
                   <p>{item.name}</p>
 
-                  {/* <div className="btn-left">
-                    <Link
-                      href={`/shop/${item.id}`}
-                      className="btn-link fs-6 text-uppercase text-decoration-none"
-                    >
-                      Discover Now
-                    </Link>
-                  </div> */}
+                 
                   <div className="btn-left">
-                    {/* અહીં આપણે પ્રોડક્ટના ID ને બદલે કેટેગરીનું નામ મોકલીશું */}
                     <Link
                       href={`/shop?category=${item.category}`}
                       className="btn-link fs-6 text-uppercase text-decoration-none"

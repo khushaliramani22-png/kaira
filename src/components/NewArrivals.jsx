@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 
-// Supabase કનેક્શન (પાથ ચેક કરી લેવો)
+
 import { supabase } from "@/lib/supabase"; 
 
 // Swiper CSS
@@ -22,11 +22,11 @@ export default function NewArrivals() {
     const fetchNewArrivals = async () => {
       try {
         const { data, error } = await supabase
-          .from('products') // તમારા એડમિન પેજ વાળું ટેબલ
+          .from('products') 
           .select('*')
           .eq('category', 'NEW ARRIVALS')
-          .order('created_at', { ascending: false }) // નવી આઈટમ પહેલા બતાવવા
-          .limit(8); // હોમ પેજ પર ટોપ 8 આઈટમ બતાવવા માટે
+          .order('created_at', { ascending: false }) 
+          .limit(8); 
 
         if (error) throw error;
         if (data) setProducts(data);
@@ -67,7 +67,7 @@ export default function NewArrivals() {
 
         {/* Swiper Slider */}
         {products.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">નવું કલેક્શન ટૂંક સમયમાં આવશે...</div>
+          <div className="text-center py-20 text-gray-400">Coming Soon New Collection...</div>
         ) : (
           <Swiper
             modules={[Navigation, Pagination]}
@@ -84,14 +84,14 @@ export default function NewArrivals() {
           >
             {products.map((product) => (
               <SwiperSlide key={product.id}>
-                {/* <div className="product-item image-zoom-effect link-effect relative"> */}
+              
                 <div className="group relative">
-                  {/* Product Image Wrapper */}
                   <div className="relative aspect-[3/4] overflow-hidden  bg-gray-100 shadow-sm">
              
                     <Link href={`/shop/${product.id}`}>
                       <Image
-                        src={product.image1 || "/images/placeholder.jpg"} // એડમિનની image1 કોલમ
+                        src={product.image1 || "/images/placeholder.jpg"}
+                        
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"

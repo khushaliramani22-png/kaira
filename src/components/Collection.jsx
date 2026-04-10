@@ -1,4 +1,3 @@
-// components/Collection.jsx
 import Image from "next/image";
 import React from "react";
 
@@ -30,8 +29,8 @@ const Collection = () => {
                   src="/images/colorbox/single-image-2.jpg"
                   alt="collection"
                   className="product-image img-fluid"
-                  width={600} // adjust based on your design
-                  height={400} // adjust based on your design
+                  width={600} 
+                  height={400} 
                   priority
                 />
               </div>

@@ -46,8 +46,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Footer Menu 2 */}
-          {/* Footer Menu 2 */}
           <div className="col-md-3 col-sm-6">
             <div className="footer-menu footer-menu-002">
               <h5 className="widget-title text-uppercase mb-4">Quick Links</h5>
@@ -73,8 +71,6 @@ export default function Footer() {
             </div>
           </div>
 
-
-          {/* Footer Menu 3 */}
           <div className="col-md-3 col-sm-6">
             <div className="footer-menu footer-menu-003">
               <h5 className="widget-title text-uppercase mb-4">Help & Info</h5>
@@ -100,7 +96,7 @@ export default function Footer() {
               </ul>
             </div>
           </div>
-          {/* Footer Menu 4 */}
+      
           <div className="col-md-3 col-sm-6">
             <div className="footer-menu footer-menu-004 border-animation-left">
               <h5 className="widget-title text-uppercase mb-4">Contact Us</h5>
@@ -129,7 +125,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Footer */}
+
      
     </footer>
   );

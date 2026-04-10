@@ -7,14 +7,14 @@
 **File:** [src/components/NewArrivals.jsx](src/components/NewArrivals.jsx)
 
 ```javascript
-// ❌ BEFORE: Fetching all columns
+
 const { data, error } = await supabase
   .from('products')
   .select('*')  // ALL columns!
   .eq('category', 'NEW ARRIVALS')
   .limit(8);
 
-// ✅ AFTER: Only fetch needed columns
+
 const { data, error } = await supabase
   .from('products')
   .select('id,name,image1,price,category,created_at')  // Only what you need
@@ -30,12 +30,11 @@ const { data, error } = await supabase
 **File:** [src/components/Categories.jsx](src/components/Categories.jsx)
 
 ```javascript
-// ❌ BEFORE: Fetching all products to deduplicate categories
+
 const { data, error } = await supabase
   .from("products")
   .select("category, image1");
 
-// ❌ EVEN WORSE: Then deduplicates on client
 const uniqueCategories = [];
 const seenCategories = new Set();
 data.forEach((item) => {
@@ -45,8 +44,7 @@ data.forEach((item) => {
   }
 });
 
-// ✅ BEST: Use SQL DISTINCT (requires Supabase RPC or change approach)
-// For now, use pagination with limit
+
 const { data, error } = await supabase
   .from("products")
   .select("category,image1")
@@ -59,20 +57,20 @@ const { data, error } = await supabase
 **File:** [src/components/HeroSlider.jsx](src/components/HeroSlider.jsx)
 
 ```javascript
-// ❌ BEFORE: Fetch all, filter on client
+
 const { data, error } = await supabase
   .from("products")
   .select("*")
   .in("category", targetCategories)
   .order("created_at", { ascending: false });
 
-// ✅ AFTER: Filter at DB level and limit columns
+
 const { data, error } = await supabase
   .from("products")
   .select('id,name,image1,category,created_at')
   .in("category", targetCategories)
   .order("created_at", { ascending: false })
-  .limit(12);  // Get enough to ensure 1 per category
+  .limit(12);  
 ```
 
 ---
@@ -82,7 +80,7 @@ const { data, error } = await supabase
 **File:** [src/components/Blog.jsx](src/components/Blog.jsx)
 
 ```javascript
-// ❌ BEFORE
+
 import { useEffect, useState } from "react";
 export default function Blog() {
   return (
@@ -90,7 +88,7 @@ export default function Blog() {
   );
 }
 
-// ✅ AFTER
+
 import Image from "next/image";
 export default function Blog() {
   return (
@@ -110,7 +108,6 @@ export default function Blog() {
 **File:** [src/components/RelatedProduct.jsx](src/components/RelatedProduct.jsx)
 
 ```javascript
-// ❌ BEFORE: Plain img tag
 <img
   src={product.image1}
   alt={product.name}
@@ -118,7 +115,6 @@ export default function Blog() {
   style={{ width: '365px', height: '400px', objectFit: 'cover' }}
 />
 
-// ✅ AFTER: Next.js Image with optimization
 import Image from "next/image";
 
 <Image
@@ -140,7 +136,7 @@ import Image from "next/image";
 **File:** [src/app/page.js](src/app/page.js)
 
 ```javascript
-// ❌ BEFORE: Always loads AOS
+
 "use client";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -152,7 +148,6 @@ export default function Page() {
   // ...
 }
 
-// ✅ AFTER: Remove from critical path (or lazy load)
 "use client";
 import dynamic from "next/dynamic";
 
@@ -165,7 +160,6 @@ export default function Page() {
     <>
       <AOSInit />
       <HeroSlider />
-      {/* ... rest of components ... */}
     </>
   );
 }
@@ -210,8 +204,8 @@ export default function AOSInit() {
   fill
   className="object-cover transition-transform duration-700 group-hover:scale-110"
   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-  quality={85}  // Slightly compressed but good quality
-  priority={index < 2}  // Only prioritize first 2 images
+  quality={85}  
+  priority={index < 2}  
 />
 ```
 
@@ -231,7 +225,7 @@ import { cookies } from 'next/headers';
 export const revalidate = 3600; // Cache for 1 hour (ISR)
 
 export async function GET(request) {
-  // Get cookies for server-side client
+  
   const cookieStore = await cookies();
   
   const supabase = createServerClient(
@@ -250,7 +244,6 @@ export async function GET(request) {
   );
 
   try {
-    // Single optimized query instead of multiple
     const [newArrivals, bestSellers, featured] = await Promise.all([
       supabase
         .from('products')

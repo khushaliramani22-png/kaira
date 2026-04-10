@@ -130,7 +130,7 @@ export default function AdminLayout({ children }) {
               </ul>
             )}
           </li>
-{/* Banners Dropdown - અહીં એડ કર્યું છે */}
+{/* Banners Dropdown*/}
           <li className="mb-2">
             <div
               onClick={() => setIsBannerOpen(!isBannerOpen)}
@@ -168,7 +168,7 @@ export default function AdminLayout({ children }) {
             </div>
           </li>
 
-          {/* --- ન્યૂઝલેટર ઓપ્શન અહીં એડ કર્યું છે --- */}
+          {/* --- newslatter --- */}
           <li className="mb-3">
             <div onClick={() => router.push('/admin/subscribers')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📧 Subscribers

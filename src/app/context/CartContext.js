@@ -30,7 +30,7 @@ export function CartProvider({ children }) {
         .eq("user_id", currentUser.id);
 
       if (!error && data) {
-        // ખાતરી કરો કે ડેટાબેઝ માંથી આવતા ડેટામાં size/variant પ્રોપર્ટી છે
+     
         setCartItems(data);
       }
     } else {
@@ -44,7 +44,7 @@ export function CartProvider({ children }) {
     refreshCart();
   }, [refreshCart]);
 
-  // 🔥 નવું addToCart ફંક્શન (આનો ઉપયોગ બધે કરજો)
+  
   const addToCart = async (product, selectedSize, selectedColor) => {
     const newItem = {
       ...product,
@@ -52,7 +52,7 @@ export function CartProvider({ children }) {
       quantity: 1,
       selectedSize: selectedSize || null,
       selectedColor: selectedColor || null,
-      // જો variant સ્ટ્રિંગ તરીકે સ્ટોર કરવું હોય તો:
+     
       variant: selectedSize && selectedColor ? `${selectedSize} / ${selectedColor}` : null
     };
 
@@ -64,8 +64,8 @@ export function CartProvider({ children }) {
         price: product.price,
         image: product.image || product.image1,
         quantity: 1,
-        size: selectedSize,   // ખાતરી કરો કે DB માં આ કોલમ છે
-        color: selectedColor, // ખાતરી કરો કે DB માં આ કોલમ છે
+        size: selectedSize,   
+        color: selectedColor,
         variant: newItem.variant
       }]);
       if (!error) refreshCart();
@@ -120,7 +120,7 @@ export function CartProvider({ children }) {
     <CartContext.Provider
       value={{
         cartItems,
-        addToCart, // આ લાઈન ઉમેરી
+        addToCart, 
         updateQuantity,
         removeFromCart,
         clearCart,
