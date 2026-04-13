@@ -42,3 +42,16 @@ body {
   display: list-item !important;
   margin-bottom: 0.25rem !important;
 }
+/* આખા પ્રોજેક્ટ માટે અંડરલાઇન હટાવવા */
+a, .no-underline {
+  text-decoration: none !important;
+}
+
+a:hover {
+  text-decoration: none !important;
+}
+
+/* ખાસ કરીને ટાઇટલ્સ માટે */
+h2, h4, .font-serif {
+  text-decoration: none !important;
+}

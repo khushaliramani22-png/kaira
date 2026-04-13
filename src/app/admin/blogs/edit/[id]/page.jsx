@@ -9,7 +9,7 @@ import Link from "next/link";
 export default function EditBlog() {
   const router = useRouter();
   const params = useParams();
-  const blogId = params.id;
+  const blogId = params.id; // આ UUID હોવો જોઈએ
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -40,17 +40,19 @@ export default function EditBlog() {
 
       if (error) throw error;
 
-      setFormData({
-        title: data.title,
-        description: data.description,
-        content: data.content,
-        category: data.category,
-        status: data.status,
-        image_url: data.image_url,
-      });
+      if (data) {
+        setFormData({
+          title: data.title || "",
+          description: data.description || "",
+          content: data.content || "",
+          category: data.category || "Fashion",
+          status: data.status || "draft",
+          image_url: data.image_url || "",
+        });
 
-      if (data.image_url) {
-        setImagePreview(data.image_url);
+        if (data.image_url) {
+          setImagePreview(data.image_url);
+        }
       }
     } catch (err) {
       console.error("Error fetching blog:", err);
@@ -70,18 +72,18 @@ export default function EditBlog() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview
+    // Preview બતાવવા માટે
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
     };
     reader.readAsDataURL(file);
 
-    // Upload to Supabase
     try {
       const timestamp = Date.now();
-      const fileName = `blogs/${timestamp}-${file.name}`;
+      const fileName = `blogs/${timestamp}-${file.name.replace(/\s+/g, '-')}`;
 
+      // ખાતરી કરો કે તમારા Supabase માં "products" નામનું બકેટ છે
       const { error: uploadError } = await supabase.storage
         .from("products")
         .upload(fileName, file);
@@ -94,42 +96,45 @@ export default function EditBlog() {
       Swal.fire("Success", "Image uploaded successfully!", "success");
     } catch (err) {
       console.error("Upload error:", err);
-      Swal.fire("Error", "Failed to upload image", "error");
+      Swal.fire("Error", "Failed to upload image. Check storage bucket permissions.", "error");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.title.trim()) {
-      Swal.fire("Error", "Title is required", "error");
-      return;
-    }
-    if (!formData.content.trim()) {
-      Swal.fire("Error", "Content is required", "error");
+    if (!formData.title.trim() || !formData.content.trim()) {
+      Swal.fire("Error", "Title and Content are required", "error");
       return;
     }
 
     try {
       setSubmitting(true);
 
-      const { error } = await supabase
-        .from("blogs")
-        .update({
-          title: formData.title,
-          description: formData.description,
-          content: formData.content,
-          category: formData.category,
-          status: formData.status,
-          image_url: formData.image_url,
-        })
-        .eq("id", blogId);
+      // ૧. પેલા યુઝરની ID મેળવો (author_id માટે જો જરૂર હોય તો)
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (error) throw error;
+      // ૨. API કોલ કરો
+      const response = await fetch(`/api/admin/blogs/${blogId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          updated_at: new Date().toISOString(),
+        }),
+      });
 
-      Swal.fire("Success!", "Blog updated successfully!", "success");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update blog");
+      }
+
+      await Swal.fire("Success!", "Blog updated successfully!", "success");
       router.push("/admin/blogs");
+      router.refresh(); // પેજ રિફ્રેશ કરવા માટે
     } catch (err) {
       console.error("Submit error:", err);
       Swal.fire("Error", err.message || "Failed to update blog", "error");
@@ -140,7 +145,7 @@ export default function EditBlog() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
         <div className="spinner-border text-dark" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
@@ -152,16 +157,14 @@ export default function EditBlog() {
     <div className="container py-5">
       <div className="row">
         <div className="col-lg-8 mx-auto">
-          {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="fw-bold m-0">✏️ Edit Blog</h2>
-            <Link href="/admin/blogs" className="btn btn-secondary btn-sm">
+            <h2 className="fw-bold m-0 text-dark">✏️ Edit Blog</h2>
+            <Link href="/admin/blogs" className="btn btn-outline-secondary btn-sm">
               ← Back to Blogs
             </Link>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow-sm">
+          <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow-sm border">
             {/* Title */}
             <div className="mb-3">
               <label className="form-label fw-bold">Title *</label>
@@ -171,128 +174,103 @@ export default function EditBlog() {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Enter blog title..."
+                required
               />
             </div>
 
             {/* Description */}
             <div className="mb-3">
-              <label className="form-label fw-bold">Description</label>
+              <label className="form-label fw-bold">Short Description</label>
               <textarea
                 className="form-control"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Brief description of the blog..."
                 rows="2"
               />
             </div>
 
             {/* Content */}
             <div className="mb-3">
-              <label className="form-label fw-bold">Content *</label>
+              <label className="form-label fw-bold">Blog Content *</label>
               <textarea
                 className="form-control"
                 name="content"
                 value={formData.content}
                 onChange={handleInputChange}
-                placeholder="Write the full blog content here..."
-                rows="8"
-                style={{ fontFamily: "monospace" }}
+                rows="10"
+                style={{ fontFamily: "inherit" }}
+                required
               />
-              <small className="text-muted">Supports plain text and basic formatting</small>
             </div>
 
-            {/* Category */}
-            <div className="mb-3">
-              <label className="form-label fw-bold">Category</label>
-              <select
-                className="form-select"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-              >
-                <option value="Fashion">Fashion</option>
-                <option value="Lifestyle">Lifestyle</option>
-                <option value="Trends">Trends</option>
-                <option value="Tips & Tricks">Tips & Tricks</option>
-                <option value="Care Guide">Care Guide</option>
-                <option value="News">News</option>
-              </select>
+            <div className="row mb-3">
+              {/* Category */}
+              <div className="col-md-6">
+                <label className="form-label fw-bold">Category</label>
+                <select
+                  className="form-select"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  <option value="Fashion">Fashion</option>
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Trends">Trends</option>
+                  <option value="Tips & Tricks">Tips & Tricks</option>
+                  <option value="Care Guide">Care Guide</option>
+                  <option value="News">News</option>
+                </select>
+              </div>
+
+              {/* Status */}
+              <div className="col-md-6">
+                <label className="form-label fw-bold">Status</label>
+                <select
+                  className="form-select"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                >
+                  <option value="draft">Draft (Private)</option>
+                  <option value="published">Published (Public)</option>
+                </select>
+              </div>
             </div>
 
             {/* Image Upload */}
-            <div className="mb-3">
+            <div className="mb-4">
               <label className="form-label fw-bold">Featured Image</label>
-              <div className="border-2 border-dashed border-gray-300 rounded p-3 text-center bg-light">
-                {imagePreview ? (
-                  <div>
+              <div className="border border-2 border-dashed rounded p-3 text-center bg-light">
+                {imagePreview && (
+                  <div className="mb-3">
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      style={{ maxHeight: "200px", marginBottom: "10px" }}
+                      className="img-thumbnail"
+                      style={{ maxHeight: "200px" }}
                     />
-                    <p className="text-muted small m-0">Click to change image</p>
                   </div>
-                ) : (
-                  <p className="text-muted m-0">📁 Click to upload image</p>
                 )}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="form-control"
-                  style={{ cursor: "pointer" }}
+                  className="form-control mt-2"
                 />
               </div>
-              <small className="text-muted">JPG, PNG, or WebP. Max 5MB</small>
             </div>
 
-            {/* Status */}
-            <div className="mb-4">
-              <label className="form-label fw-bold">Status</label>
-              <div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="status"
-                    value="draft"
-                    checked={formData.status === "draft"}
-                    onChange={handleInputChange}
-                    id="statusDraft"
-                  />
-                  <label className="form-check-label" htmlFor="statusDraft">
-                    Draft (Not visible to visitors)
-                  </label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="status"
-                    value="published"
-                    checked={formData.status === "published"}
-                    onChange={handleInputChange}
-                    id="statusPublished"
-                  />
-                  <label className="form-check-label" htmlFor="statusPublished">
-                    Published (Visible to visitors)
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="d-flex gap-2">
+            {/* Buttons */}
+            <div className="d-flex gap-3 mt-4">
               <button
                 type="submit"
                 disabled={submitting}
-                className="btn btn-dark flex-grow-1"
+                className="btn btn-dark flex-grow-1 py-2 fw-bold"
               >
-                {submitting ? "Updating..." : "✓ Update Blog"}
+                {submitting ? "Updating..." : "Update Blog"}
               </button>
-              <Link href="/admin/blogs" className="btn btn-secondary">
+              <Link href="/admin/blogs" className="btn btn-light border px-4 py-2">
                 Cancel
               </Link>
             </div>
