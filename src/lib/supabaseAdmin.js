@@ -10,5 +10,12 @@ if (!supabaseServiceKey) {
 
 export const supabaseAdmin = createClient(
   supabaseUrl,
-  supabaseServiceKey || "" 
+  supabaseServiceKey || "",
+  {
+    global: {
+      headers: {
+        'Accept': 'application/json'
+      }
+    }
+  }
 );

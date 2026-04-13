@@ -14,7 +14,7 @@ import BestSellers from "@/components/BestSellers";
 import RelatedProducts from "@/components/RelatedProduct";
 import Newsletter from "@/components/Newsletter";
 import Banner from "@/components/Banner";
-import VideoPlayer from "@/components/VideoPlayer";
+import Testimonials from "@/components/Testimonials";
 
 export default function Page() {
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function Page() {
         <NewArrivals />
         <Collection />
         <BestSellers />
-        <VideoPlayer />
+        <Testimonials />
         <RelatedProducts />
         <Newsletter />
         <Blog />

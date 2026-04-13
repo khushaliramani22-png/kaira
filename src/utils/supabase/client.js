@@ -9,6 +9,11 @@ export const createClient = () =>
         persistSession: true, 
         autoRefreshToken: true, 
         detectSessionInUrl: true 
+      },
+      global: {
+        headers: {
+          'Accept': 'application/json'
+        }
       }
     }
   )

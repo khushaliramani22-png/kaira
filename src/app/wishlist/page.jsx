@@ -24,32 +24,61 @@ export default function WishlistPage() {
 
 
   useEffect(() => {
+    // const fetchWishlist = async () => {
+    //   const { data: { user } } = await supabase.auth.getUser();
+
+    //   if (user) {
+    //     const { data, error } = await supabase
+    //       .from("wishlist")
+    //       .select(`
+    //         id,
+    //         product_id,
+    //         products (
+    //           id,
+    //           name,
+    //           price,
+    //           image1
+    //         )
+    //       `)
+    //       .eq("user_id", user.id);
+
+    //     if (!error) {
+    //       setWishlistItems(data || []);
+    //     } else {
+    //       console.error("Error:", error.message);
+    //     }
+    //   }
+    //   setLoading(false);
+    // };
+
     const fetchWishlist = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data, error } = await supabase
-          .from("wishlist")
-          .select(`
-            id,
-            product_id,
-            products (
-              id,
-              name,
-              price,
-              image1
-            )
-          `)
-          .eq("user_id", user.id);
+  if (user) {
 
-        if (!error) {
-          setWishlistItems(data || []);
-        } else {
-          console.error("Error:", error.message);
-        }
-      }
-      setLoading(false);
-    };
+   const { data, error } = await supabase
+  .from("wishlist")
+  .select(`
+    id,
+    product_id,
+    products (
+      id,
+      name,
+      price,
+      image1
+    )
+  `)
+  .eq("user_id", user.id);
+
+    if (!error) {
+      console.log("Data found:", data); 
+      setWishlistItems(data || []);
+    } else {
+      console.error("Error Detail:", error); 
+    }
+  }
+  setLoading(false);
+};
 
     fetchWishlist();
   }, []);

@@ -10,5 +10,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'kaira-auth-token'
+  },
+  global: {
+    headers: {
+      'Accept': 'application/json'
+    }
   }
 })

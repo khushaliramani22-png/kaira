@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useCart } from "@/app/context/CartContext";
 import { AiOutlineShoppingCart, AiOutlineHeart, AiFillHeart, AiFillStar, AiOutlineStar, AiOutlineDown, } from "react-icons/ai";
 import { toast } from 'react-hot-toast';
+import RelatedProduct from "@/components/RelatedProduct"
 // color meping
 const colorMap = {
   "pink": "#DCAE96",
@@ -87,22 +88,23 @@ export default function ProductDetail() {
 
         if (approvedReviews) setReviews(approvedReviews);
 
-        // ૪. user settion and email fetch
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUserId(session.user.id);
-          setUserEmail(session.user.email);
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.user) {
+          setUserId(currentSession.user.id);
+          setUserEmail(currentSession.user.email);
+          setNewReview(prev => ({ ...prev, name: currentSession.user.email }));
 
-
-          setNewReview(prev => ({ ...prev, name: session.user.email }));
-
-          // wishlist 
-          const { data: wishlistData } = await supabase
+          const { data: wishlistData, error: wishlistError } = await supabase
             .from("wishlist")
             .select("*")
-            .eq("user_id", session.user.id)
+            .eq("user_id", currentSession.user.id)
             .eq("product_id", id)
-            .single();
+            .maybeSingle();
+
+          if (wishlistError) {
+            console.error("Wishlist error:", wishlistError.message);
+          }
+
           setIsWishlisted(!!wishlistData);
         }
       } catch (err) {
@@ -113,7 +115,8 @@ export default function ProductDetail() {
     if (id) loadProductData();
   }, [id]);
 
-  // review submit with chack login
+
+
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
 
@@ -359,7 +362,7 @@ export default function ProductDetail() {
               </button>
               {isDescOpen && (
                 <div
-                  className="mt-3 text-muted small ql-editor list-disc ml-5" // 'ql-editor' ક્લાસ લિસ્ટ સ્ટાઇલિંગમાં મદદ કરશે
+                  className="mt-3 text-muted small ql-editor list-disc ml-5"
                   dangerouslySetInnerHTML={{ __html: product.description || "No description available." }}
                 />
               )}
@@ -465,6 +468,15 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+      {product && (
+        <div className="mt-5 pt-5">
+          <RelatedProduct
+            currentCategory={product.category}
+            currentProductId={id}
+          />
+        </div>
+      )}
+
     </div>
   );
 }

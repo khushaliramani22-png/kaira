@@ -47,7 +47,7 @@ const BannerSlider = () => {
                     <SwiperSlide key={slide.id}>
                         <div className="relative w-full h-full flex items-center overflow-hidden bg-gray-900">
                             <div 
-                                className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[10000ms] scale-110 hover:scale-100"
+                                className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[500ms] scale-110 hover:scale-100"
                                 style={{ backgroundImage: `url(${slide.image_url})` }}
                             >
                                 <div className="absolute inset-0 bg-black/40"></div>
