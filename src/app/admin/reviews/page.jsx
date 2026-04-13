@@ -10,14 +10,30 @@ export default function AdminReviews() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null); 
 
+  // useEffect(() => {
+  // const checkUser = async () => {
+  // const { data: { user } } = await supabase.auth.getUser();
+  // setUser(user); 
+  // };
+  //   checkUser();
+  //   fetchReviews();
+  // }, []);
+
   useEffect(() => {
-  const checkUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  setUser(user); 
+  const init = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+    if (user) {
+      await fetchReviews();
+    } else {
+      setLoading(false);
+      console.log("No authenticated user found");
+    }
   };
-    checkUser();
-    fetchReviews();
-  }, []);
+
+  init();
+}, []);
 
 const fetchReviews = async () => {
   setLoading(true);

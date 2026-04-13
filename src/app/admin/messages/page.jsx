@@ -13,7 +13,7 @@ export default function AdminMessages() {
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
-  const messagesPerPage = 6; // એક પેજ પર ૬ મેસેજ દેખાશે
+  const messagesPerPage = 6; 
 
   useEffect(() => {
     fetchMessages();
@@ -33,20 +33,25 @@ export default function AdminMessages() {
     }
     setLoading(false);
   };
-
   const deleteMessage = async (id) => {
-    if (!confirm("Are you sure you want to delete this message?")) return;
-    const { error } = await supabase.from("contact_messages").delete().eq("id", id);
-    if (error) {
-      toast.error("Failed to delete");
-    } else {
-      toast.success("Message deleted");
-      setMessages(messages.filter((m) => m.id !== id));
-    }
-  };
+  if (!confirm("Are you sure you want to delete this message?")) return;
+  
+  const { error } = await supabase
+    .from("contact_messages")
+    .delete()
+    .eq("id", id);
 
+  if (error) {
+    console.error("Delete Error:", error.message);
+    toast.error(`Failed to delete: ${error.message}`);
+  } else {
+    toast.success("Message deleted permanently");
+
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+  }
+};
   // 1. Search & Filter Logic
-  const filteredMessages = messages.filter((msg) => {
+    const filteredMessages = messages.filter((msg) => {
     const matchesSearch = 
       msg.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       msg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,7 +96,7 @@ export default function AdminMessages() {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // સર્ચ વખતે પહેલા પેજ પર આવી જવું
+                setCurrentPage(1); 
               }}
             />
           </div>

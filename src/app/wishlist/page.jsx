@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import Link from "next/link"; 
-import { AiOutlineClose } from "react-icons/ai"; 
+import Link from "next/link";
+import { AiOutlineClose } from "react-icons/ai";
 
 export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -15,73 +15,44 @@ export default function WishlistPage() {
       .eq("id", id);
 
     if (!error) {
-     
+
       setWishlistItems((prev) => prev.filter((item) => item.id !== id));
     } else {
       console.error("Error removing item:", error.message);
     }
   };
-
-
   useEffect(() => {
-    // const fetchWishlist = async () => {
-    //   const { data: { user } } = await supabase.auth.getUser();
-
-    //   if (user) {
-    //     const { data, error } = await supabase
-    //       .from("wishlist")
-    //       .select(`
-    //         id,
-    //         product_id,
-    //         products (
-    //           id,
-    //           name,
-    //           price,
-    //           image1
-    //         )
-    //       `)
-    //       .eq("user_id", user.id);
-
-    //     if (!error) {
-    //       setWishlistItems(data || []);
-    //     } else {
-    //       console.error("Error:", error.message);
-    //     }
-    //   }
-    //   setLoading(false);
-    // };
-
     const fetchWishlist = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
-  if (user) {
+      if (user) {
 
-   const { data, error } = await supabase
-  .from("wishlist")
-  .select(`
-    id,
-    product_id,
-    products (
-      id,
-      name,
-      price,
-      image1
-    )
-  `)
-  .eq("user_id", user.id);
+        const { data, error } = await supabase
+          .from("wishlist")
+          .select(`
+                  id,
+                  product_id,
+                  products (
+                    id,
+                    name,
+                    price,
+                    image1
+                  )
+                `)
+          .eq("user_id", user.id);
 
-    if (!error) {
-      console.log("Data found:", data); 
-      setWishlistItems(data || []);
-    } else {
-      console.error("Error Detail:", error); 
-    }
-  }
-  setLoading(false);
-};
+        if (!error) {
+                  console.log("Data found:", data);
+                  setWishlistItems(data || []);
+                } else {
+                  console.error("Error Detail:", error);
+                }
+              }
+              setLoading(false);
+            };
 
-    fetchWishlist();
-  }, []);
+            fetchWishlist();
+          }, []);
 
   if (loading) return <div className="text-center py-5">Loading...</div>;
 
@@ -97,11 +68,11 @@ export default function WishlistPage() {
         <div className="row">
           {wishlistItems.map((item) => (
             <div key={item.id} className="col-md-3 mb-4">
-             
+
               <div className="card h-100 shadow-sm position-relative">
-                
-             
-                <button 
+
+
+                <button
                   onClick={() => removeFromWishlist(item.id)}
                   className="btn btn-sm btn-light position-absolute top-0 end-0 m-2 shadow-sm"
                   style={{ borderRadius: "50%", zIndex: 10 }}
@@ -109,7 +80,7 @@ export default function WishlistPage() {
                 >
                   <AiOutlineClose size={16} className="text-danger" />
                 </button>
-        
+
 
                 <img src={item.products?.image1} className="card-img-top" alt={item.products?.name} />
                 <div className="card-body text-center">

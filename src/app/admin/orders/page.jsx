@@ -180,7 +180,7 @@ export default function AdminOrders() {
 
   const getCount = (status) => {
     if (status === "All") return orders.length;
-    // Flexible check for counts
+
     return orders.filter((o) => {
       if (status === "Return Requested") {
         return o.status?.toUpperCase().trim() === "RETURN REQUESTED" || o.status?.toUpperCase().trim() === "RETURN PENDING";
@@ -197,7 +197,6 @@ export default function AdminOrders() {
 
     let matchesTab = activeTab === "All" || order.status === activeTab;
 
-    // Add logic to show RETURN PENDING in Return Requested tab
     if (activeTab === "Return Requested") {
       const s = order.status?.toUpperCase().trim();
       matchesTab = s === "RETURN REQUESTED" || s === "RETURN PENDING";
@@ -278,22 +277,58 @@ export default function AdminOrders() {
         </div>
 
         {selectedOrders.length > 0 && (
-          <div className="px-4 md:px-6 py-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl gap-3">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                  {selectedOrders.length} Selected
-                </div>
-                <p className="text-[10px] text-blue-600 font-bold uppercase italic">Bulk Action</p>
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button onClick={() => handleBulkUpdate("Confirmed")} className="flex-1 sm:flex-none bg-white border border-blue-200 text-blue-600 text-[9px] font-black uppercase px-4 py-2 rounded-xl">Confirm All</button>
-                <button onClick={() => handleBulkUpdate("Shipped")} className="flex-1 sm:flex-none bg-black text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl">Mark Shipped</button>
-              </div>
-            </div>
-          </div>
+  <div className="px-4 md:px-6 py-4">
+    <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl gap-3">
+      <div className="flex items-center gap-3">
+        <div className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
+          {selectedOrders.length} Selected
+        </div>
+        <p className="text-[10px] text-blue-600 font-bold uppercase italic">Action Required</p>
+      </div>
+
+      <div className="flex gap-2 w-full sm:w-auto">
+
+        {orders.filter(o => selectedOrders.includes(o.id)).every(o => o.status === "Pending") && (
+          <button 
+            onClick={() => handleBulkUpdate("Confirmed")} 
+            className="flex-1 sm:flex-none bg-white border border-blue-200 text-blue-600 text-[9px] font-black uppercase px-4 py-2 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
+          >
+            Confirm Selected
+          </button>
         )}
 
+        {orders.filter(o => selectedOrders.includes(o.id)).every(o => o.status === "Confirmed") && (
+          <button 
+            onClick={() => handleBulkUpdate("Shipped")} 
+            className="flex-1 sm:flex-none bg-black text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl hover:bg-gray-800 transition-all"
+          >
+            Mark Shipped
+          </button>
+        )}
+
+
+        {orders.filter(o => selectedOrders.includes(o.id)).every(o => o.status === "Delivered") && (
+          <button 
+            onClick={() => window.print()} 
+            className="flex-1 sm:flex-none bg-green-600 text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl flex items-center gap-2"
+          >
+            <AiOutlinePrinter size={14} /> Print Invoices
+          </button>
+        )}
+
+        {!(
+          orders.filter(o => selectedOrders.includes(o.id)).every(o => o.status === "Pending") ||
+          orders.filter(o => selectedOrders.includes(o.id)).every(o => o.status === "Confirmed") ||
+          orders.filter(o => selectedOrders.includes(o.id)).every(o => o.status === "Delivered")
+        ) && (
+          <span className="text-[9px] text-red-500 font-bold uppercase py-2">
+            ⚠️ Select same status orders for bulk action
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
+)}
         <div className="overflow-x-auto md:overflow-visible">
           <div className="hidden md:block">
             <table className="w-full border-collapse min-w-[800px]">
