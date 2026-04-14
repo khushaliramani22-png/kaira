@@ -4,19 +4,26 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation"; 
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/app/context/CartContext";
-import { ShoppingBag, Heart, Eye } from "lucide-react";
+import { Heart, Eye } from "lucide-react";
 import Link from "next/link";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 function ShopContent() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-
-
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
 
   useEffect(() => {
+    // AOS Initialize કરો
+    AOS.init({
+      duration: 800,
+      once: true,
+    });
+
+ 
     async function fetchProducts() {
       try {
         setLoading(true);
@@ -65,7 +72,9 @@ function ShopContent() {
   return (
     <div className="max-w-[1300px] mx-auto px-4 py-14">
       {/* Heading - Dynamic title based on category */}
-      <h2 className="text-2xl md:text-3xl font-semibold text-center mb-12 tracking-wide uppercase">
+
+      <h2 data-aos="fade-down"
+      className="text-2xl md:text-3xl font-semibold text-center mb-12 tracking-wide uppercase">
         {categoryParam ? categoryParam.replace(/-/g, ' ') : "Our Collection"}
       </h2>
 
@@ -73,9 +82,11 @@ function ShopContent() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6 p-2">
         {products.length > 0 ? (
-          products.map((product) => (
+          products.map((product,index) => (
             <div
               key={product.id}
+              data-aos="fade-up"
+              data-aos-delay={index * 50}
               className="group bg-white  overflow-hidden border hover:shadow-xl transition duration-300"
             >
               {/* Image Section */}

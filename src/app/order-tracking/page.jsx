@@ -1,115 +1,140 @@
 "use client";
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 
-export default function OrderTracking() {
-  const [orderId, setOrderId] = useState(""); 
+import React, { useState, useEffect } from 'react';
+import { Truck, Package, CheckCircle, Search, Clock, AlertCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+
+export default function TrackOrder() {
+  const [orderIdInput, setOrderIdInput] = useState('');
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const [user, setUser] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
-  const handleTrackOrder = async () => {
-    if (!orderId) return alert("કૃપા કરીને Order ID નાખો");
+  useEffect(() => {
+    setMounted(true);
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    fetchUser();
+  }, []);
+
+  if (!mounted) return null;
+
+  const handleTrack = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      setError("Please login to track your orders.");
+      return;
+    }
 
     setLoading(true);
-    setError("");
+    setError('');
     setOrderData(null);
 
-    
-    const { data, error } = await supabase
-      .from("orders")
-      .select("order_number, status, customer_name, total_amount, created_at")
-      .eq("order_number", orderId)
-      .single();
-
-    if (error) {
-      setError(
-        "No details found for this order number.");
-    } else {
-      setOrderData(data);
+    let searchId = orderIdInput.trim();
+    if (!searchId.startsWith('#')) {
+      searchId = '#' + searchId;
     }
-    setLoading(false);
+
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_number', searchId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError || !data) {
+        setError("Invalid Order ID. Please check and try again.");
+      } else {
+        setOrderData(data);
+      }
+    } catch (err) {
+      setError("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="container py-5 text-center">
-      <h1 className="fw-bold">Track Your Order</h1>
-      <p className="text-muted">
+    <div className="bg-white min-h-screen py-20 px-6 font-sans">
+      <div className="max-w-xl mx-auto text-center">
+        <h1 className="text-4xl font-light tracking-[0.3em] uppercase mb-4 text-gray-900">Track Order</h1>
+        <p className="text-gray-400 text-sm mb-12 uppercase tracking-widest">Kaira Fashion Store</p>
+        
+        <form onSubmit={handleTrack} className="flex flex-col sm:flex-row gap-3 mb-16">
+          <input 
+            type="text" 
+            placeholder="Enter Order Number (e.g. #KRA-123)" 
+            value={orderIdInput}
+            onChange={(e) => setOrderIdInput(e.target.value)}
+            className="flex-1 p-3 border-b-2 border-gray-100 focus:border-black outline-none transition-all text-center text-lg tracking-widest"
+            required
+          />
+          <button className="bg-black text-white px-10 py-3 hover:bg-gray-900 transition flex items-center justify-center gap-3 shadow-2xl">
+            {loading ? <Clock className="animate-spin" size={20} /> : <Search size={20} />}
+            <span className="font-bold text-xs uppercase tracking-widest">Search</span>
+          </button>
+        </form>
 
-        To know the status of your order, enter your order ID.
-      </p>
-
-      <div className="row justify-content-center mt-4">
-        <div className="col-md-5">
-          <div className="input-group mb-3">
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Enter Order Number"
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-            />
-            <button
-              className="btn btn-dark px-4"
-              onClick={handleTrackOrder}
-              disabled={loading}
-            >
-              {loading ? "Searching..." : "Track"}
-            </button>
+        {error && (
+          <div className="flex items-center justify-center gap-2 text-red-500 mb-10 animate-pulse font-medium text-sm italic">
+            <AlertCircle size={16} />
+            <p>{error}</p>
           </div>
-        </div>
+        )}
+
+        {orderData && (
+          <div className="bg-gray-50/50 p-10 rounded-none border border-gray-100 text-left animate-in fade-in slide-in-from-bottom-4">
+             <div className="flex justify-between items-end mb-12">
+                <div>
+                  <h2 className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-2">Order Reference</h2>
+                  <p className="font-bold text-2xl text-black tracking-tighter">{orderData.order_number}</p>
+                </div>
+                <div className="text-right">
+                  <span className="px-4 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-widest">
+                    {orderData.status}
+                  </span>
+                </div>
+             </div>
+
+             {/* Timeline UI */}
+             <div className="space-y-12 relative">
+                <div className="absolute left-[11px] top-2 bottom-2 w-[1px] bg-gray-200"></div>
+
+                {/* Step 1 */}
+                <div className="flex gap-8 relative items-center">
+                  <div className="z-10 w-[23px] h-[23px] bg-black border-4 border-white rounded-full"></div>
+                  <div>
+                    <p className="font-black text-xs uppercase tracking-widest text-black">Order Placed</p>
+                    <p className="text-[10px] text-gray-400 mt-1 uppercase">Confirmed</p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex gap-8 relative items-center text-gray-400">
+                  <div className={`z-10 w-[23px] h-[23px] border-4 border-white rounded-full ${orderData.status === 'Processing' || orderData.status === 'Delivered' ? 'bg-black' : 'bg-gray-200'}`}></div>
+                  <div className={orderData.status === 'Processing' || orderData.status === 'Delivered' ? 'text-black' : ''}>
+                    <p className="font-black text-xs uppercase tracking-widest">Processing</p>
+                    <p className="text-[10px] mt-1 uppercase italic">In Quality Check</p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex gap-8 relative items-center text-gray-400">
+                   <div className={`z-10 w-[23px] h-[23px] border-4 border-white rounded-full ${orderData.status === 'Delivered' ? 'bg-black' : 'bg-gray-200'}`}></div>
+                   <div className={orderData.status === 'Delivered' ? 'text-black' : ''}>
+                    <p className="font-black text-xs uppercase tracking-widest">Delivered</p>
+                    <p className="text-[10px] mt-1 uppercase">At your doorstep</p>
+                  </div>
+                </div>
+             </div>
+          </div>
+        )}
       </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="mt-4 text-danger font-weight-bold animate__animated animate__fadeIn">
-          {error}
-        </div>
-      )}
-
-      {/* Order Status Display Section */}
-      {orderData && (
-        <div className="row justify-content-center mt-5">
-          <div className="col-md-6 text-start">
-            <div className="card shadow border-0 p-4 rounded-4 shadow-sm bg-white">
-              <h4 className="mb-4 text-center fw-bold border-bottom pb-3">Order Status</h4>
-
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">Order ID:</span>
-                <span className="fw-bold text-dark">#{orderData.order_number}</span>
-              </div>
-
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">Customer:</span>
-                <span className="fw-bold">{orderData.customer_name}</span>
-              </div>
-
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">Total Amount:</span>
-                <span className="fw-bold text-success">₹{orderData.total_amount}</span>
-              </div>
-
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <span className="text-muted">Status:</span>
-                <span className={`badge rounded-pill px-3 py-2 ${orderData.status === 'Delivered' ? 'bg-success' :
-                  orderData.status === 'Canceled' ? 'bg-danger' : 'bg-primary'
-                  }`}>
-                  {orderData.status ? orderData.status.toUpperCase() : "PENDING"}
-                </span>
-              </div>
-
-              <hr className="my-4" />
-
-              <div className="text-center">
-                <small className="text-muted d-block">
-                  Ordered on: {new Date(orderData.created_at).toLocaleDateString('en-GB')}
-                </small>
-                <p className="mt-3 text-primary small mb-0">Thank you for your order!</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

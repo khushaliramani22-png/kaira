@@ -19,42 +19,71 @@ export default function OrderDetailsPage() {
     const [reason, setReason] = useState("");
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    const isValidUUID = (uuid) => {
+        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return regex.test(uuid);
+    };
     useEffect(() => {
+
         async function fetchOrderAndReview() {
             try {
-                const { data: orderData, error: orderError } = await supabase
-                    .from("orders")
-                    .select(`*, order_items (*)`)
-                    .eq("id", id)
-                    .single();
+                setLoading(true);
+                const searchId = decodeURIComponent(id);
+
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(searchId);
+
+                let orderData = null;
+                let orderError = null;
+
+                if (isUUID) {
+                    const { data, error } = await supabase
+                        .from("orders")
+                        .select(`*, order_items (*)`)
+                        .eq("id", searchId)
+                        .maybeSingle();
+                    orderData = data;
+                    orderError = error;
+                } else {
+
+                    const { data, error } = await supabase
+                        .from("orders")
+                        .select(`*, order_items (*)`)
+                        .eq("order_number", searchId)
+                        .maybeSingle();
+                    orderData = data;
+                    orderError = error;
+                }
 
                 if (orderError) throw orderError;
+
                 setOrder(orderData);
+
 
                 if (orderData && orderData.order_items?.[0]) {
                     const productId = orderData.order_items[0].product_id;
-
-                    const { data: reviewData, error: reviewError } = await supabase
+                    const { data: reviewData } = await supabase
                         .from("product_reviews")
                         .select("*")
                         .eq("product_id", productId)
-
                         .eq("customer_name", orderData.customer_name)
                         .maybeSingle();
 
-                    if (reviewData) {
-                        setUserReview(reviewData);
-                    }
+                    if (reviewData) setUserReview(reviewData);
                 }
+
             } catch (err) {
-                console.error("Error fetching data:", err.message);
+                console.error("Fetch Error:", err.message);
+                setOrder(null);
             } finally {
                 setLoading(false);
             }
         }
-
-        if (id) fetchOrderAndReview();
+        if (id) {
+            fetchOrderAndReview();
+        }
     }, [id]);
+
 
     if (loading)
         return (
@@ -63,13 +92,29 @@ export default function OrderDetailsPage() {
             </div>
         );
 
-    if (!order)
-        return <div className="text-center p-10 font-bold">Order Not Found</div>;
-
+    if (!order) {
+        return (
+            <div className="text-center p-20 min-h-screen bg-white flex flex-col items-center justify-center">
+                <h2 className="text-2xl font-bold text-red-600 uppercase tracking-wide">
+                    Invalid Order ID
+                </h2>
+                <p className="text-gray-500 mt-2">
+                    We couldn't find any order with this ID. Please check and try again.
+                </p>
+                <button
+                    onClick={() => router.push('/returns-exchanges')}
+                    className="mt-6 bg-black text-white px-8 py-3 rounded-lg font-bold uppercase text-xs tracking-widest hover:bg-gray-800 transition"
+                >
+                    Go Back
+                </button>
+            </div>
+        );
+    }
     const isDelivered = order.status.toLowerCase() === "delivered";
     const canReturnOrExchange =
         isDelivered &&
         (new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24) <= 7;
+
 
     const submitRequest = async () => {
         if (!reason) return alert("Please select a reason");
@@ -80,7 +125,7 @@ export default function OrderDetailsPage() {
                 .from("orders")
                 .update({
                     status: `${requestType} Pending`,
-                    return_reason: reason, 
+                    return_reason: reason,
                     return_details: additionalInfo
                 })
                 .eq("id", id);
@@ -95,6 +140,7 @@ export default function OrderDetailsPage() {
             setSubmitting(false);
         }
     };
+
 
     const openModal = (type) => {
         setRequestType(type);
@@ -133,11 +179,12 @@ export default function OrderDetailsPage() {
                             <img
                                 src={item.image}
                                 className="w-28 h-36 md:w-40 md:h-52 object-cover rounded-lg border shadow-sm"
-                                alt={item.product_name}/>
+                                alt={item.product_name} />
                             <div className="flex-grow">
                                 <div className="flex justify-between items-start">
-                                    <h2 className="text-lg md:text-2xl font-bold text-gray-800">
-                                        Order #{order.id.slice(0, 15).toUpperCase()}
+
+                                    <h2 className="text-lg md:text-2xl font-bold text-black ">
+                                        Order ID : {order.order_number || `#${order.id.slice(0, 8).toUpperCase()}`}
                                     </h2>
                                     <AiOutlineRight className="text-gray-400 size-6" />
                                 </div>
@@ -154,7 +201,7 @@ export default function OrderDetailsPage() {
                         </div>
                     ))}
                 </div>
-               
+
                 {/* Status and Tracker Section */}
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 w-full">
                     <div className="flex items-center gap-6">
@@ -176,27 +223,27 @@ export default function OrderDetailsPage() {
                         </div>
                     </div>
 
-             
+
                     {/* Dynamic Alert Box */}
                     <div
-                        className={`border p-4 rounded-xl mt-6 flex items-center gap-3 ${order.status === "Cancelled" ? "bg-red-50 border-red-100" : order.status.includes("Pending") ? "bg-yellow-50 border-yellow-100" : "bg-green-50 border-green-100" }`}>
+                        className={`border p-4 rounded-xl mt-6 flex items-center gap-3 ${order.status === "Cancelled" ? "bg-red-50 border-red-100" : order.status.includes("Pending") ? "bg-yellow-50 border-yellow-100" : "bg-green-50 border-green-100"}`}>
                         <span className="text-2xl">
                             {order.status === "Cancelled" ? "🛑" : order.status.includes("Pending") ? "⏳" : "⚡"}
                         </span>
                         <p
-                            className={`text-sm md:text-base font-bold tracking-wide ${order.status === "Cancelled" ? "text-red-800" : order.status.includes("Pending") ? "text-yellow-800" : "text-green-800" }`} >
+                            className={`text-sm md:text-base font-bold tracking-wide ${order.status === "Cancelled" ? "text-red-800" : order.status.includes("Pending") ? "text-yellow-800" : "text-green-800"}`} >
                             {order.status === "Cancelled"
-                            ? "This order was cancelled. Any refund will be credited within 5-7 business days."
-                            : order.status === "Return Pending"
-                            ? "We have received your Return request. Our team is reviewing it."
-                            : order.status === "Exchange Pending"  
-                        ? "Your Exchange request is under process. We will update you soon."
-                        : "Great news! Your order has been processed and successfully delivered."}
+                                ? "This order was cancelled. Any refund will be credited within 5-7 business days."
+                                : order.status === "Return Pending"
+                                    ? "We have received your Return request. Our team is reviewing it."
+                                    : order.status === "Exchange Pending"
+                                        ? "Your Exchange request is under process. We will update you soon."
+                                        : "Great news! Your order has been processed and successfully delivered."}
                         </p>
-              </div>
-          </div>
+                    </div>
+                </div>
 
-             {/* Return & Exchange Section */}
+                {/* Return & Exchange Section */}
                 {canReturnOrExchange && (
                     <div className="flex gap-4 w-full mt-4">
                         <button
@@ -220,7 +267,7 @@ export default function OrderDetailsPage() {
                     {order.order_items?.[0] && (
                         <RelatedProduct
                             productId={order.order_items[0].product_id}
-                            categoryId={order.order_items[0].category_id}/>
+                            categoryId={order.order_items[0].category_id} />
                     )}
                 </div>
 
