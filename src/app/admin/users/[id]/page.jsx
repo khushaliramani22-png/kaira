@@ -17,11 +17,11 @@ export default function UserHistory() {
     const fetchUserAndOrders = async () => {
       setLoading(true);
       try {
-        // 1. યુઝર ડેટા
+        // 1. user data
         const { data: user } = await supabase.from("users").select("*").eq("id", id).single();
         setUserData(user);
 
-        // 2. ઓર્ડર્સ ડેટા (સર્વિસ રોલ દ્વારા)
+       
         const orderParams = new URLSearchParams({ id });
         if (user?.email) orderParams.append("email", user.email);
 
@@ -38,7 +38,7 @@ export default function UserHistory() {
         const fetchedOrders = ordersResult.orders || [];
         setOrders(fetchedOrders);
 
-        // 3. એડ્રેસ સેટ કરવાનું લોજિક
+    
         if (fetchedOrders.length > 0) {
           const latest = fetchedOrders[0];
           console.log("Latest Order for Address:", latest);
@@ -148,26 +148,22 @@ export default function UserHistory() {
                     orders.map((order) => (
                       <tr key={order.id}>
                         <td className="fw-bold text-primary">
-                          {order.order_number ? `#${order.order_number}` : `#${order.id.slice(0, 8)}`}
+                          {order.order_number ? `${order.order_number}` : `#${order.id.slice(0, 8)}`}
                         </td>
                         <td>{new Date(order.created_at).toLocaleDateString("en-IN")}</td>
                         <td className="fw-bold">₹{order.total_amount}</td>
                         <td>
                           <span className={`badge ${order.status.toLowerCase() === 'delivered' ? 'bg-success' :
-                              order.status.toLowerCase() === 'pending' ? 'bg-warning text-dark' :
-                                order.status.toLowerCase() === 'cancelled' ? 'bg-danger' : 'bg-secondary'
+                            order.status.toLowerCase() === 'pending' ? 'bg-warning text-dark' :
+                              order.status.toLowerCase() === 'cancelled' ? 'bg-danger' : 'bg-secondary'
                             } text-uppercase`}>
                             {order.status}
                           </span>
                         </td>
                         <td>
-                          <button
-  className="btn btn-sm btn-light"
- 
-  onClick={() => router.push(`/admin/orders/${order.id}`)} 
->
-  View Details
-</button>
+                          <button className="btn btn-sm btn-light" onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                            View Details
+                          </button>
                         </td>
                       </tr>
                     ))

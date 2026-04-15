@@ -68,7 +68,7 @@ export default function TrackOrder() {
         <form onSubmit={handleTrack} className="flex flex-col sm:flex-row gap-3 mb-16">
           <input 
             type="text" 
-            placeholder="Enter Order Number (e.g. #KRA-123)" 
+            placeholder="Enter Order Number" 
             value={orderIdInput}
             onChange={(e) => setOrderIdInput(e.target.value)}
             className="flex-1 p-3 border-b-2 border-gray-100 focus:border-black outline-none transition-all text-center text-lg tracking-widest"

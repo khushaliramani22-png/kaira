@@ -3,45 +3,43 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 async function verifyAdmin(request) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    console.log('❌ No Bearer token found');
-    return { error: 'Unauthorized', status: 401 };
-  }
-
-  const token = authHeader.slice(7);
-
   try {
+    const cookieStore = await cookies();
+    
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+        },
+      }
     );
-
-    // Set the session with the Bearer token
-    await supabase.auth.setSession({ access_token: token, refresh_token: '' });
 
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
-      console.log('❌ Invalid token or no user');
-      return { error: 'Invalid or expired token', status: 401 };
+      console.log(' No authenticated user');
+      return { error: 'Unauthorized', status: 401 };
     }
 
     const adminEmail = 'khushaliramani22@gmail.com';
     if (user.email !== adminEmail) {
-      console.log('❌ User not admin:', user.email);
+      console.log(' User not admin:', user.email);
       return { error: 'Forbidden - Admin access required', status: 403 };
     }
 
-    console.log('✅ Admin verified:', user.email);
+    console.log(' Admin verified:', user.email);
     return { user, status: 200 };
   } catch (error) {
-    console.error('❌ Admin verification failed:', error.message);
-    return { error: 'Invalid or expired token', status: 401 };
+    console.error(' Admin verification failed:', error.message);
+    return { error: 'Server error', status: 500 };
   }
 }
 
-// GET - Fetch all banners
+// GET - Fetch all banners (no auth needed)
 export async function GET(request) {
   try {
     const { data, error } = await supabaseAdmin

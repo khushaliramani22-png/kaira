@@ -15,8 +15,13 @@ export default function AdminBannerPage() {
   }, []);
 
   const fetchBanners = async () => {
-    const { data, error } = await supabase.from("banners").select("*").order("created_at", { ascending: false });
-    if (!error) setBanners(data);
+    try {
+      const response = await fetch("/api/admin/banners");
+      const result = await response.json();
+      if (response.ok) setBanners(result.data);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -51,17 +56,50 @@ export default function AdminBannerPage() {
     try {
       const publicUrl = await uploadBannerImage(file);
 
-      const { error: dbError } = await supabase
-        .from("banners")
-        .insert([{ ...form, image_url: publicUrl }]);
+      // Get current session with better error handling
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error("Failed to retrieve session: " + sessionError.message);
+      }
+      
+      if (!session || !session.access_token) {
+        console.error('No session found. User may need to log in again.');
+        throw new Error("You must be logged in to add banners. Please refresh and log in again.");
+      }
 
-      if (dbError) throw dbError;
+      console.log('✅ Session retrieved. Token:', session.access_token.substring(0, 20) + '...');
+
+      const response = await fetch("/api/admin/banners", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          title: form.title,
+          subtitle: form.subtitle,
+          description: form.description,
+          image_url: publicUrl,
+        }),
+      });
+
+      const result = await response.json();
+
+      console.log('API Response:', response.status, result);
+
+      if (!response.ok) {
+        throw new Error(result.error || `Failed to add banner (Status: ${response.status})`);
+      }
 
       alert("Banner added successfully! 🎉");
       setForm({ title: "", subtitle: "", description: "" });
       setFile(null);
-      setPreview(null); 
+      setPreview(null);
+      fetchBanners();
     } catch (error) {
+      console.error('Error adding banner:', error);
       alert("Error: " + error.message);
     } finally {
       setLoading(false);
@@ -70,11 +108,29 @@ export default function AdminBannerPage() {
 
   const deleteBanner = async (id) => {
     if (!confirm("Are you sure you want to delete this banner?")) return;
-    const { error } = await supabase.from("banners").delete().eq("id", id);
-    if (!error) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("You must be logged in to delete banners");
+      }
+
+      const response = await fetch(`/api/admin/banners?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete banner");
+      }
+
       fetchBanners();
-    } else {
-      alert("Error deleting banner");
+    } catch (error) {
+      alert("Error: " + error.message);
     }
   };
 

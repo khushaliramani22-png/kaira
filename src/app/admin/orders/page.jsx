@@ -366,7 +366,7 @@ export default function AdminOrders() {
                       </td>
                       <td className="p-6">
                         <div className="font-black text-black text-sm mb-2">
-                          #{order.order_number || order.id.slice(0, 6).toUpperCase()}
+                          {order.order_number || order.id.slice(0, 6).toUpperCase()}
                         </div>
                         <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === "Confirmed" ? "bg-green-100 text-green-700" :
                           order.status === "Cancelled" ? "bg-red-100 text-red-700" :
