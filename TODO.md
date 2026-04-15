@@ -1,12 +1,18 @@
-# User-Order Reviews Enhancement Task
+# Banner API Auth Fix - Progress Tracker
 
-## Plan Steps:
-1. ✅ Update fetchUserOrders in src/app/user-order/page.jsx to fetch full review details (rating, comment, review_image) for user's own reviews.
-2. ✅ Enhance item display: Show comment snippet, review image thumbnail if available, below stars.
-3. ✅ Update button: If full review exists, show 'View/Edit Review'; else 'Rate Now'.
-4. [ ] Test: Verify fetches user's own reviews only, displays properly for delivered orders.
-5. [ ] Complete task.
+## Status: In Progress
 
-Current: Steps 1-3 complete. Testing next.
+### Steps:
+- [x] Analyze relevant files (route.js, auth, login)
+- [x] Create detailed edit plan
+- [x] Get user approval
+- [ ] Create TODO.md (this file)
+- [ ] Ensure @supabase/ssr installed
+- [ ] Refactor verifyAdmin to use Supabase server auth + email check
+- [ ] Update POST/PUT/DELETE handlers
+- [ ] Test banner add endpoint
+- [ ] Update TODO.md with completion
+- [ ] attempt_completion
 
-
+**Admin Email:** khushaliramani22@gmail.com
+**Expected UUID:** 3f08327d-5f25-4440-87d1-aa711eb52fb1
