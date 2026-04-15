@@ -35,6 +35,8 @@ const SettingsPage = () => {
             checkout_enabled: true,
             shipping_flat_rate: 50,
             shipping_free_above: 2000,
+            announcement_text: "",
+            show_announcement: true
         },
         apps: {
             razorpay_key: "",
@@ -166,6 +168,12 @@ const SettingsPage = () => {
                     desc: "Manage passwords, set up authentication.",
                     icon: <Shield size={24} />,
                 },
+                {
+                    id: "announcement",
+                    title: "Announcement Bar",
+                    desc: "Manage the top announcement banner message.",
+                    icon: <Bell size={24} />,
+                },
             ],
         },
         {
@@ -280,7 +288,7 @@ const SettingsPage = () => {
                             {/*--------payment & account setting ----------------------------------------------------------------*/}
 
                             <div className="space-y-6">
-                                {selectedSetting?.id === 'payment' && (
+{selectedSetting?.id === 'payment' && (
                                     <>
                                         {/* Store Info */}
                                         <div className="space-y-4">
@@ -289,7 +297,7 @@ const SettingsPage = () => {
                                                 <label className="text-xs font-semibold text-gray-500">Store Name</label>
                                                 <input
                                                     type="text"
-                                                    value={formData.global.store_name}
+                                                    value={formData.global.store_name || ''}
                                                     onChange={(e) => handleUpdate('global', 'store_name', e.target.value)}
                                                     placeholder="e.g. Kaira Fashion Store"
                                                     className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
@@ -299,7 +307,7 @@ const SettingsPage = () => {
                                                 <label className="text-xs font-semibold text-gray-500">Support Email</label>
                                                 <input
                                                     type="email"
-                                                    value={formData.global.support_email}
+                                                    value={formData.global.support_email || ''}
                                                     onChange={(e) => handleUpdate('global', 'support_email', e.target.value)}
                                                     placeholder="support@kaira.com"
                                                     className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
@@ -339,7 +347,38 @@ const SettingsPage = () => {
                                         </div>
                                     </>
                                 )}
-
+                                {selectedSetting?.id === 'announcement' && (
+                                    <div className="space-y-6">
+                                        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                            <Bell size={18} className="text-blue-600" />
+                                            Announcement Bar
+                                        </h4>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-xs font-semibold text-gray-500">Announcement Message</label>
+                                                <textarea
+                                                    rows="4"
+                                                    value={formData.global.announcement_text || ''}
+                                                    onChange={(e) => handleUpdate('global', 'announcement_text', e.target.value)}
+                                                    placeholder="Enter announcement text (supports HTML for codes like <span>NEW20</span>)"
+                                                    className="w-full p-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none resize-vertical font-medium text-sm leading-relaxed shadow-sm"
+                                                />
+                                            </div>
+                                            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-800">Display Announcement Bar</p>
+                                                    <p className="text-xs text-gray-500">Toggle visibility of the top black bar</p>
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.global.show_announcement || false}
+                                                    onChange={(e) => handleUpdate('global', 'show_announcement', e.target.checked)}
+                                                    className="w-6 h-6 accent-blue-600 rounded-lg shadow-md"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 {/* --- 2. MANAGE USERS --- */}
                                 {selectedSetting?.id === 'store' && (
                                     <div className="space-y-6">
@@ -1145,4 +1184,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-

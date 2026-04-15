@@ -15,6 +15,7 @@ import RelatedProducts from "@/components/RelatedProduct";
 import Newsletter from "@/components/Newsletter";
 import Banner from "@/components/Banner";
 import Testimonials from "@/components/Testimonials";
+import AnnouncementBar from "@/components/AnnouncementBar";
 
 export default function Page() {
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function Page() {
   return (
     <>
       <div data-aos="fade-up">
+        <AnnouncementBar />
         <Banner />
         <HeroSlider />
         <Features />

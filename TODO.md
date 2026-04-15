@@ -1,18 +1,12 @@
-# Banner API Auth Fix - Progress Tracker
+# Admin Settings: Add Dedicated Announcement Card ✅ NEW TASK
 
-## Status: In Progress
+**Previous Announcement Feature:** ✅ Complete (field + dynamic bar)
 
-### Steps:
-- [x] Analyze relevant files (route.js, auth, login)
-- [x] Create detailed edit plan
-- [x] Get user approval
-- [ ] Create TODO.md (this file)
-- [ ] Ensure @supabase/ssr installed
-- [ ] Refactor verifyAdmin to use Supabase server auth + email check
-- [ ] Update POST/PUT/DELETE handlers
-- [ ] Test banner add endpoint
-- [ ] Update TODO.md with completion
-- [ ] attempt_completion
+**New Feedback Steps:**
+## 1. [✅] Add 'Announcement' card to SYSTEM section ✅
+## 2. [✅] Add conditional slider content for id==='announcement' ✅
+## 3. [✅] Update AnnouncementBar.jsx (dynamic text + toggle support) ✅
+## 4. [✅] defaultData + fetch merge ✅
+## 5. [✅] Task Complete! Test in dev server.
 
-**Admin Email:** khushaliramani22@gmail.com
-**Expected UUID:** 3f08327d-5f25-4440-87d1-aa711eb52fb1
+

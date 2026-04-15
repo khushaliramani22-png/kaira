@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react"; // અહીં useEffect ઉમેરવું જરૂરી છે
+import { useState, useEffect } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
+import CouponSystem from '@/components/CouponSystem';
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
@@ -15,7 +16,8 @@ export default function CheckoutPage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
-
+const [discount, setDiscount] = useState(0); 
+ 
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -26,44 +28,44 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-  const getAddress = async (userId) => {
-    console.log("Fetching address for:", userId);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("customer_name, phone, email, address, city, pincode")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const getAddress = async (userId) => {
+      console.log("Fetching address for:", userId);
+      const { data, error } = await supabase
+        .from("orders")
+        .select("customer_name, phone, email, address, city, pincode")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    if (data && data.length > 0) {
-      const lastOrder = data[0];
-      setFormData({
-        name: lastOrder.customer_name || "",
-        phone: lastOrder.phone || "",
-        email: lastOrder.email || "",
-        address: lastOrder.address || "",
-        city: lastOrder.city || "",
-        pincode: lastOrder.pincode || ""
-      });
-      setHasPreviousOrder(true);
-      setShowAddressForm(false);
-    } else {
-      setShowAddressForm(true);
-    }
-  };
+      if (data && data.length > 0) {
+        const lastOrder = data[0];
+        setFormData({
+          name: lastOrder.customer_name || "",
+          phone: lastOrder.phone || "",
+          email: lastOrder.email || "",
+          address: lastOrder.address || "",
+          city: lastOrder.city || "",
+          pincode: lastOrder.pincode || ""
+        });
+        setHasPreviousOrder(true);
+        setShowAddressForm(false);
+      } else {
+        setShowAddressForm(true);
+      }
+    };
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setFormData(prev => ({ ...prev, email: user.email }));
-      getAddress(user.id);
-    } else {
-      setShowAddressForm(true);
-    }
-  };
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setFormData(prev => ({ ...prev, email: user.email }));
+        getAddress(user.id);
+      } else {
+        setShowAddressForm(true);
+      }
+    };
 
-  checkUser();
-}, []);
+    checkUser();
+  }, []);
 
 
   const handleChange = (e) => {
@@ -71,8 +73,10 @@ export default function CheckoutPage() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
   const shippingCharge = subtotal > 1000 ? 0 : 50;
-  const totalAmount = subtotal + shippingCharge;
+  // const totalAmount = subtotal + shippingCharge;
+  const totalAmount = subtotal - discount + shippingCharge;
 
   // ૧. Professional Invoice PDF Function
   const generateInvoicePDF = (orderData, items) => {
@@ -199,7 +203,7 @@ export default function CheckoutPage() {
       // D. invoice janret
       generateInvoicePDF(orderData, itemsToInsert);
 
-   
+
       Swal.fire({
         html: `
           <div style="background-color: #03a66d; margin: -20px; padding: 50px 20px; color: white; text-align: center;">
@@ -241,13 +245,13 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-[#f8f8f8] py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4">Checkout</h1>
-        
-        
+
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Shipping & Payment */}
           <div className="lg:col-span-7 space-y-6">
-            
+
             <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
               <div className="flex items-center p-4 bg-gray-50 border-b">
                 <span className="text-blue-600 mr-2 text-xl">📍</span>
@@ -274,7 +278,7 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                 ) : (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
                     <input name="name" value={formData.name} placeholder="Full Name *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
                     <input name="phone" value={formData.phone} placeholder="Phone Number *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
                     <input name="email" value={formData.email} placeholder="Email Address *" onChange={handleChange} className="w-full border p-3 rounded-xl outline-none focus:border-black" />
@@ -310,6 +314,8 @@ export default function CheckoutPage() {
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-black sticky top-10">
               <h3 className="font-black mb-6 uppercase italic text-lg">Order Summary</h3>
+
+              {/* Cart Items List */}
               <div className="divide-y max-h-60 overflow-y-auto pr-2">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4 py-4">
@@ -322,18 +328,48 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-4 border-t-2 border-dashed space-y-2">
-                <div className="flex justify-between text-sm font-bold text-gray-500"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
-                <div className="flex justify-between text-sm font-bold text-gray-500"><span>Shipping</span><span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span></div>
-                <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4"><span>Total</span><span>₹{totalAmount.toLocaleString()}</span></div>
+
+              {/* --- couponsys --- */}
+              <div className="mt-6">
+                <CouponSystem 
+                  cartTotal={subtotal}
+                  userEmail={formData.email}
+                  onApplyDiscount={(amount) => setDiscount(amount)}
+                />
               </div>
+
+              <div className="mt-6 pt-4 border-t-2 border-dashed space-y-2">
+                <div className="flex justify-between text-sm font-bold text-gray-500">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm font-bold text-green-600">
+                    <span>Discount</span>
+                    <span>- ₹{discount.toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-sm font-bold text-gray-500">
+                  <span>Shipping</span>
+                  <span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span>
+                </div>
+
+                <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4">
+                  <span>Total</span>
+                  {/* અહિંયા ટોટલ અમાઉન્ટમાંથી ડિસ્કાઉન્ટ બાદ કરવાનું રહેશે */}
+                  <span>₹{(subtotal - discount + shippingCharge).toLocaleString()}</span>
+                </div>
+              </div>
+
               <button onClick={handleOrder} disabled={loading || cartItems.length === 0} className="w-full bg-black text-white py-5 rounded-2xl mt-8 font-black uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 shadow-xl">
                 {loading ? "Placing Order..." : "Confirm & Pay"}
               </button>
             </div>
           </div>
-          
-        </div> 
+
+        </div>
       </div>
     </div>
   );

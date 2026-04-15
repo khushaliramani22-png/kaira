@@ -11,6 +11,9 @@ export default function AdminLayout({ children }) {
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isBannerOpen, setIsBannerOpen] = useState(false)
   const [isBlogOpen, setIsBlogOpen] = useState(false)
+  // કૂપન ડ્રોપડાઉન માટે નવી સ્ટેટ
+  const [isCouponOpen, setIsCouponOpen] = useState(false) 
+  
   const [adminEmail, setAdminEmail] = useState('Loading...')
   const [loading, setLoading] = useState(true)
 
@@ -24,7 +27,6 @@ export default function AdminLayout({ children }) {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
 
       if (!user || authError) {
-        console.log("User not logged in. Redirecting to login...");
         router.push('/admin/login')
         return
       }
@@ -35,11 +37,7 @@ export default function AdminLayout({ children }) {
         .eq('id', user.id)
         .single()
 
-      console.log("Log-in ID:", user.email);
-      console.log("Database Role:", userData?.role);
-
       if (dbError || !userData || userData.role !== 'admin') {
-        console.error("Access Denied: this id is not admin!");
         router.push('/')
         return
       }
@@ -63,8 +61,6 @@ export default function AdminLayout({ children }) {
     const { error } = await supabase.auth.signOut();
     if (!error) {
       router.push('/admin/login');
-    } else {
-      console.error("Logout Error:", error.message);
     }
   };
 
@@ -85,12 +81,11 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="d-flex">
-      {/* Sidebar - Added 'no-print' class for clean printing */}
       <div
         className="bg-black text-white p-3 no-print"
         style={{ width: "240px", minHeight: "100vh", position: "sticky", top: 0 }}
       >
-        <h4 className="mb-4 text-center border-bottom pb-3">Kiara Admin</h4>
+        <h4 className="mb-4 text-center border-bottom pb-3 uppercase tracking-tighter">Kaira Admin</h4>
 
         <ul className="list-unstyled">
           <li className="mb-3">
@@ -101,108 +96,85 @@ export default function AdminLayout({ children }) {
 
           {/* Products Dropdown */}
           <li className="mb-2">
+            <div onClick={() => setIsProductOpen(!isProductOpen)} className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect" style={{ cursor: 'pointer' }}>
+              <div className="d-flex align-items-center"><span className="me-2">📦</span> Products</div>
+              <span style={{ transform: isProductOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s', fontSize: '12px' }}>▼</span>
+            </div>
+            {isProductOpen && (
+              <ul className="list-unstyled ms-4 mt-1">
+                <li><div onClick={() => router.push('/admin/products')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>• All Products</div></li>
+                <li><div onClick={() => router.push('/admin/products/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>• Add New</div></li>
+              </ul>
+            )}
+          </li>
+
+          {/* Coupons Dropdown - NEW SECTION */}
+          <li className="mb-2">
             <div
-              onClick={() => setIsProductOpen(!isProductOpen)}
+              onClick={() => setIsCouponOpen(!isCouponOpen)}
               className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect"
               style={{ cursor: 'pointer' }}
             >
               <div className="d-flex align-items-center">
-                <span className="me-2">📦</span> Products
+                <span className="me-2">🎟️</span> Coupons
               </div>
               <span style={{
-                transform: isProductOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transform: isCouponOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: '0.3s',
                 fontSize: '12px'
               }}>▼</span>
             </div>
 
-            {isProductOpen && (
+            {isCouponOpen && (
               <ul className="list-unstyled ms-4 mt-1">
                 <li className="mb-1">
-                  <div onClick={() => router.push('/admin/products')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
-                    • All Products
+                  <div onClick={() => router.push('/admin/coupons')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
+                    • Manage Coupons
                   </div>
                 </li>
                 <li className="mb-1">
-                  <div onClick={() => router.push('/admin/products/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
-                    • Add New Product
+                  <div onClick={() => router.push('/admin/coupons/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
+                    • Create New Code
                   </div>
                 </li>
               </ul>
             )}
           </li>
-{/* Banners Dropdown*/}
-          <li className="mb-2">
-            <div
-              onClick={() => setIsBannerOpen(!isBannerOpen)}
-              className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect"
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="d-flex align-items-center">
-                <span className="me-2">🖼️</span> Banners
-              </div>
-              <span style={{
-                transform: isBannerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: '0.3s',
-                fontSize: '12px'
-              }}>▼</span>
-            </div>
 
+          {/* Banners Dropdown*/}
+          <li className="mb-2">
+            <div onClick={() => setIsBannerOpen(!isBannerOpen)} className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect" style={{ cursor: 'pointer' }}>
+              <div className="d-flex align-items-center"><span className="me-2">🖼️</span> Banners</div>
+              <span style={{ transform: isBannerOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s', fontSize: '12px' }}>▼</span>
+            </div>
             {isBannerOpen && (
               <ul className="list-unstyled ms-4 mt-1">
-                <li className="mb-1">
-                  <div onClick={() => router.push('/admin/banner')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
-                    • All Banners
-                  </div>
-                </li>
-                <li className="mb-1">
-                  <div onClick={() => router.push('/admin/banner/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
-                    • Add New Banner
-                  </div>
-                </li>
+                <li><div onClick={() => router.push('/admin/banner')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>• All Banners</div></li>
+                <li><div onClick={() => router.push('/admin/banner/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>• Add New</div></li>
               </ul>
             )}
           </li>
 
           {/* Blog Dropdown */}
           <li className="mb-2">
-            <div
-              onClick={() => setIsBlogOpen(!isBlogOpen)}
-              className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect"
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="d-flex align-items-center">
-                <span className="me-2">📚</span> Blog
-              </div>
-              <span style={{
-                transform: isBlogOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: '0.3s',
-                fontSize: '12px'
-              }}>▼</span>
+            <div onClick={() => setIsBlogOpen(!isBlogOpen)} className="text-white text-decoration-none d-flex align-items-center justify-content-between p-2 rounded hover-effect" style={{ cursor: 'pointer' }}>
+              <div className="d-flex align-items-center"><span className="me-2">📚</span> Blog</div>
+              <span style={{ transform: isBlogOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s', fontSize: '12px' }}>▼</span>
             </div>
-
             {isBlogOpen && (
               <ul className="list-unstyled ms-4 mt-1">
-                <li className="mb-1">
-                  <div onClick={() => router.push('/admin/blogs')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
-                    • Blog List
-                  </div>
-                </li>
-                <li className="mb-1">
-                  <div onClick={() => router.push('/admin/blogs/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>
-                    • Add Blog
-                  </div>
-                </li>
+                <li><div onClick={() => router.push('/admin/blogs')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>• Blog List</div></li>
+                <li><div onClick={() => router.push('/admin/blogs/add')} className="text-gray-400 text-decoration-none d-block p-2 small hover-text-white" style={{ cursor: 'pointer' }}>• Add Blog</div></li>
               </ul>
             )}
           </li>
+          
           <li className="mb-3">
             <div onClick={() => router.push('/admin/orders')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📜 Orders
             </div>
           </li>
 
-          {/* --- newslatter --- */}
           <li className="mb-3">
             <div onClick={() => router.push('/admin/subscribers')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               📧 Subscribers
@@ -215,21 +187,13 @@ export default function AdminLayout({ children }) {
             </div>
           </li>
           <li className="mb-3">
-            <div
-              onClick={() => router.push('/admin/reviews')}
-              className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded"
-              style={{ cursor: 'pointer' }}
-            >
+            <div onClick={() => router.push('/admin/reviews')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
               ⭐ Reviews
             </div>
           </li>
           <li className="mb-3">
-            <div
-              onClick={() => router.push('/admin/wishlist')}
-              className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded"
-              style={{ cursor: 'pointer' }}
-            >
-             ❤️  wishlist
+            <div onClick={() => router.push('/admin/wishlist')} className="text-white text-decoration-none d-block p-2 hover-bg-dark rounded" style={{ cursor: 'pointer' }}>
+              ❤️ wishlist
             </div>
           </li>
           <li className="mb-3">
@@ -242,33 +206,20 @@ export default function AdminLayout({ children }) {
               ⚙️ Settings
             </div>
           </li>
-
         </ul>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-grow-1 bg-light">
-
-        {/* Admin Header - Added 'no-print' class */}
         <header className="navbar navbar-white bg-white border-bottom px-4 py-2 shadow-sm no-print">
           <div className="container-fluid d-flex justify-content-between align-items-center">
-            <span className="navbar-text fw-bold text-dark">
-              Welcome back, Admin
-            </span>
-
+            <span className="navbar-text fw-bold text-dark">Welcome back, Admin</span>
             <div className="d-flex align-items-center">
               <span className="me-3 text-muted small">{adminEmail}</span>
-              <button
-                onClick={handleLogout}
-                className="btn btn-outline-danger btn-sm"
-              >
-                Logout
-              </button>
+              <button onClick={handleLogout} className="btn btn-outline-danger btn-sm">Logout</button>
             </div>
           </div>
         </header>
-
-        {/* Page Content */}
         <div className="p-4">
           {children}
         </div>
