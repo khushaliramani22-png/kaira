@@ -7,6 +7,8 @@ import { useCart } from "@/app/context/CartContext";
 import { AiOutlineShoppingCart, AiOutlineHeart, AiFillHeart, AiFillStar, AiOutlineStar, AiOutlineDown, } from "react-icons/ai";
 import { toast } from 'react-hot-toast';
 import RelatedProduct from "@/components/RelatedProduct"
+import { useSettings } from "@/hooks/useSettings";
+
 // color meping
 const colorMap = {
   "pink": "#DCAE96",
@@ -45,6 +47,10 @@ export default function ProductDetail() {
   const [isSizeOpen, setIsSizeOpen] = useState(false);
   const [isFabricOpen, setIsFabricOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+
+  const { snippets, loading: settingsLoading, error: settingsError } = useSettings();
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
 
   useEffect(() => {
     const loadProductData = async () => {
@@ -299,7 +305,24 @@ export default function ProductDetail() {
                 <button key={size} onClick={() => setSelectedSize(size)} className={`btn px-4 py-2 fw-medium ${selectedSize === size ? "btn-dark" : "btn-outline-dark"}`}>{size}</button>
               ))}
             </div>
+            {snippets.size_guide && !settingsLoading && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <button 
+                  onClick={() => setIsSizeGuideOpen(!isSizeGuideOpen)}
+                  className="text-blue-700 font-semibold text-sm hover:underline flex items-center gap-1 mb-2"
+                >
+                  📏 Size Guide {isSizeGuideOpen ? '−' : '+'}
+                </button>
+                {isSizeGuideOpen && (
+                  <div 
+                    className="text-sm text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: snippets.size_guide }} 
+                  />
+                )}
+              </div>
+            )}
           </div>
+
 
           {/* stock status */}
           <div className="mb-3">
@@ -322,12 +345,15 @@ export default function ProductDetail() {
             <div className="mb-2">
               {product.stock > 0 ? (
                 <span className={`small fw-bold ${product.stock <= 5 ? "text-warning" : "text-success"}`}>
-                  {product.stock <= 5 ? `⚠️ Only ${product.stock} units left!` : "✓ In Stock"}
+                  {product.stock <= 5 ? `⚠️ Only ${product.stock} units left! ${snippets.out_of_stock || ''}` : "✓ In Stock"}
                 </span>
               ) : (
-                <span className="small fw-bold text-danger">✕ Out of Stock</span>
+                <span className="small fw-bold text-danger">
+                  ✕ Out of Stock {snippets.out_of_stock || ''}
+                </span>
               )}
             </div>
+
 
             <div className="d-flex gap-3">
               <button

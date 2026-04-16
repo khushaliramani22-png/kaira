@@ -1,52 +1,44 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
-
- 
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseServiceKey) {
+      return new Response(JSON.stringify({ success: false, error: 'Service key missing' }), { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body = await req.json();
     const { settings_json } = body;
 
     if (!settings_json) {
-      return NextResponse.json(
-        { success: false, error: "settings_json is required" },
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ success: false, error: "settings_json is required" }), { 
+        status: 400, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from("store_settings")
-      .upsert(
-        [
-          {
-            id: 1,
-            settings_json,
-            updated_at: new Date().toISOString(),
-          },
-        ],
-        { onConflict: "id" }
-      )
+      .upsert([{ id: 1, settings_json }])
       .select();
 
-    if (error) {
-      console.error("Supabase save error:", error);
-      return NextResponse.json(
-        { success: false, error: error.message, details: error },
-        { status: 500 }
-      );
-    }
+    if (error) throw error;
 
-    return NextResponse.json({
-      success: true,
-      message: "Settings saved successfully",
-      data,
+    return new Response(JSON.stringify({ success: true, data }), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
     });
   } catch (err) {
-    console.error("API route error:", err);
-    return NextResponse.json(
-      { success: false, error: err.message || "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("API Error:", err);
+    return new Response(JSON.stringify({ success: false, error: err.message }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
   }
 }

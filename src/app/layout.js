@@ -12,11 +12,13 @@ import "./styles/style.css";
 import "./globals.css";
 import Header from "@/components/Header";
 import { Toaster } from 'react-hot-toast';
-
+import { useSettings } from '../hooks/useSettings';
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith("/admin");
+  const { global } = useSettings();
+
 
   useEffect(() => {
     import("bootstrap/dist/js/bootstrap.bundle.min.js");
@@ -26,7 +28,7 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
 
       <head>
-        <title>Kaira Fashion Store</title>
+        <title>{global?.store_name || 'Kaira Fashion Store'}</title>
    
         <meta name="description" content="Discover trendy fashion finds at Kaira. Your one-stop shop for everything you need. Explore high-quality women's clothing and accessories." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />

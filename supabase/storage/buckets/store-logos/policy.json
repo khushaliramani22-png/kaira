@@ -1,0 +1,13 @@
+[
+  {
+    "name": "public",
+    "bucket_id": "store-logos",
+    "check": {
+      "read": true,
+      "select": true,
+      "insert": false,
+      "update": false,
+      "delete": false
+    }
+  }
+]

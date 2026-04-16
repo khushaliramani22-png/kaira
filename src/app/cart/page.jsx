@@ -3,15 +3,19 @@ import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
 import { ShoppingBag, X, Plus, Minus } from "lucide-react"; 
 import { useEffect } from "react";
+import { useSettings } from "@/hooks/useSettings";
+
 
 export default function CartPage() {
 
   const { cartItems, updateQuantity, removeFromCart, refreshCart, loading } = useCart();
+  const { snippets } = useSettings();
 
  
   useEffect(() => {
     if (refreshCart) refreshCart();
   }, [refreshCart]);
+
 
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -177,9 +181,13 @@ export default function CartPage() {
                         <label className="text-sm font-light">Flat rate: ₹100</label>
                         <input type="radio" name="shipping" className="accent-black h-4 w-4" />
                       </div>
+                      {snippets?.shipping_charges && (
+                        <p className="text-xs text-gray-500 mt-2 text-right italic p-2 bg-gray-50 rounded">{snippets.shipping_charges}</p>
+                      )}
                     </div>
                   </div>
                 </div>
+
 
                 <div className="flex justify-between items-center py-8 text-xl font-medium text-black">
                   <span>Total</span>

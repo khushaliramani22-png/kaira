@@ -15,9 +15,10 @@ export default function ContactPage() {
     message: "",
   });
   const [loading, setLoading] = useState(false);
-  const { settings } = useSettings();
-  const email = settings?.global?.support_email || "care@kaira.com";
-  const phone = settings?.global?.support_phone || "+91 90000 00000";
+  const { global } = useSettings();
+  const email = global?.support_email || "care@kaira.com";
+  const phone = global?.support_phone || "+91 90000 00000";
+
 
   useEffect(() => {
     const fetchUser = async () => {

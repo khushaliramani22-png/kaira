@@ -8,11 +8,15 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
 import CouponSystem from '@/components/CouponSystem';
+import { useSettings } from "@/hooks/useSettings";
+
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const router = useRouter();
+  const { snippets } = useSettings();
   const [loading, setLoading] = useState(false);
+
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -218,8 +222,13 @@ const [discount, setDiscount] = useState(0);
             <div style="margin-top: 20px; background: rgba(255,255,255,0.2); display: inline-block; padding: 8px 20px; border-radius: 50px; font-weight: bold;">
               Invoice Downloaded ✅
             </div>
+            <p style="margin-top: 10px; font-size: 14px;">
+              <strong>Returns:</strong> ${snippets?.return_inst || 'Standard return policy applies.'}<br/>
+              <strong>Refunds:</strong> ${snippets?.refund_timeline || 'Within 7 days.'}
+            </p>
           </div>
         `,
+
         background: '#03a66d',
         showConfirmButton: true,
         confirmButtonText: 'GO TO MY ORDERS',
@@ -355,6 +364,10 @@ const [discount, setDiscount] = useState(0);
                   <span>Shipping</span>
                   <span>{shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}</span>
                 </div>
+                {snippets?.shipping_charges && (
+                  <p className="text-xs text-gray-500 mt-1 italic">{snippets.shipping_charges}</p>
+                )}
+
 
                 <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4">
                   <span>Total</span>

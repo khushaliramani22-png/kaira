@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers';
 
 const defaultSettings = {
   global: {
@@ -41,7 +42,19 @@ const defaultSettings = {
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+    const { data, error } = await supabase
       .from("store_settings")
       .select("settings_json")
       .eq("id", 1)

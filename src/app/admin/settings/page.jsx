@@ -15,7 +15,8 @@ import {
     Loader2,
     Plus,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+    import { supabase } from "@/lib/supabase";
+
 
 const SettingsPage = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -27,8 +28,11 @@ const SettingsPage = () => {
         global: {
             site_title: "Kaira Fashion Store",
             store_name: "Kaira Fashion Store",
+            store_logo: "",
             support_email: "support@kaira.com",
+
             support_phone: "+91 00000 00000",
+
             currency: "INR",
             tax_rate: 18,
             maintenance_mode: false,
@@ -102,9 +106,15 @@ const SettingsPage = () => {
 
     // Update handler
     const handleUpdate = (section, key, value) => {
+        // Fix path looping for store_logo
+        let cleanValue = value;
+        if (key === 'store_logo' && typeof value === 'string') {
+            // Remove any existing /images/colorbox/ prefix before saving
+            cleanValue = value.replace(/^\/images\/colorbox\//, '');
+        }
         setFormData((prev) => ({
             ...prev,
-            [section]: { ...prev[section], [key]: value },
+            [section]: { ...prev[section], [key]: cleanValue },
         }));
     };
 
@@ -277,7 +287,7 @@ const SettingsPage = () => {
 
                         <div className="flex-1 overflow-y-auto">
                             <p className="text-xs text-gray-400 mb-6 uppercase tracking-wider">General Settings</p>
-                            {/*--------payment & account setting ----------------------------------------------------------------*/}
+                            {/*--------payment & account setting --------------*/}
 
                             <div className="space-y-6">
                                 {selectedSetting?.id === 'payment' && (
@@ -294,6 +304,29 @@ const SettingsPage = () => {
                                                     placeholder="e.g. Kaira Fashion Store"
                                                     className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                                                 />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-xs font-semibold text-gray-500">Store Logo</label>
+                                                <div className="space-y-3">
+                                                    <label className="text-xs font-semibold text-gray-500">Store Logo Filename</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                handleUpdate('global', 'store_logo', file.name);
+                                                            }
+                                                        }}
+                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                                    />
+                                                    {formData.global.store_logo && (
+                                                        <div className="p-3 bg-gray-50 rounded-xl text-sm text-gray-600">
+                                                            Current: {formData.global.store_logo}
+                                                        </div>
+                                                    )}
+                                                </div>
+
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <label className="text-xs font-semibold text-gray-500">Support Email</label>
