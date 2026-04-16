@@ -232,15 +232,10 @@ const SettingsPage = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {section.items.map((card, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => openDrawer(card)}
-                                    className="bg-white p-8 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 flex flex-col min-h-[300px] cursor-pointer active:scale-95 group"
-                                >
+                                <div key={i} onClick={() => openDrawer(card)} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 flex flex-col min-h-[300px] cursor-pointer active:scale-95 group">
                                     <div className="w-12 h-12 flex items-center justify-center bg-gray-50 text-gray-400 rounded-xl mb-12 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                                         {card.icon}
                                     </div>
-
                                     <div className="mt-auto">
                                         <h3 className="text-2xl font-light text-gray-500 mb-4 leading-tight max-w-[180px]">
                                             {card.title}
@@ -258,10 +253,7 @@ const SettingsPage = () => {
 
             {/* --- Overlay Background --- */}
             {isDrawerOpen && (
-                <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity"
-                    onClick={() => setIsDrawerOpen(false)}
-                />
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity" onClick={() => setIsDrawerOpen(false)} />
             )}
 
             {/* --- Side Drawer --- */}
@@ -288,7 +280,7 @@ const SettingsPage = () => {
                             {/*--------payment & account setting ----------------------------------------------------------------*/}
 
                             <div className="space-y-6">
-{selectedSetting?.id === 'payment' && (
+                                {selectedSetting?.id === 'payment' && (
                                     <>
                                         {/* Store Info */}
                                         <div className="space-y-4">
@@ -511,7 +503,6 @@ const SettingsPage = () => {
 
                                 {selectedSetting?.id === 'users' && (
                                     <div className="space-y-6">
-                                        {/* જો યુઝર ઉમેરવાનું ચાલુ ન હોય તો લિસ્ટ બતાવો */}
                                         {!isAddingStaff ? (
                                             <div className="space-y-6">
                                                 <button
@@ -538,7 +529,7 @@ const SettingsPage = () => {
                                                 </section>
                                             </div>
                                         ) : (
-                                            /* જો isAddingStaff True હોય, તો ફોર્મ બતાવો */
+                                          
                                             <div className="space-y-6">
                                                 <button
                                                     onClick={() => setIsAddingStaff(false)} className="text-xs font-bold text-blue-600 uppercase flex items-center gap-1 hover:underline"
@@ -911,7 +902,7 @@ const SettingsPage = () => {
 
                                         <div className="space-y-8">
 
-                                            {/* 1. ઓર્ડર અને પેમેન્ટ અપડેટ્સ (Transactional) */}
+                                            {/* 1. order and payment updates(Transactional) */}
                                             <div className="space-y-4">
                                                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Order & Payment Updates</h4>
 
@@ -943,7 +934,7 @@ const SettingsPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* 2. માર્કેટિંગ અને પ્રમોશનલ (Marketing) */}
+                                            {/* 2. marketing and pramotional (Marketing) */}
                                             <div className="space-y-4">
                                                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Marketing & Retention</h4>
 
@@ -1132,8 +1123,7 @@ const SettingsPage = () => {
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Profile, Apps, Notifications jeva simple cards mate j aa section dekhase */}
+                               {/* Profile, Apps, Notifications jeva simple cards mate j aa section dekhase */}
                                 {['payment', 'users', 'groups', 'security', 'profile', 'sync', 'apps', 'notifications', 'snippets'].indexOf(selectedSetting?.id) === -1 && (
                                     <div className="space-y-6">
                                         <div className="flex flex-col gap-2">
@@ -1146,17 +1136,10 @@ const SettingsPage = () => {
                                         </div>
                                     </div>
                                 )}
-
-
                             </div>
                         </div>
-
-
                     </div>
-
                     <div className="border-t pt-6 flex gap-4">
-
-
                         <button
                             disabled={loading}
                             onClick={saveToSupabase}
@@ -1165,7 +1148,6 @@ const SettingsPage = () => {
                             {loading && <Loader2 className="animate-spin" size={18} />}
                             {loading ? "Saving Changes..." : "Apply Settings"}
                         </button>
-
                         <button
                             onClick={() => setIsDrawerOpen(false)}
                             className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors"
@@ -1173,14 +1155,9 @@ const SettingsPage = () => {
                             Cancel
                         </button>
                     </div>
-
-
                 </div>
             </div>
         </div>
-
-
     );
 };
-
 export default SettingsPage;

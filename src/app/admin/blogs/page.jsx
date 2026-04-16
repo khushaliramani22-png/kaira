@@ -10,7 +10,7 @@ export default function BlogList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // બ્લોગ્સ ફેચ કરવા માટે
+  // blog fatch
   const fetchBlogs = async () => {
     try {
       setLoading(true);
@@ -33,7 +33,7 @@ export default function BlogList() {
     fetchBlogs();
   }, []);
 
-  // બ્લોગ ડિલીટ કરવા માટે
+  // blog delat
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -54,14 +54,14 @@ export default function BlogList() {
         if (!response.ok) throw new Error("Failed to delete");
 
         Swal.fire("Deleted!", "Blog has been deleted.", "success");
-        fetchBlogs(); // લિસ્ટ રિફ્રેશ કરો
+        fetchBlogs(); 
       } catch (err) {
         Swal.fire("Error", err.message, "error");
       }
     }
   };
 
-  // સર્ચ ફિલ્ટર
+  // sarch filter
   const filteredBlogs = blogs.filter((blog) =>
     blog.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
