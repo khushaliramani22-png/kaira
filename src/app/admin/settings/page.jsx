@@ -322,6 +322,7 @@ const SettingsPage = () => {
                                 </h4>
 
                                 {passwordStep === 'verify' && (
+                                    <form onSubmit={(e) => { e.preventDefault(); handleVerifyPassword(); }} className="space-y-4">
                                     <div className="space-y-4">
                                         <div className="flex flex-col gap-2">
                                             <label className="text-xs font-semibold text-gray-500">Current Password</label>
@@ -331,6 +332,7 @@ const SettingsPage = () => {
                                                     value={currentPassword}
                                                     onChange={(e) => setCurrentPassword(e.target.value)}
                                                     placeholder="Enter current password"
+                                                    autoComplete="current-password"
                                                     className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 />
                                                 <button
@@ -352,10 +354,13 @@ const SettingsPage = () => {
                                         >
                                             {passwordLoading ? <Loader2 className="animate-spin" size={18} /> : 'Next'}
                                         </button>
+                                      
                                     </div>
+                                      </form>
                                 )}
 
                                 {passwordStep === 'new' && (
+                                    <form onSubmit={(e) => { e.preventDefault(); handleUpdatePassword(); }} className="space-y-4">
                                     <div className="space-y-4">
                                         <div className="flex flex-col gap-2">
                                             <label className="text-xs font-semibold text-gray-500">New Password</label>
@@ -365,6 +370,7 @@ const SettingsPage = () => {
                                                     value={newPassword}
                                                     onChange={(e) => setNewPassword(e.target.value)}
                                                     placeholder="New password (min 8 chars)"
+                                                    autoComplete="new-password"
                                                     className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 />
                                                 <button
@@ -384,6 +390,7 @@ const SettingsPage = () => {
                                                     value={confirmPassword}
                                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                                     placeholder="Confirm new password"
+                                                    autoComplete="new-password"
                                                     className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 />
                                                 <button
@@ -413,6 +420,7 @@ const SettingsPage = () => {
                                             </button>
                                         </div>
                                     </div>
+                                    </form>
                                 )}
 
                                 {passwordStep === 'success' && (

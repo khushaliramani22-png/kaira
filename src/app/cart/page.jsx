@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
-import { ShoppingBag, X, Plus, Minus } from "lucide-react"; 
+import { ShoppingBag, X, Plus, Minus } from "lucide-react";
 import { useEffect } from "react";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -11,7 +11,7 @@ export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, refreshCart, loading } = useCart();
   const { snippets } = useSettings();
 
- 
+
   useEffect(() => {
     if (refreshCart) refreshCart();
   }, [refreshCart]);
@@ -37,9 +37,9 @@ export default function CartPage() {
     return (
       <div className="container min-vh-100 d-flex flex-column align-items-center justify-content-center text-center py-5">
         <div className="mb-4">
-          <img 
-            src="/images/colorbox/cart_empty.jpg.png" 
-            alt="Empty Cart Illustration" 
+          <img
+            src="/images/colorbox/cart_empty.jpg.png"
+            alt="Empty Cart Illustration"
             style={{ width: "100%", maxWidth: "380px", height: "auto" }}
           />
         </div>
@@ -53,9 +53,9 @@ export default function CartPage() {
         </p>
 
         <Link href="/shop" className="text-decoration-none">
-          <button 
-            className="btn text-white px-5 py-2 shadow-sm border-0" 
-            style={{ 
+          <button
+            className="btn text-white px-5 py-2 shadow-sm border-0"
+            style={{
               backgroundColor: "#9d178d",
               borderRadius: "8px",
               fontWeight: "600",
@@ -79,10 +79,11 @@ export default function CartPage() {
 
         <div className="flex flex-col lg:flex-row gap-20 items-start">
 
-          
+
           <div className="w-full lg:w-[65%]">
             <table className="w-full border-collapse">
-              <thead>
+
+              <thead className="hidden md:table-header-group">
                 <tr className="border-b border-gray-200 text-[11px] uppercase tracking-[0.2em] text-gray-400">
                   <th className="pb-6 font-medium text-left">Product</th>
                   <th className="pb-6 font-medium text-center">Price</th>
@@ -93,9 +94,11 @@ export default function CartPage() {
 
               <tbody className="divide-y divide-gray-100">
                 {cartItems.map((item) => (
-                  <tr key={item.id || item.product_id}>
-                    <td className="py-10" style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <div className="flex items-center gap-6">
+                  <tr key={item.id || item.product_id} className="flex flex-col md:table-row border-b border-gray-100 py-6 md:py-0">
+
+                    {/* Product Column */}
+                    <td className="py-4 md:py-10">
+                      <div className="flex items-center gap-4 md:gap-6">
                         <button
                           onClick={() => removeFromCart(item.product_id || item.id)}
                           className="text-gray-300 hover:text-black transition-colors"
@@ -103,54 +106,69 @@ export default function CartPage() {
                           <X size={18} strokeWidth={1.5} />
                         </button>
 
-                        <div className="w-24 h-32 bg-[#fbfbfb] border border-gray-50 flex-shrink-0 overflow-hidden">
+                        <div className="w-20 h-24 md:w-24 md:h-32 bg-[#fbfbfb] border border-gray-50 flex-shrink-0 overflow-hidden">
                           <img
                             src={item.image}
                             alt={item.name}
-                           style={{ width: "150px", height: "150px", cursor: "pointer", objectFit: "cover", flexShrink: 0 }}
+                            className="w-full h-full object-cover"
                           />
                         </div>
 
                         <div>
-                          <span className="text-[15px] font-medium tracking-tight text-gray-800 block">
+                          <span className="text-[14px] md:text-[15px] font-medium tracking-tight text-gray-800 block">
                             {item.name}
                           </span>
-                          <span className="text-[12px] text-gray-400 uppercase tracking-wider">
+                          <span className="text-[11px] md:text-[12px] text-gray-400 uppercase tracking-wider">
                             {item.selected_size} / {item.selected_color}
                           </span>
+
+                          <div className="md:hidden mt-1 text-sm font-light text-gray-500">
+                            ₹{item.price.toLocaleString()}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-10 text-center text-sm text-gray-500 font-light">
+                    {/* Price Column - Desktop Only */}
+                    <td className="hidden md:table-cell py-10 text-center text-sm text-gray-500 font-light">
                       ₹{item.price.toLocaleString()}
                     </td>
 
-                    <td className="py-10 text-center">
-                      <div className="inline-flex items-center border border-gray-200 bg-white shadow-sm">
-                        <span className="w-10 text-center text-[13px]">{item.quantity}</span>
-                        <div className="flex flex-col border-l border-gray-200">
-                          <button
-                            onClick={() => updateQuantity(item.product_id || item.id, 1)}
-                            className="px-2 py-1 border-b border-gray-100 hover:bg-gray-50"
-                          >
-                            <Plus size={10} />
-                          </button>
-                          <button
-                            onClick={() => updateQuantity(item.product_id || item.id, -1)}
-                            className="px-2 py-1 hover:bg-gray-50"
-                          >
-                            <Minus size={10} />
-                          </button>
+                    {/* Quantity & Subtotal - Mobile Flexbox */}
+                    <td className="py-4 md:py-10">
+                      <div className="flex justify-between items-center md:justify-center">
+                        <span className="md:hidden text-sm text-gray-400 uppercase tracking-widest">Quantity</span>
+                        <div className="inline-flex items-center border border-gray-200 bg-white shadow-sm">
+                          <span className="w-10 text-center text-[13px]">{item.quantity}</span>
+                          <div className="flex flex-col border-l border-gray-200">
+                            <button
+                              onClick={() => updateQuantity(item.product_id || item.id, 1)}
+                              className="px-2 py-1 border-b border-gray-100 hover:bg-gray-50"
+                            >
+                              <Plus size={10} />
+                            </button>
+                            <button
+                              onClick={() => updateQuantity(item.product_id || item.id, -1)}
+                              className="px-2 py-1 hover:bg-gray-50"
+                            >
+                              <Minus size={10} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-10 text-center text-[15px] font-medium text-black">
-                      ₹{(item.price * item.quantity).toLocaleString()}
+                    <td className="py-4 md:py-10 text-right md:text-center">
+                      <div className="flex justify-between items-center md:block">
+                        <span className="md:hidden text-sm text-gray-400 uppercase tracking-widest">Subtotal</span>
+                        <span className="text-[15px] font-medium text-black">
+                          ₹{(item.price * item.quantity).toLocaleString()}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
+
               </tbody>
             </table>
           </div>
@@ -160,7 +178,7 @@ export default function CartPage() {
               <h2 className="text-2xl font-normal mb-10 border-b border-gray-100 pb-4 tracking-tight">
                 Cart totals
               </h2>
-              
+
               <div>
                 <div className="flex justify-between items-center py-6 border-b border-gray-100 text-[15px]">
                   <span className="text-gray-500">Subtotal</span>

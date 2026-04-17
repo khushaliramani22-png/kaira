@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useEffect } from "react";
 import { AiOutlineDown } from "react-icons/ai";
 import { supabase } from "@/lib/supabase";
@@ -94,17 +95,37 @@ export default function EditProduct() {
     if (index === 3) setPreview3(previewUrl);
   };
 
-  const uploadImage = async (file, index) => {
-    if (!file) return null;
-    const ext = file.name.split(".").pop();
-    const fileName = `product-${Date.now()}-${index}.${ext}`;
-    const filePath = `colorbox/${fileName}`;
-    const { error } = await supabase.storage.from("products").upload(filePath, file);
-    if (error) throw error;
-    const { data: urlData } = supabase.storage.from("products").getPublicUrl(filePath);
-    return urlData.publicUrl;
-  };
+  // const uploadImage = async (file, index) => {
+  //   if (!file) return null;
+  //   const ext = file.name.split(".").pop();
+  //   const fileName = `product-${Date.now()}-${index}.${ext}`;
+  //   const filePath = `colorbox/${fileName}`;
+  //   const { error } = await supabase.storage.from("products").upload(filePath, file);
+  //   if (error) throw error;
+  //   const { data: urlData } = supabase.storage.from("products").getPublicUrl(filePath);
+  //   return urlData.publicUrl;
+  // };
+const uploadImage = async (file, index) => {
+  if (!file) return null;
+  const ext = file.name.split(".").pop();
+  const fileName = `product-${Date.now()}-${index}.${ext}`;
+  const filePath = `colorbox/${fileName}`;
 
+  const { data, error } = await supabase.storage
+    .from("products")
+    .upload(filePath, file, {
+      upsert: true 
+    });
+
+  if (error) {
+    // આ લાઈન તમને કન્સોલમાં બતાવશે કે પરમિશનની ભૂલ છે કે કનેક્શનની
+    console.error("Supabase Storage Error Details:", error.message);
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+
+  const { data: urlData } = supabase.storage.from("products").getPublicUrl(filePath);
+  return urlData.publicUrl;
+};
   const updateProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -155,6 +176,7 @@ export default function EditProduct() {
       setLoading(false);
     }
   };
+
 
   if (fetching) return <div className="text-center py-5 fw-bold">Loading product details...</div>;
 

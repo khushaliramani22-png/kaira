@@ -88,6 +88,7 @@ const handleLogin = async (e) => {
 
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-6">
+
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
             <input

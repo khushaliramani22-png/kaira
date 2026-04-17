@@ -10,6 +10,7 @@ export default function Products() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -25,17 +26,45 @@ export default function Products() {
     setCurrentPage(1);
   }, [searchQuery, products]);
 
-  const fetchProducts = async () => {
-    const { data } = await supabase
+  // const fetchProducts = async () => {
+  //   const { data } = await supabase
+  //     .from("products")
+  //     .select("*")
+  //     .order("id", { ascending: false });
+
+  //   if (data) {
+  //     setProducts(data);
+  //   }
+  // };
+ const fetchProducts = async () => {
+  setLoading(true);
+  try {
+    console.log("Fetching products from Supabase...");
+    const { data, error } = await supabase
       .from("products")
       .select("*")
       .order("id", { ascending: false });
 
-    if (data) {
-      setProducts(data);
+    if (error) {
+      console.error("Supabase Error:", error.message);
+      return;
     }
-  };
 
+    console.log("Data received from Supabase:", data);
+    
+    // જો ડેટા મળે તો સેટ કરો, નહીં તો ખાલી એરે
+    if (data && data.length > 0) {
+      setProducts(data);
+    } else {
+      setProducts([]);
+      console.warn("No products found in the database table.");
+    }
+  } catch (err) {
+    console.error("Unexpected fetch error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
   const deleteProduct = async (id) => {
     const confirmDelete = confirm("Are you sure you want to delete this product?");
     if (!confirmDelete) return;
