@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
 
 export default function EditBanner() {
-  const { id } = useParams(); // URL માંથી ID મેળવવા માટે
+  const { id } = useParams();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -18,7 +18,6 @@ export default function EditBanner() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ૧. જૂનો ડેટા ફેચ કરવા માટે
   useEffect(() => {
     if (id) fetchBannerData();
   }, [id]);
@@ -34,7 +33,7 @@ export default function EditBanner() {
       alert("ડેટા મેળવવામાં ભૂલ આવી: " + error.message);
     } else {
       setForm(data);
-      setPreview(data.image_url); // જૂની ઈમેજ પ્રિવ્યૂમાં બતાવશે
+      setPreview(data.image_url);
     }
   };
 
@@ -46,36 +45,39 @@ export default function EditBanner() {
     }
   };
 
-  // ૨. ઈમેજ અપલોડ કરવાનું ફંક્શન (તમારા પ્રોડક્ટ લોજિક મુજબ)
+  // ઈમેજ અપલોડ કરવાનું સુધારેલું ફંક્શન
   const uploadImage = async (file) => {
-    if (!file) return form.image_url; // જો નવી ફાઈલ ન હોય તો જૂની URL રાખવી
+    if (!file) return form.image_url;
     
     const ext = file.name.split(".").pop();
-    const fileName = `banner-update-${Date.now()}.${ext}`;
-    const filePath = `banners/${fileName}`;
+    const fileName = `banner-${Date.now()}.${ext}`;
 
-    const { error } = await supabase.storage
-      .from("products")
-      .upload(filePath, file);
+    // નોંઘ: અહીં 'banners/' પાથ હટાવી દીધો છે જેથી 400 એરર ન આવે
+    const { data, error } = await supabase.storage
+      .from("products") 
+      .upload(fileName, file);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Storage Error Details:", error);
+      throw error;
+    }
 
     const { data: urlData } = supabase.storage
       .from("products")
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
 
     return urlData.publicUrl;
   };
 
-  // ૩. બેનર અપડેટ કરવાનું ફંક્શન
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // જો નવો ફોટો હોય તો અપલોડ કરો, નહીતર જૂનો પાથ વાપરો
+      // ૧. પહેલા ઈમેજ અપલોડ કરો
       const finalImageUrl = file ? await uploadImage(file) : form.image_url;
 
+      // ૨. પછી ડેટાબેઝ અપડેટ કરો
       const { error } = await supabase
         .from("banners")
         .update({
@@ -89,10 +91,10 @@ export default function EditBanner() {
       if (error) throw error;
 
       alert("Banner Updated Successfully! ✅");
-      router.push("/admin/banner"); // અપડેટ થયા પછી લિસ્ટ પેજ પર પાછા જાઓ
+      router.push("/admin/banner/add"); // લિસ્ટ પેજ પર રીડાયરેક્ટ
     } catch (err) {
-      console.error(err);
-      alert("Error: " + err.message);
+      console.error("Full Error Object:", err);
+      alert("Error: " + (err.message || "કંઈક ભૂલ થઈ છે."));
     } finally {
       setLoading(false);
     }
@@ -100,10 +102,16 @@ export default function EditBanner() {
 
   return (
     <div className="container py-5">
-      <h2 className="mb-4">Edit Banner</h2>
-      <form onSubmit={handleUpdate} className="card p-4 shadow-sm bg-light">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold uppercase">Edit Banner</h2>
+        <button className="btn btn-outline-secondary btn-sm" onClick={() => router.back()}>
+          Back to List
+        </button>
+      </div>
+
+      <form onSubmit={handleUpdate} className="card p-4 shadow-sm bg-light border-0">
         <div className="mb-3">
-          <label className="fw-bold">Title</label>
+          <label className="fw-bold small mb-1">BANNER TITLE</label>
           <input 
             className="form-control" 
             value={form.title} 
@@ -113,7 +121,7 @@ export default function EditBanner() {
         </div>
         
         <div className="mb-3">
-          <label className="fw-bold">Subtitle</label>
+          <label className="fw-bold small mb-1">SUBTITLE</label>
           <input 
             className="form-control" 
             value={form.subtitle} 
@@ -122,7 +130,7 @@ export default function EditBanner() {
         </div>
 
         <div className="mb-3">
-          <label className="fw-bold">Description</label>
+          <label className="fw-bold small mb-1">DESCRIPTION</label>
           <textarea 
             className="form-control" 
             rows="3"
@@ -131,25 +139,27 @@ export default function EditBanner() {
           />
         </div>
 
-        <div className="mb-3">
-          <label className="fw-bold d-block">Banner Image</label>
+        <div className="mb-4">
+          <label className="fw-bold small mb-1">BANNER IMAGE</label>
           <input type="file" accept="image/*" onChange={handleFileChange} className="form-control mb-3" />
           
-          <div style={{ height: "200px", border: "1px solid #ddd", borderRadius: "8px", overflow: "hidden" }}>
+          <div className="rounded border bg-white overflow-hidden" style={{ height: "250px", position: "relative" }}>
             {preview ? (
-              <img src={preview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={preview} alt="Preview" className="w-100 h-100" style={{ objectFit: "cover" }} />
             ) : (
-              <div className="h-100 d-flex align-items-center justify-content-center text-muted">No Image</div>
+              <div className="h-100 d-flex align-items-center justify-content-center text-muted italic">
+                No preview available
+              </div>
             )}
           </div>
         </div>
 
-        <div className="d-flex gap-2">
-          <button type="submit" className="btn btn-dark flex-grow-1" disabled={loading}>
-            {loading ? "Updating..." : "Update Banner"}
-          </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={() => router.back()}>
-            Cancel
+        <div className="d-grid gap-2">
+          <button type="submit" className="btn btn-dark fw-bold py-2" disabled={loading}>
+            {loading ? (
+              <span className="spinner-border spinner-border-sm me-2"></span>
+            ) : null}
+            {loading ? "SAVING CHANGES..." : "UPDATE BANNER"}
           </button>
         </div>
       </form>
