@@ -18,24 +18,55 @@ async function verifyAdmin(request) {
       }
     );
 
-    const { data: { user }, error } = await supabase.auth.getUser();
+    let user = null;
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-    if (error || !user) {
-      console.log(' No authenticated user');
-      return { error: 'Unauthorized', status: 401 };
+    console.log('🔍 Admin auth check started. Token present:', !!token, 'Cookies:', cookieStore.getAll().length);
+
+    // 1. PRIORITIZE COOKIES FIRST (client session)
+    console.log('🔍 [1] Checking cookies/session...');
+    const { data: { user: cookieUser }, error: cookieError } = await supabase.auth.getUser();
+    if (!cookieError && cookieUser) {
+      user = cookieUser;
+      console.log('✅ Cookie session found:', cookieUser.email);
     }
 
+    // 2. FALLBACK to Bearer token if no cookies
+    if (!user && token) {
+      console.log('🔍 [2] Checking Bearer token...');
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token);
+      if (!tokenError && tokenUser) {
+        user = tokenUser;
+        console.log('✅ Bearer token valid:', tokenUser.email);
+      } else {
+        console.log('❌ Bearer token invalid:', tokenError?.message);
+      }
+    }
+
+    if (!user) {
+      console.error('❌ NO VALID SESSION: cookies failed, token failed');
+      return { error: 'No session found - Please login again', status: 401 };
+    }
+
+    // 3. Admin email/role check
     const adminEmail = 'khushaliramani22@gmail.com';
     if (user.email !== adminEmail) {
-      console.log(' User not admin:', user.email);
-      return { error: 'Forbidden - Admin access required', status: 403 };
+      console.log(`🚫 Unauthorized email: ${user.email} (expected: ${adminEmail})`);
+      return { error: `Forbidden: Admin access required (use ${adminEmail})`, status: 403 };
     }
 
-    console.log(' Admin verified:', user.email);
+    // 4. Check token expiry (simple)
+    const now = Math.floor(Date.now() / 1000);
+    if (user.expires_at && user.expires_at < now + 60) {
+      console.log('⚠️ Token expiring soon, recommend refresh');
+    }
+
+    console.log(`✅ ADMIN VERIFIED: ${user.email} | expires: ${user.expires_at}`);
     return { user, status: 200 };
   } catch (error) {
-    console.error(' Admin verification failed:', error.message);
-    return { error: 'Server error', status: 500 };
+    console.error('💥 verifyAdmin CRASHED:', error.message, error.stack);
+    return { error: `Auth error: ${error.message}`, status: 500 };
   }
 }
 

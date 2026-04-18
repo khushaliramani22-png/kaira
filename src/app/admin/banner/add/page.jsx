@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function AdminBannerPage() {
+export default function AdminAddBannerPage() {
   const [banners, setBanners] = useState([]);
   const [form, setForm] = useState({ title: "", subtitle: "", description: "" });
   const [file, setFile] = useState(null);
@@ -31,6 +31,7 @@ export default function AdminBannerPage() {
       setPreview(URL.createObjectURL(selectedFile));
     }
   };
+
   const uploadBannerImage = async (file) => {
     if (!file) return null;
     const ext = file.name.split(".").pop();
@@ -47,35 +48,20 @@ export default function AdminBannerPage() {
     return urlData.publicUrl;
   };
 
-
   const handleAddBanner = async (e) => {
     e.preventDefault();
-    if (!file) return alert("select image");
+    if (!file) return alert("Please select an image");
     setLoading(true);
 
     try {
       const publicUrl = await uploadBannerImage(file);
-
-      // Get current session with better error handling
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw new Error("Failed to retrieve session: " + sessionError.message);
-      }
-      
-      if (!session || !session.access_token) {
-        console.error('No session found. User may need to log in again.');
-        throw new Error("You must be logged in to add banners. Please refresh and log in again.");
-      }
-
-      console.log('✅ Session retrieved. Token:', session.access_token.substring(0, 20) + '...');
-
       const response = await fetch("/api/admin/banners", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
           title: form.title,
@@ -85,21 +71,14 @@ export default function AdminBannerPage() {
         }),
       });
 
-      const result = await response.json();
-
-      console.log('API Response:', response.status, result);
-
-      if (!response.ok) {
-        throw new Error(result.error || `Failed to add banner (Status: ${response.status})`);
+      if (response.ok) {
+        alert("Banner added successfully! 🎉");
+        setForm({ title: "", subtitle: "", description: "" });
+        setFile(null);
+        setPreview(null);
+        fetchBanners(); // Nava banner add thaya pachi list update thase
       }
-
-      alert("Banner added successfully! 🎉");
-      setForm({ title: "", subtitle: "", description: "" });
-      setFile(null);
-      setPreview(null);
-      fetchBanners();
     } catch (error) {
-      console.error('Error adding banner:', error);
       alert("Error: " + error.message);
     } finally {
       setLoading(false);
@@ -110,25 +89,16 @@ export default function AdminBannerPage() {
     if (!confirm("Are you sure you want to delete this banner?")) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("You must be logged in to delete banners");
-      }
-
       const response = await fetch(`/api/admin/banners?id=${id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session?.access_token}`,
         },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to delete banner");
+      if (response.ok) {
+        fetchBanners();
       }
-
-      fetchBanners();
     } catch (error) {
       alert("Error: " + error.message);
     }
@@ -138,7 +108,7 @@ export default function AdminBannerPage() {
     <div className="container py-5 font-sans">
       <h2 className="mb-4 uppercase fw-bold border-bottom pb-2">Manage Store Banners</h2>
 
-      {/* --- Add Form --- */}
+      {/* --- ADD FORM SECTION --- */}
       <form onSubmit={handleAddBanner} className="card p-4 shadow-sm mb-5 bg-light">
         <div className="row">
           <div className="col-md-6 mb-3">
@@ -173,21 +143,29 @@ export default function AdminBannerPage() {
         </button>
       </form>
 
-      {/* --- Banners List --- */}
-      <h4 className="mb-3 fw-bold">Live Banners</h4>
+      {/* --- LIVE BANNERS LIST SECTION --- */}
+      <h4 className="mb-3 fw-bold uppercase">Live Banners</h4>
       <div className="row">
-        {banners.map((b) => (
-          <div key={b.id} className="col-md-4 mb-4">
-            <div className="card h-100 shadow-sm overflow-hidden">
-              <img src={b.image_url} alt={b.title} className="card-img-top" style={{ height: "180px", objectFit: "cover" }} />
-              <div className="card-body">
-                <h6 className="fw-bold mb-1">{b.title}</h6>
-                <p className="text-muted small mb-3">{b.subtitle}</p>
-                <button onClick={() => deleteBanner(b.id)} className="btn btn-outline-danger btn-sm w-100">Delete Banner</button>
+        {banners.length > 0 ? (
+          banners.map((b) => (
+            <div key={b.id} className="col-md-4 mb-4">
+              <div className="card h-100 shadow-sm overflow-hidden">
+                <img src={b.image_url} alt={b.title} className="card-img-top" style={{ height: "180px", objectFit: "cover" }} />
+                <div className="card-body">
+                  <h6 className="fw-bold mb-1 text-uppercase">{b.title}</h6>
+                  <p className="text-muted small mb-3">{b.subtitle}</p>
+                  <button onClick={() => deleteBanner(b.id)} className="btn btn-outline-danger btn-sm w-100 fw-bold">
+                    DELETE BANNER
+                  </button>
+                </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="col-12 text-center py-4 bg-white border rounded">
+            <p className="m-0 text-muted">No banners live at the moment.</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
