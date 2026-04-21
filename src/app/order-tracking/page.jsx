@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Truck, Package, CheckCircle, Search, Clock, AlertCircle } from 'lucide-react';
+import { Search, Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function TrackOrder() {

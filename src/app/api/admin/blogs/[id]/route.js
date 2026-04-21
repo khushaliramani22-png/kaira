@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 
 export async function PUT(request, { params }) {
   try {
-    // ૧. Next.js 15+ માં params ને await કરવું જરૂરી છે
+  
     const { id } = await params; 
 
     const cookieStore = await cookies();
@@ -28,7 +28,7 @@ export async function PUT(request, { params }) {
       }
     );
 
-    // ૨. યુઝર ઓથેન્ટિકેશન ચેક કરો
+    // ૨. chack user unthetication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(
@@ -37,7 +37,7 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ૩. એડમિન એક્સેસ વેરીફાય કરો
+    // ૩. admin access verify
     const allowedAdmins = ["admin@gmail.com", "khushaliramani22@gmail.com"];
     if (!allowedAdmins.includes(user.email)) {
       return new Response(
@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ૪. રિક્વેસ્ટ બોડી પાર્સ કરો
+
     const body = await request.json();
     const { title, description, content, category, status, image_url } = body;
 
@@ -57,7 +57,6 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ૫. Service Role સાથે Admin Client બનાવો (ડેટા અપડેટ કરવા માટે)
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -78,7 +77,7 @@ export async function PUT(request, { params }) {
         category: category || "Fashion",
         status: status || "draft",
         image_url: image_url || "",
-        updated_at: new Date().toISOString(), // અપડેટ ટાઈમ ઉમેરો
+        updated_at: new Date().toISOString(), 
       })
       .eq("id", id)
       .select();
@@ -107,10 +106,10 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = await params; // અહીં પણ await કરો
+    const { id } = await params; 
     const cookieStore = await cookies();
     
-    // ... બાકીનો તમારો DELETE કોડ અહીં ચાલુ રહેશે (params.id ને બદલે ફક્ત id વાપરવું)
+   
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -122,7 +121,7 @@ export async function DELETE(request, { params }) {
       }
     );
 
-    // ૧. પહેલા ઈમેજ URL મેળવો (ડીલીટ કરવા માટે)
+    
     const { data: blog } = await supabaseAdmin
       .from("blogs")
       .select("image_url")
@@ -136,7 +135,7 @@ export async function DELETE(request, { params }) {
       }
     }
 
-    // ૨. બ્લોગ ડીલીટ કરો
+    // ૨. delat blog
     const { error: deleteError } = await supabaseAdmin
       .from("blogs")
       .delete()

@@ -371,7 +371,7 @@ const [discount, setDiscount] = useState(0);
 
                 <div className="flex justify-between font-black text-2xl pt-4 border-t-2 border-black mt-4">
                   <span>Total</span>
-                  {/* અહિંયા ટોટલ અમાઉન્ટમાંથી ડિસ્કાઉન્ટ બાદ કરવાનું રહેશે */}
+                 
                   <span>₹{(subtotal - discount + shippingCharge).toLocaleString()}</span>
                 </div>
               </div>

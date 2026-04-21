@@ -72,7 +72,7 @@ export default function EditBlog() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview બતાવવા માટે
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
@@ -83,7 +83,6 @@ export default function EditBlog() {
       const timestamp = Date.now();
       const fileName = `blogs/${timestamp}-${file.name.replace(/\s+/g, '-')}`;
 
-      // ખાતરી કરો કે તમારા Supabase માં "products" નામનું બકેટ છે
       const { error: uploadError } = await supabase.storage
         .from("products")
         .upload(fileName, file);
@@ -111,10 +110,10 @@ export default function EditBlog() {
     try {
       setSubmitting(true);
 
-      // ૧. પેલા યુઝરની ID મેળવો (author_id માટે જો જરૂર હોય તો)
+      
       const { data: { user } } = await supabase.auth.getUser();
 
-      // ૨. API કોલ કરો
+
       const response = await fetch(`/api/admin/blogs/${blogId}`, {
         method: "PUT",
         headers: {
@@ -134,7 +133,7 @@ export default function EditBlog() {
 
       await Swal.fire("Success!", "Blog updated successfully!", "success");
       router.push("/admin/blogs");
-      router.refresh(); // પેજ રિફ્રેશ કરવા માટે
+      router.refresh(); 
     } catch (err) {
       console.error("Submit error:", err);
       Swal.fire("Error", err.message || "Failed to update blog", "error");

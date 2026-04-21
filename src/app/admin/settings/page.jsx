@@ -272,14 +272,14 @@ const SettingsPage = () => {
 
             const result = await res.json();
             if (result.success) {
-                await fetchSettings(); // ડેટા રિફ્રેશ કરો
+                await fetchSettings(); 
                 alert(`${sectionId.toUpperCase()} save successfull!`);
             } else {
                 throw new Error(result.error);
             }
         } catch (err) {
             console.error("Save Error:", err);
-            alert('સેવ કરવામાં ભૂલ આવી: ' + err.message);
+            alert('error: ' + err.message);
         } finally {
             setLoading(false);
         }
@@ -289,7 +289,7 @@ const SettingsPage = () => {
         setSelectedSetting(item);
         setIsDrawerOpen(true);
         setIsAddingStaff(false);
-        // Reset password flow when opening security
+  
         if (item.id === 'security') {
             resetPasswordFlow();
         }

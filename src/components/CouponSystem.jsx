@@ -8,7 +8,7 @@ const CouponSystem = ({ cartTotal, onApplyDiscount, userEmail }) => {
   const [loading, setLoading] = useState(false);
 
   const handleApplyCoupon = async () => {
-    // ૧. બેઝિક વેલિડેશન
+
     if (!couponCode) {
       setMessage({ type: 'error', text: 'Please enter a coupon code.' });
       return;
@@ -23,7 +23,7 @@ const CouponSystem = ({ cartTotal, onApplyDiscount, userEmail }) => {
     setMessage({ type: '', text: '' });
 
     try {
-      // ૨. Supabase માંથી કૂપન ડેટા મેળવવો
+
       const { data: coupon, error } = await supabase
         .from('coupons')
         .select('*')

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
-import { ShoppingBag, X, Plus, Minus } from "lucide-react";
+import { X, Plus, Minus } from "lucide-react";
 import { useEffect } from "react";
 import { useSettings } from "@/hooks/useSettings";
 

@@ -101,10 +101,7 @@ export default function OrderDetail() {
             </p>
           </div>
           <div className="md:text-right">
-            {/* <div className="bg-black text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-3 inline-block">
-              {order.status || "Pending"}
-            </div> */}
-
+            
             <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-3 inline-block ${order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
                 order.status === 'Delivered' ? 'bg-green-100 text-green-600' : 'bg-black text-white'
               }`}>
@@ -264,7 +261,7 @@ export default function OrderDetail() {
       {/* Admin Footer Branding */}
       <div className="mt-8 text-center no-print">
         <p className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.5em]">
-          WebExpert Solutions Admin Panel
+          kaira 
         </p>
       </div>
 

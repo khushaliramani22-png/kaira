@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Truck, Clock, Globe, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Clock, Globe, ShieldCheck } from 'lucide-react';
 
 export default function ShippingDelivery() {
   return (

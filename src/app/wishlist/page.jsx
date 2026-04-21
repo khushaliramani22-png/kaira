@@ -42,17 +42,17 @@ export default function WishlistPage() {
           .eq("user_id", user.id);
 
         if (!error) {
-                  console.log("Data found:", data);
-                  setWishlistItems(data || []);
-                } else {
-                  console.error("Error Detail:", error);
-                }
-              }
-              setLoading(false);
-            };
+          console.log("Data found:", data);
+          setWishlistItems(data || []);
+        } else {
+          console.error("Error Detail:", error);
+        }
+      }
+      setLoading(false);
+    };
 
-            fetchWishlist();
-          }, []);
+    fetchWishlist();
+  }, []);
 
   if (loading) return <div className="text-center py-5">Loading...</div>;
 

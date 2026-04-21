@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Mail, MessageSquare, Calendar, User, Hash, Filter, Trash2, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {  MessageSquare, Calendar, User, Hash, Filter, Trash2, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function AdminMessages() {

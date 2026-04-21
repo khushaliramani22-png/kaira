@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
 
   const router = useRouter();
-
+  const [name, setName] = useState("");
   // OTP send
   const handleSendOTP = async (e) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ export default function LoginPage() {
       options: {
         shouldCreateUser: true,
         data: {
-          name: email.split('@')[0], 
+          name: name,
         },
       },
     });
@@ -43,7 +43,7 @@ export default function LoginPage() {
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
-setMessage("");
+    setMessage("");
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
@@ -79,7 +79,19 @@ setMessage("");
         </div>
 
         {message && <div className="alert alert-info small p-2 text-center">{message}</div>}
-
+        {!showOtpInput && (
+          <div className="mb-3">
+            <label className="form-label small fw-bold">Full Name</label>
+            <input
+              type="text"
+              className="form-control py-2"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+        )}
         {!showOtpInput ? (
           /* e-mail form */
           <form onSubmit={handleSendOTP}>
@@ -109,10 +121,10 @@ setMessage("");
                 className="form-control py-2 text-center fw-bold"
                 style={{ letterSpacing: '0.3rem', fontSize: '1.2rem' }}
                 placeholder="00000000"
-                maxLength={8} 
+                maxLength={8}
                 value={otp}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ""); // ફક્ત નંબર્સ
+                  const value = e.target.value.replace(/\D/g, "");
                   setOtp(value);
 
                   if (message) setMessage("");

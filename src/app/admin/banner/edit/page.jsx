@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
 
 export default function EditBanner() {
-  const { id } = useParams(); // URL માંથી ID મેળવવા માટે
+  const { id } = useParams(); 
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -18,7 +18,7 @@ export default function EditBanner() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ૧. જૂનો ડેટા ફેચ કરવા માટે
+
   useEffect(() => {
     if (id) fetchBannerData();
   }, [id]);
@@ -31,10 +31,10 @@ export default function EditBanner() {
       .single();
 
     if (error) {
-      alert("ડેટા મેળવવામાં ભૂલ આવી: " + error.message);
+      alert("error " + error.message);
     } else {
       setForm(data);
-      setPreview(data.image_url); // જૂની ઈમેજ પ્રિવ્યૂમાં બતાવશે
+      setPreview(data.image_url); 
     }
   };
 
@@ -46,9 +46,8 @@ export default function EditBanner() {
     }
   };
 
-  // ૨. ઈમેજ અપલોડ કરવાનું ફંક્શન (તમારા પ્રોડક્ટ લોજિક મુજબ)
   const uploadImage = async (file) => {
-    if (!file) return form.image_url; // જો નવી ફાઈલ ન હોય તો જૂની URL રાખવી
+    if (!file) return form.image_url;
     
     const ext = file.name.split(".").pop();
     const fileName = `banner-update-${Date.now()}.${ext}`;
@@ -67,13 +66,13 @@ export default function EditBanner() {
     return urlData.publicUrl;
   };
 
-  // ૩. બેનર અપડેટ કરવાનું ફંક્શન
+ 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // જો નવો ફોટો હોય તો અપલોડ કરો, નહીતર જૂનો પાથ વાપરો
+     
       const finalImageUrl = file ? await uploadImage(file) : form.image_url;
 
       const { error } = await supabase
@@ -89,7 +88,7 @@ export default function EditBanner() {
       if (error) throw error;
 
       alert("Banner Updated Successfully! ✅");
-      router.push("/admin/banner"); // અપડેટ થયા પછી લિસ્ટ પેજ પર પાછા જાઓ
+      router.push("/admin/banner"); 
     } catch (err) {
       console.error(err);
       alert("Error: " + err.message);

@@ -10,15 +10,6 @@ export default function AdminReviews() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null); 
 
-  // useEffect(() => {
-  // const checkUser = async () => {
-  // const { data: { user } } = await supabase.auth.getUser();
-  // setUser(user); 
-  // };
-  //   checkUser();
-  //   fetchReviews();
-  // }, []);
-
   useEffect(() => {
   const init = async () => {
     setLoading(true);

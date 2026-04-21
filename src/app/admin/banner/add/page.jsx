@@ -76,7 +76,7 @@ export default function AdminAddBannerPage() {
         setForm({ title: "", subtitle: "", description: "" });
         setFile(null);
         setPreview(null);
-        fetchBanners(); // Nava banner add thaya pachi list update thase
+        fetchBanners(); 
       }
     } catch (error) {
       alert("Error: " + error.message);

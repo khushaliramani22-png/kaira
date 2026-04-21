@@ -39,7 +39,7 @@ function ShopContent() {
 
         const { data, error } = await query;
         if (error) throw error;
-        //ratng calculetion
+        //rating calculetion
         const productsWithReviews = data.map((product) => {
           const allReviews = product.product_reviews || [];
           const totalReviews = allReviews.length;

@@ -74,10 +74,8 @@ export default function EditBanner() {
     setLoading(true);
 
     try {
-      // ૧. પહેલા ઈમેજ અપલોડ કરો
       const finalImageUrl = file ? await uploadImage(file) : form.image_url;
 
-      // ૨. પછી ડેટાબેઝ અપડેટ કરો
       const { error } = await supabase
         .from("banners")
         .update({
@@ -91,10 +89,10 @@ export default function EditBanner() {
       if (error) throw error;
 
       alert("Banner Updated Successfully! ✅");
-      router.push("/admin/banner/add"); // લિસ્ટ પેજ પર રીડાયરેક્ટ
+      router.push("/admin/banner"); 
     } catch (err) {
       console.error("Full Error Object:", err);
-      alert("Error: " + (err.message || "કંઈક ભૂલ થઈ છે."));
+      alert("Error: " + (err.message || "error."));
     } finally {
       setLoading(false);
     }

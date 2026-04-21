@@ -17,7 +17,7 @@ export default function Products() {
     fetchProducts();
   }, []);
 
-  // સર્ચ લોજિક: જ્યારે પણ સર્ચ ક્વેરી બદલાય ત્યારે લિસ્ટ ફિલ્ટર થશે
+  
   useEffect(() => {
     const filtered = products.filter((item) =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -26,16 +26,6 @@ export default function Products() {
     setCurrentPage(1);
   }, [searchQuery, products]);
 
-  // const fetchProducts = async () => {
-  //   const { data } = await supabase
-  //     .from("products")
-  //     .select("*")
-  //     .order("id", { ascending: false });
-
-  //   if (data) {
-  //     setProducts(data);
-  //   }
-  // };
  const fetchProducts = async () => {
   setLoading(true);
   try {
@@ -52,7 +42,7 @@ export default function Products() {
 
     console.log("Data received from Supabase:", data);
     
-    // જો ડેટા મળે તો સેટ કરો, નહીં તો ખાલી એરે
+   
     if (data && data.length > 0) {
       setProducts(data);
     } else {
@@ -115,7 +105,6 @@ export default function Products() {
               <th>Image</th>
               <th>Name</th>
               <th>Price</th>
-
               <th>Size</th>
               <th>Color</th>
               <th>Stock</th>

@@ -8,8 +8,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
-
-
+  
   const [profile, setProfile] = useState({
     customer_name: "",
     phone: "",
@@ -167,8 +166,6 @@ export default function AccountPage() {
       });
       
       if (error) throw error;
-
-      
       const event = new CustomEvent('profilePictureUpdated', {
         detail: { user: updatedUser }
       });
