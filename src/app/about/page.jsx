@@ -19,7 +19,7 @@ export default function About() {
 
             <div className="col-md-6">
               <img
-                src="/images/about.jpg"
+                src="/images/colorbox/post-large-image4.jpg"
                 className="img-fluid rounded"
                 alt="about"
               />
