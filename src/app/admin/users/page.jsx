@@ -3,11 +3,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, User,Mail, ShoppingBag, IndianRupee, AlertCircle } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, User, Mail, ShoppingBag, IndianRupee, AlertCircle } from "lucide-react";
 
 export default function UsersListPage() {
   const router = useRouter();
-
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,7 +23,7 @@ export default function UsersListPage() {
     try {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
-   
+
       let query = supabase
         .from("users")
         .select("*", { count: "exact" })
@@ -39,10 +38,8 @@ export default function UsersListPage() {
       const { data: userData, error: userError, count } = await query;
       if (userError) throw userError;
 
-
       const ordersResponse = await fetch("/api/admin/order-stats", { cache: "no-store" });
       const ordersJson = await ordersResponse.json();
-
       const orderStats = ordersJson?.success ? ordersJson.stats : null;
       const orderStatsById = orderStats?.byUserId || {};
       const orderStatsByEmail = orderStats?.byEmail || {};
@@ -54,12 +51,10 @@ export default function UsersListPage() {
         const userEmail = user.email ? String(user.email).toLowerCase().trim() : null;
         const userName = user.name ? String(user.name).toLowerCase().trim() : null;
         const userFirstName = userName ? userName.split(" ")[0] : null;
-
         const statsById = userId ? orderStatsById[userId] : null;
         const statsByEmail = userEmail ? orderStatsByEmail[userEmail] : null;
         const statsByName = userName ? orderStatsByName[userName] : null;
         const statsByFirstName = userFirstName ? orderStatsByFirstName[userFirstName] : null;
-
         const totalOrdersCount = statsById?.count ?? statsByEmail?.count ?? statsByName?.count ?? statsByFirstName?.count ?? 0;
         const totalSpendAmount = statsById?.sum ?? statsByEmail?.sum ?? statsByName?.sum ?? statsByFirstName?.sum ?? 0;
 
@@ -158,19 +153,13 @@ export default function UsersListPage() {
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="4"
-                    className="p-32 text-center text-gray-300 font-bold uppercase tracking-widest text-xs"
-                  >
+                  <td colSpan="4" className="p-32 text-center text-gray-300 font-bold uppercase tracking-widest text-xs">
                     No users found
                   </td>
                 </tr>
               ) : (
                 users.map((user, index) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-blue-50/30 transition-all duration-200 group"
-                  >
+                  <tr key={user.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
                     <td className="p-6">
                       <div className="flex items-center gap-4">
                         <span className="text-[10px] font-black text-blue-500 bg-blue-50 w-8 h-8 rounded-lg flex items-center justify-center border border-blue-100">
@@ -214,12 +203,10 @@ export default function UsersListPage() {
                       </div>
                     </td>
                     <td className="p-6 text-center">
-                      <button
-                        onClick={() => router.push(`/admin/users/${user.id}`)}
-                        className="text-[10px] font-black py-2.5 px-6 border-2 border-gray-100 rounded-2xl bg-white hover:bg-gray-900 hover:text-black hover:border-gray-900 transition-all uppercase shadow-sm active:scale-95"
-                      >
-                       view Details
-                      </button>
+                      <button onClick={() => router.push(`/admin/users/${user.id}`)}                       
+                        className="text-[10px] font-black py-2.5 px-6 border-2 border-gray-100 rounded-2xl bg-white hover:bg-gray-900 hover:text-black hover:border-gray-900 transition-all uppercase shadow-sm active:scale-95">
+                           view Details
+                       </button>                      
                     </td>
                   </tr>
                 ))
