@@ -254,8 +254,6 @@ const [discount, setDiscount] = useState(0);
     <div className="min-h-screen bg-[#f8f8f8] py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-black mb-8 uppercase tracking-widest border-b-2 border-black pb-4">Checkout</h1>
-
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
           {/* Shipping & Payment */}
@@ -299,8 +297,7 @@ const [discount, setDiscount] = useState(0);
                       <button
                         type="button"
                         onClick={() => setShowAddressForm(false)}
-                        className="md:col-span-2 text-gray-400 text-xs underline text-left hover:text-black"
-                      >
+                        className="md:col-span-2 text-gray-400 text-xs underline text-left hover:text-black">
                         Use previously saved address
                       </button>
                     )}
@@ -313,8 +310,8 @@ const [discount, setDiscount] = useState(0);
             <div className="bg-white p-6 rounded-2xl shadow-sm border">
               <h3 className="font-bold mb-4 uppercase text-xs tracking-wider text-gray-400">Payment Method</h3>
               <div className="flex gap-4">
-                <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Cash on Delivery</button>
-                <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-4 border-2 rounded-xl font-bold ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Online Payment</button>
+                <button onClick={() => setPaymentMethod("COD")} className={`flex-1 p-2 border-2 rounded-xl font-bold ${paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Cash on Delivery</button>
+                <button onClick={() => setPaymentMethod("Online")} className={`flex-1 p-2 border-2 rounded-xl font-bold ${paymentMethod === "Online" ? "border-black bg-gray-50" : "border-gray-100 text-gray-400"}`}>Online Payment</button>
               </div>
             </div>
           </div>

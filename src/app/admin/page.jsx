@@ -142,7 +142,8 @@ export default function AdminDashboard() {
   <h5 className="text-[9px] uppercase font-black tracking-widest text-gray-400 mb-1">Users</h5>
   <h2 className="text-2xl font-black text-purple-600">
     {stats.users > 0 ? stats.users - 1 : 0}
-  </h2>  
+  </h2> 
+ 
   <Users className="text-purple-200" size={40} />
 </div>
 
@@ -205,7 +206,7 @@ export default function AdminDashboard() {
                 <Area
                   type="monotone"
                   dataKey="orders"
-                  stroke="#ffffff"  /* White/Silver Line for contrast */
+                  stroke="#ffffff" 
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#colorOrdersWhite)"
@@ -251,7 +252,7 @@ export default function AdminDashboard() {
         
       </div>
 
-      {/* ૩. તેની નીચે Recent Orders ટેબલ */}
+  
       <div className="mt-8 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-50 flex justify-between items-center">
           <h3 className="font-black uppercase tracking-tight text-lg">Recent Orders</h3>
