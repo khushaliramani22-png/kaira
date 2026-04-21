@@ -55,7 +55,7 @@ export default function FindUs() {
                   <div className="bg-gray-100 p-3 rounded-full">
                     <Mail size={20} className="text-black" />
                   </div>
-                  <p className="text-gray-600 font-medium">hello@kairafashion.com</p>
+                  <p className="text-gray-600 font-medium">kaira@gmail.com</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="bg-gray-100 p-3 rounded-full">
