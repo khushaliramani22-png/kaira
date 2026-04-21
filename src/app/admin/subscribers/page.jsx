@@ -8,7 +8,6 @@ export default function SubscribersList() {
     const [subscribers, setSubscribers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // ડેટા ફેચ કરવાનું ફંક્શન
     const fetchSubscribers = async () => {
         setLoading(true);
         const { data, error } = await supabase
@@ -26,7 +25,7 @@ export default function SubscribersList() {
         fetchSubscribers();
     }, []);
 
-    // સબસ્ક્રાઇબર ડિલીટ કરવાનું લોજિક
+    //subscribe delet
     const deleteSubscriber = async (id) => {
         if (confirm("Do you want to be removed from this email list?")) {
             const { error } = await supabase
@@ -80,10 +79,8 @@ export default function SubscribersList() {
                                     </div>
                                 </td>
                                 <td className="p-4 text-right">
-                                    <button
-                                        onClick={() => deleteSubscriber(sub.id)}
-                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                    >
+                                    <button onClick={() => deleteSubscriber(sub.id)}
+                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                                         <Trash2 size={18} />
                                     </button>
                                 </td>
@@ -91,10 +88,8 @@ export default function SubscribersList() {
                         ))}
                     </tbody>
                 </table>
-
                 {subscribers.length === 0 && (
                     <div className="p-10 text-center text-gray-400 font-bold">
-
                         No one has subscribed yet.
                     </div>
                 )}
