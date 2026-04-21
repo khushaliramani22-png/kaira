@@ -15,8 +15,8 @@ import {
     Plus,
     Eye,
     Globe,
-    EyeOff,
-} from "lucide-react";
+    EyeOff,} from "lucide-react";
+
 import { supabase } from "@/lib/supabase";
 
 const ADMIN_EMAIL = 'khushaliramani22@gmail.com'; // Fixed admin email
@@ -970,7 +970,6 @@ const SettingsPage = () => {
                                         <div className="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-white/50">
                                             <div className="relative group">
                                                 <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-black to-gray-700 flex items-center justify-center text-white text-3xl font-bold shadow-xl overflow-hidden">
-                                                    {/* જો ઈમેજ હોય તો અહીં આવશે, અત્યારે ઇનિશિયલ બતાવે છે */}
                                                     KR
                                                 </div>
                                                 <button className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-lg border border-gray-100 text-black hover:bg-gray-50 transition-all">
@@ -990,7 +989,6 @@ const SettingsPage = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         {/* Profile Details Form */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="form-group">
@@ -1027,7 +1025,6 @@ const SettingsPage = () => {
                                                 />
                                             </div>
                                         </div>
-
                                         {/* Social Integration Preview */}
                                         <div className="mt-8 p-4 bg-white/40 rounded-2xl border border-white/50 border-dashed">
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Linked Accounts</p>
@@ -1076,7 +1073,6 @@ const SettingsPage = () => {
                                     <RefreshCw size={16} />
                                     Contacts and Calendar Sync
                                 </h4>
-
                                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                     <div className="p-6 bg-gradient-to-br from-gray-50 to-blue-50/20">
 
@@ -1134,7 +1130,6 @@ const SettingsPage = () => {
                                                     <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                                 </label>
                                             </div>
-
                                             <div className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-white/50">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 bg-white rounded-lg shadow-sm">
@@ -1281,10 +1276,8 @@ const SettingsPage = () => {
                         {selectedSetting?.id === 'notifications' && (
                             <div className="space-y-6 animate-in fade-in duration-500">
                                 <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2 mb-4">
-                                    <Bell size={16} />
-                                    Notification Preferences
-                                </h4>
-
+                                    <Bell size={16} />  Notification Preferences
+                                    </h4>  
                                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                     <div className="p-6 bg-gradient-to-br from-slate-50 to-orange-50/20">
 
@@ -1321,18 +1314,15 @@ const SettingsPage = () => {
                                                             type="checkbox"
                                                             className="sr-only peer"
                                                             checked={formData.notifications?.payment_conf}
-                                                            onChange={(e) => handleUpdate('notifications', 'payment_conf', e.target.checked)}
-                                                        />
+                                                            onChange={(e) => handleUpdate('notifications', 'payment_conf', e.target.checked)} />
                                                         <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-orange-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
-
                                         {/* Marketing & Alerts Section */}
                                         <div className="space-y-4">
                                             <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Marketing & Alerts</h5>
-
                                             <div className="space-y-3">
                                                 {/* Abandoned Cart */}
                                                 <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -1350,7 +1340,6 @@ const SettingsPage = () => {
                                                         <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-orange-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                                                     </label>
                                                 </div>
-
                                                 {/* Login OTP */}
                                                 <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                                                     <div>
@@ -1370,7 +1359,6 @@ const SettingsPage = () => {
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Save and Apply Button Footer */}
                                     <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
                                         <button
@@ -1400,10 +1388,8 @@ const SettingsPage = () => {
                                     <MessageSquare size={16} />
                                     Text Snippets Library
                                 </h4>
-
                                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                     <div className="p-6 bg-gradient-to-br from-slate-50 to-purple-50/20 space-y-5">
-
                                         {/* 1. Customer Feedback */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Customer Feedback Message</label>
@@ -1412,10 +1398,9 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.feedback || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'feedback', e.target.value)}
                                                 placeholder="Thank you for shopping with Kaira..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200  focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                         {/* 2. Size Guide */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Size Guide Info</label>
@@ -1424,10 +1409,9 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.size_guide || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'size_guide', e.target.value)}
                                                 placeholder="Please refer to the size chart..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200  focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                         {/* 3. Return Instructions */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Return Instructions</label>
@@ -1436,10 +1420,9 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.return_inst || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'return_inst', e.target.value)}
                                                 placeholder="You can request a return within 7 days..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200 focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                         {/* 4. Out of Stock */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Out of Stock Message</label>
@@ -1448,10 +1431,9 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.out_of_stock || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'out_of_stock', e.target.value)}
                                                 placeholder="This item is currently out of stock..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200 focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                         {/* 5. Delayed Order */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Delayed Order Alert</label>
@@ -1460,10 +1442,9 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.delayed_order || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'delayed_order', e.target.value)}
                                                 placeholder="Due to high demand, your order might take..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200 focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                         {/* 6. Refund Timeline */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Refund Timeline</label>
@@ -1472,10 +1453,9 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.refund_timeline || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'refund_timeline', e.target.value)}
                                                 placeholder="Refund will be processed within 5-7 business days..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200 focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                         {/* 7. Shipping Charges */}
                                         <div className="form-group">
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Shipping Charges Info</label>
@@ -1484,19 +1464,16 @@ const SettingsPage = () => {
                                                 value={formData.snippets?.shipping_charges || ''}
                                                 onChange={(e) => handleUpdate('snippets', 'shipping_charges', e.target.value)}
                                                 placeholder="Free Shipping on orders above ₹2000..."
-                                                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
+                                                className="w-full p-4 bg-white border border-gray-200 focus:ring-2 focus:ring-purple-500/10 focus:border-purple-500 text-sm shadow-sm transition-all resize-none leading-relaxed"
                                             />
                                         </div>
-
                                     </div>
-
                                     {/* Save and Apply Button Footer */}
                                     <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end sticky bottom-0 z-10">
                                         <button
                                             onClick={() => handleSave('snippets')}
                                             disabled={loading}
-                                            className="bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg disabled:opacity-50"
-                                        >
+                                            className="bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg disabled:opacity-50">
                                             {loading ? (
                                                 <>
                                                     <Loader2 size={14} className="animate-spin" />
@@ -1511,9 +1488,8 @@ const SettingsPage = () => {
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                          </div>
                         )}
-
                     </div>
                 </div>
             </div>

@@ -84,6 +84,7 @@ export default function BannerList() {
                       {banner.description || "-"}
                     </p>
                   </td>
+                  
                   <td className="text-end pe-4">
                     <div className="d-flex justify-content-end gap-2">                  
                       <Link 
@@ -93,7 +94,7 @@ export default function BannerList() {
                       >
                         <AiOutlineEdit size={18} />
                       </Link>
-                      {/* Delete બટન */}
+                      {/* ---------------------Delete btn--------------- */}
                       <button
                         onClick={() => handleDelete(banner.id)}
                         className="btn btn-sm btn-outline-danger"

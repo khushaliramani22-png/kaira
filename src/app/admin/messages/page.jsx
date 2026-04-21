@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import {  MessageSquare, Calendar, User, Hash, Filter, Trash2, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {  MessageSquare, Calendar, Hash, Filter, Trash2, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function AdminMessages() {
@@ -33,32 +33,30 @@ export default function AdminMessages() {
     }
     setLoading(false);
   };
-  const deleteMessage = async (id) => {
+
+const deleteMessage = async (id) => {
   if (!confirm("Are you sure you want to delete this message?")) return;
-  
+
   const { error } = await supabase
     .from("contact_messages")
     .delete()
     .eq("id", id);
 
-  if (error) {
+  if (error) {  
     console.error("Delete Error:", error.message);
-    toast.error(`Failed to delete: ${error.message}`);
+    toast.error(`Database error: ${error.message}`);
   } else {
+   
     toast.success("Message deleted permanently");
-
     setMessages((prev) => prev.filter((m) => m.id !== id));
   }
 };
   // 1. Search & Filter Logic
     const filteredMessages = messages.filter((msg) => {
-    const matchesSearch = 
-      msg.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      msg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (msg.order_number && msg.order_number.includes(searchTerm));
-    
+    const matchesSearch =  msg.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           msg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (msg.order_number && msg.order_number.includes(searchTerm));
     const matchesFilter = filter === "All" ? true : msg.subject === filter;
-    
     return matchesSearch && matchesFilter;
   });
 

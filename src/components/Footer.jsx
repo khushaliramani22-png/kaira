@@ -24,7 +24,7 @@ export default function Footer() {
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Services", href: "/services" },
-    { name: "Single item", href: "/styles" },
+    // { name: "Single item", href: "/styles" },
     { name: "Contact", href: "/contact" },
   ];
 

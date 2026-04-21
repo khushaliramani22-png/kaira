@@ -38,7 +38,7 @@ const BannerSlider = () => {
             <Swiper
                 modules={[Autoplay, EffectFade, Navigation]}
                 effect={'fade'}
-                autoplay={{ delay: 5000 }}
+                autoplay={{ delay: 1000 }}
                 navigation={true}
                 loop={true}
                 className="h-full w-full"

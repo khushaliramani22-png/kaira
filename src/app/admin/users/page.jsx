@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, User, Phone, Calendar, Mail, ShoppingBag, IndianRupee, AlertCircle } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, User,Mail, ShoppingBag, IndianRupee, AlertCircle } from "lucide-react";
 
 export default function UsersListPage() {
   const router = useRouter();
@@ -24,8 +24,7 @@ export default function UsersListPage() {
     try {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
-
-      // ૧. યુઝર્સ ફેચ કરો (ફક્ત 'user' રોલ વાળા)
+   
       let query = supabase
         .from("users")
         .select("*", { count: "exact" })
@@ -217,7 +216,7 @@ export default function UsersListPage() {
                     <td className="p-6 text-center">
                       <button
                         onClick={() => router.push(`/admin/users/${user.id}`)}
-                        className="text-[10px] font-black py-2.5 px-6 border-2 border-gray-100 rounded-2xl bg-white hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all uppercase shadow-sm active:scale-95"
+                        className="text-[10px] font-black py-2.5 px-6 border-2 border-gray-100 rounded-2xl bg-white hover:bg-gray-900 hover:text-black hover:border-gray-900 transition-all uppercase shadow-sm active:scale-95"
                       >
                        view Details
                       </button>

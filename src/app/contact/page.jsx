@@ -16,7 +16,7 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const { global } = useSettings();
-  const email = global?.support_email || "care@kaira.com";
+  const email = global?.support_email || "kaira@gmail.com";
   const phone = global?.support_phone || "+91 90000 00000";
 
 
@@ -67,7 +67,7 @@ export default function ContactPage() {
         </h1>
         <p className="text-gray-400 max-w-2xl mx-auto font-medium text-lg">
          If you have any questions about your order or product, please let us know. 
-We will get back to you within 24 hours.
+         we will get back to you within 24 hours.
         </p>
       </div>
 

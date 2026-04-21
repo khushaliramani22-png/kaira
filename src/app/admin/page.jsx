@@ -136,12 +136,15 @@ export default function AdminDashboard() {
     <Clock className="text-orange-200" size={40} />
   </div>
 
-  {/* Total Users */}
-  <div className="bg-purple-50 p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
-    <h5 className="text-[9px] uppercase font-black tracking-widest text-gray-400 mb-1">Users</h5>
-    <h2 className="text-2xl font-black text-purple-600">{stats.users}</h2>
-    <Users className="text-purple-200" size={40} />
-  </div>
+
+{/* Total Users Section */}
+<div className="bg-purple-50 p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+  <h5 className="text-[9px] uppercase font-black tracking-widest text-gray-400 mb-1">Users</h5>
+  <h2 className="text-2xl font-black text-purple-600">
+    {stats.users > 0 ? stats.users - 1 : 0}
+  </h2>  
+  <Users className="text-purple-200" size={40} />
+</div>
 
   {/* Total Revenue */}
   <div className="bg-black p-4 rounded-2xl shadow-lg text-center">
